@@ -1,2 +1,9 @@
 # README
 
+Before your can run this project in eclipse, you have to bring in all the JAR 
+dependencies. Maven is used to download and copy the JAR dependencies. Run 
+the following maven command from the top level folder where the pom.xml is located:
+
+mvn dependency:copy-dependencies
+
+
