@@ -41,6 +41,7 @@ import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.location.LocationProvider;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
@@ -49,14 +50,14 @@ import android.util.Log;
 public class ArtifactlyService extends Service implements OnSharedPreferenceChangeListener, ApplicationConstants {
 
 	// Logging
-	private static final String LOG_TAG = "Artifactly Service";
+	private static final String LOG_TAG = "** A.S. **";
 
 	// Preferences
 	private static final String PREFS_NAME = "ArtifactlyPrefsFile";
 	private SharedPreferences settings;
 
 	// Location constants
-	private static final int LOCATION_MIN_TIME = 5000;
+	private static final int LOCATION_MIN_TIME = 120000;
 	private static final int LOCATION_MIN_DISTANCE = 100;
 	private static final String DISTANCE = "dist";
 	
@@ -73,17 +74,26 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	// Managers
 	private LocationManager locationManager;
 	private NotificationManager notificationManager;
+	
+	// Location provider
+	private String locationProviderName;
+	
+	// Location LocationListener
+	LocationListener locationListener;
 
-	// Content / DB
-	DbAdapter dbAdapter;
+	// DB adapter
+	private DbAdapter dbAdapter;
 
 	// Keeping track of current location
 	private Location currentLocation;
 
-
+	// Binder access to service API
+	private IBinder localServiceBinder;
+	
 	@Override
-	public IBinder onBind(Intent arg0) {
-		return null;
+	public IBinder onBind(Intent intent) {
+		localServiceBinder = new LocalServiceImpl(this);
+		return localServiceBinder;
 	}
 
 	@Override
@@ -103,19 +113,17 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		// Setting up the database
 		dbAdapter = new DbAdapter(this);
 
-		// FIXME: Remove this after testing
-		initTestData();
-
 		// Setting up the notification manager
 		notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
 		// Setting up the location manager
 		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-		String provider = locationManager.getBestProvider(getLocationCriteria(), true);
-		locationManager.requestLocationUpdates(provider, LOCATION_MIN_TIME, LOCATION_MIN_DISTANCE, getLocationListener());
+		locationProviderName = locationManager.getBestProvider(getLocationCriteria(), true);
+		locationListener = getLocationListener();
+		locationManager.requestLocationUpdates(locationProviderName, LOCATION_MIN_TIME, LOCATION_MIN_DISTANCE, locationListener);
 
 		// Getting the initial location
-		currentLocation = locationManager.getLastKnownLocation(provider);
+		currentLocation = locationManager.getLastKnownLocation(locationProviderName);
 	}
 
 
@@ -137,6 +145,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		// TODO: Determine what the appropriate minimum radius is.
 		if(0 < newRadius) {
 
+			Log.i(LOG_TAG, "Radius was set to " + newRadius);
 			radius = newRadius;
 		}
 		else {
@@ -145,6 +154,47 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		}
 	}
 
+	/*
+	 * DbAdater getter method
+	 */
+	protected DbAdapter getDbAdapter() {
+		return dbAdapter;
+	}
+	
+	/*
+	 * Dispatch method for local service
+	 */
+	protected boolean startLocationTracking() {
+
+		try {
+		
+			locationManager.requestLocationUpdates(locationProviderName, LOCATION_MIN_TIME, LOCATION_MIN_DISTANCE, locationListener);
+		}
+		catch(IllegalArgumentException iae) {
+			
+			return false;
+		}
+		
+		return true;
+	}
+	
+	/*
+	 * Dispatch method for local service
+	 */
+	protected boolean stopLocationTracking() {
+
+		try {
+
+			locationManager.removeUpdates(locationListener);
+		}
+		catch(IllegalArgumentException iae) {
+
+			return false;
+		}
+
+		return true;
+	}
+	
 	/*
 	 * Method that returns a location listener
 	 */
@@ -297,16 +347,5 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		else {
 			return new JSONArray(items).toString();
 		}
-	}
-	
-	/*
-	 * FIXME: Remove this when not needed anymore
-	 * Test date
-	 */
-	private void initTestData() {
-
-		// TODO: add test to check if test data exists
-		dbAdapter.insert("38.540013", "-121.57983", "artifact name 1", "artifact data 1");
-		dbAdapter.insert("38.535298", "-121.578745", "artifact name 2", "artifact data 2");
 	}
 }

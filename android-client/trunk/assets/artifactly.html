@@ -5,7 +5,7 @@
 		<link rel="stylesheet" type="text/css" href="artifactly.css"/>
 	</head>
 	<body>
-		<h1>Artifactly</h1>
+		<h1>Artifactly v1.b</h1>
 		<br />
 		<div id="longitude"></div>
 		<div id="latitude"></div>
@@ -14,7 +14,18 @@
 		<div id="artifactData"></div>
 		<div id="distance"></div>
 		<br />
-		<INPUT TYPE="text" NAME="foo" id="radius" />
-		<INPUT TYPE="button" NAME="button" Value="Set Radius" onClick="setRadius();" />
+		<div id="radiusOutput"></div>
+		<br />
+		<INPUT id="radiusInput" TYPE="text" NAME="radiusText" />
+		<INPUT TYPE="button" NAME="setRadius" Value="Set Radius" onClick="setRadius();" />
+		<br />
+		<INPUT TYPE="button" NAME="getRadius" Value="Get Radisu" onClick="getRadius();" />
+		<br />
+		<INPUT TYPE="button" NAME="createButton" Value="Create Artifact" onClick="createArtifact();" />
+		<br />
+		<INPUT TYPE="button" NAME="startLocationTracking" Value="Start Location Tracking" onClick="startLocationTracking();" />
+		<br />
+		<INPUT TYPE="button" NAME="stopLocationTracking" Value="Stop Location Tracking" onClick="stopLocationTracking();" />
+ 		<br />
 	</body>
 </html>
