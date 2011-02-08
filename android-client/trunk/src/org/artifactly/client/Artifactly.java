@@ -186,25 +186,19 @@ public class Artifactly extends Activity implements ApplicationConstants {
     	String[] latitudes = { "38.540013", "38.535298", "38.540095" };
     	String[] longitudes = { "-121.57983", "-121.57983", "-121.549062" };
         
-    	public void setRadius(String radius) {
+    	public void setRadius(int radius) {
 
-    		int newRadius = 0;
+    		Log.i(LOG_TAG, "A setRadius to " + radius);
     		
-    		try {
-    			newRadius = Integer.parseInt(radius);
-    		}
-    		catch(NumberFormatException	nfe) {
-    			// TODO: show toast error message
-    		}
-    		
-    		Log.i(LOG_TAG, "A setRadius to " + newRadius);
-    		
-    		if(PREFERENCE_RADIUS_DEFAULT < newRadius) {
+    		if(PREFERENCE_RADIUS_DEFAULT < radius) {
 
+    			String message = String.format(getResources().getString(R.string.set_location_radius), radius);
+    			Toast toast = Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT);
+    			toast.show();
+    			
     			SharedPreferences settings = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
     			SharedPreferences.Editor editor = settings.edit();
-    			Log.i(LOG_TAG, "B setRadius to " + newRadius);
-    			editor.putInt(PREFERENCE_RADIUS, newRadius);
+    			editor.putInt(PREFERENCE_RADIUS, radius);
     			editor.commit();
     		}
     	}
@@ -258,15 +252,12 @@ public class Artifactly extends Activity implements ApplicationConstants {
     			Toast toast = Toast.makeText(getApplicationContext(), R.string.stop_location_tracking_failure, Toast.LENGTH_SHORT);
     			toast.show();
     		}
-    		
     	}
     	
     	public int getRadius() {
     		
     		SharedPreferences settings = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-    		int radius = settings.getInt(PREFERENCE_RADIUS, PREFERENCE_RADIUS_DEFAULT);
-    		Log.i(LOG_TAG, "Radius = " + radius);
-    		return radius;
+    		return settings.getInt(PREFERENCE_RADIUS, PREFERENCE_RADIUS_DEFAULT);
     	}
     } 
     
