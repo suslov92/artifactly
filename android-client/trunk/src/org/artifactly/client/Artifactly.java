@@ -73,6 +73,11 @@ public class Artifactly extends Activity implements ApplicationConstants {
         // Setting up the WebView
         webView = (WebView) findViewById(R.id.webview);
 		webView.getSettings().setJavaScriptEnabled(true);
+		
+		// Two ways to hide/disable the vertical scroll bar
+		//webView.setScrollBarStyle(WebView.SCROLLBARS_OUTSIDE_OVERLAY);
+		webView.setVerticalScrollBarEnabled(false);
+		
 		webView.setWebViewClient(new WebViewClient() {
 			@Override
 			public void onPageFinished(WebView view, String url) {

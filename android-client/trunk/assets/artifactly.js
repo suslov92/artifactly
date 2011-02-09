@@ -56,13 +56,11 @@ function showServiceResult(data) {
 	document.getElementById("distance").innerHTML = "Distance: " + data[0].dist;
 }
 
-function setRadius() {
+$(document).ready(function() {
 	
-	// Get radius from UI
-	var radius = document.getElementById("radiusInput").value;
-	document.getElementById("radiusInput").value = "";
-	
-	// TODO: Either check user input if it's numeric and within bounds or use number slider component
-	// Make Android interface call, casting radius into a number using the unary '+' operator
-	window.android.setRadius(+radius);
-}
+	$('#setRadius').submit(function setRadius() {
+		
+		var radius = $('#radiusInput').val();
+		window.android.setRadius(+radius);
+	});
+});
