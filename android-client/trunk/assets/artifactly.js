@@ -14,53 +14,68 @@
  * limitations under the License. 
  */
 
-/*
- * JavaScript to Java calls
- */
-function getRadius() {
-	
-	var radius = window.android.getRadius();
-	
-	document.getElementById("radiusOutput").innerHTML = "Radius: " + radius;
-}
-
-function startLocationTracking() {
-
-	// Make Android interface call
-	window.android.startLocationTracking();
-}
-
-function stopLocationTracking() {
-	
-	// Make Android interface call
-	window.android.stopLocationTracking();
-}
-
-function createArtifact() {
-	
-	// Make Android interface call
-	window.android.createArtifact();
-}
-
-/*
- * Java to JavaScript calls
- */
-
-function showServiceResult(data) {
-	
-	// Show result
-	document.getElementById("latitude").innerHTML = "Latitude: " + data[0].lat;
-	document.getElementById("longitude").innerHTML = "Longitude: " + data[0].long;
-	document.getElementById("artifactName").innerHTML = "Name: " + data[0].name;
-	document.getElementById("artifactData").innerHTML = "Data: " + data[0].data;
-	document.getElementById("distance").innerHTML = "Distance: " + data[0].dist;
-}
-
 $(document).ready(function() {
 	
-	$('#setRadius').submit(function setRadius() {
+	/*
+	 * Initialize
+	 */
+	$('#preferences').bind('pageshow', function(){
+		
+		$('#radiusInput').val(window.android.getRadius());
+	});
+
+	
+	/*
+	 * Set radius button click handler
+	 */
+	$('#setRadius').click(function() {
 		
 		var radius = $('#radiusInput').val();
 		window.android.setRadius(+radius);
 	});
+
+	/*
+	 * Get radius button click handler
+	 */
+	$('#getRadius').click(function() {
+		
+		var radius = window.android.getRadius();
+		$('#radiusOutput').text("Radius: " + radius);
+	});
+	
+	/*
+	 * Stop location tracking click handler
+	 */
+	$('#stopLocationTracking').click(function() {
+		
+		window.android.stopLocationTracking();
+	});
+	
+	/*
+	 * Start location tracking click handler
+	 */
+	$('#startLocationTracking').click(function() {
+		
+		window.android.startLocationTracking();
+	});
+	
+	/*
+	 * Create artifact click handler
+	 */
+	$('#createArtifact').click(function() {
+		
+		window.android.createArtifact();
+	});
 });
+
+function showServiceResult(data) {
+	
+	// Show result
+	$('#latitude').text("Latitude: " + data[0].lat);
+	$('#longitude').text("Longitude: " + data[0].long);
+	$('#artifactName').text("Name: " + data[0].name);
+	$('#artifactData').text("Data: " + data[0].data);
+	$('#distance').text("Distance: " + data[0].dist);
+}
+
+
