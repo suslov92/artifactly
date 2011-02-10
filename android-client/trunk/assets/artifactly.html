@@ -3,9 +3,9 @@
 	<head> 
 	<title>Artifactly</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.0a3/jquery.mobile-1.0a3.min.css" />
-	<script type="text/javascript" src="http://code.jquery.com/jquery-1.4.3.min.js"></script>
-	<script type="text/javascript" src="http://code.jquery.com/mobile/1.0a3/jquery.mobile-1.0a3.min.js"></script>
+	<link rel="stylesheet" href="jquery.mobile-1.0a3.min.css" />
+	<script type="text/javascript" src="jquery.1.5.0.min.js"></script>
+	<script type="text/javascript" src="jquery.mobile-1.0a3.min.js"></script>
 	<script type="text/javascript" src="artifactly.js"></script>
 </head> 
 <body> 
@@ -25,10 +25,10 @@
 			<div id="artifactData"></div>
 			<div id="distance"></div>
 			
-			<div id="functions">
-				<INPUT TYPE="button" NAME="createButton" Value="Create Artifact" onClick="createArtifact();" />
-				<INPUT TYPE="button" NAME="startLocationTracking" Value="Start Location Tracking" onClick="startLocationTracking();" />
-				<INPUT TYPE="button" NAME="stopLocationTracking" Value="Stop Location Tracking" onClick="stopLocationTracking();" />
+			<div id="mainFunctions">
+				<INPUT type="button" name="createArtifact" id="createArtifact" value="Create Artifact" />
+				<INPUT type="button" name="startLocationTracking" id="startLocationTracking" value="Start Location Tracking" />
+				<INPUT type="button" name="stopLocationTracking" id="stopLocationTracking" value="Stop Location Tracking" />
 			</div>
 	</div>
 
@@ -44,14 +44,12 @@
 		<div id="radiusOutput"></div>
 			<div id="radiusInputs">
 				<div data-role="fieldcontain">
-					<form id="setRadius">
- 					<input type="range" name="slider" id="radiusInput" value="100" min="50" max="1000"  />
- 					<INPUT TYPE="submit" NAME="setRadius" Value="Set Radius" />
- 					</form>
+ 					<input type="range" name="slider" id="radiusInput" value="100" min="50" max="1000" />
+ 					<INPUT type="button" name="setRadius" id="setRadius" value="Set Radius" />
 				</div>
 			</div>
-			<div id="functions">
-				<INPUT TYPE="button" NAME="getRadius" Value="Get Radius" onClick="getRadius();" />
+			<div id="prefFunctions">
+				<INPUT type="button" name="getRadius" id="getRadius" value="Get Radius" />
 			</div>
 	</div>
 </div>
