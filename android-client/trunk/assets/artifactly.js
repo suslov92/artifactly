@@ -66,16 +66,33 @@ $(document).ready(function() {
 		
 		window.android.createArtifact();
 	});
+	
+	/*
+	 * Get location click handler
+	 */
+	$('#getLocation').click(function() {
+	
+		//var data = jQuery.parseJSON(window.android.getLocation());
+		var data = JSON.parse(window.android.getLocation());
+		$('#latitude').text("Latitude: " + data[0]);
+		$('#longitude').text("Longitude: " + data[1]);
+		$('#accuracy').text("Accuracy: " + data[2]);
+	});
+	
 });
 
 function showServiceResult(data) {
 	
-	// Show result
-	$('#latitude').text("Latitude: " + data[0].lat);
-	$('#longitude').text("Longitude: " + data[0].long);
-	$('#artifactName').text("Name: " + data[0].name);
-	$('#artifactData').text("Data: " + data[0].data);
-	$('#distance').text("Distance: " + data[0].dist);
+	$.each(data, function(i, val) {
+		$('#artifactlyList ul').append('<li>' + val.name + '</li>');
+	});
+	$('#artifactlyList ul').listview('refresh');
+	
+//	$('#latitude').text("Latitude: " + data[0].lat);
+//	$('#longitude').text("Longitude: " + data[0].long);
+//	$('#artifactName').text("Name: " + data[0].name);
+//	$('#artifactData').text("Data: " + data[0].data);
+//	$('#distance').text("Distance: " + data[0].dist);
 }
 
 

@@ -25,8 +25,6 @@ import org.artifactly.client.ApplicationConstants;
 import org.artifactly.client.Artifactly;
 import org.artifactly.client.R;
 import org.artifactly.client.content.DbAdapter;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -41,10 +39,11 @@ import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.location.LocationProvider;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
+
+import com.google.gson.Gson;
 
 
 public class ArtifactlyService extends Service implements OnSharedPreferenceChangeListener, ApplicationConstants {
@@ -57,7 +56,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	private SharedPreferences settings;
 
 	// Location constants
-	private static final int LOCATION_MIN_TIME = 120000;
+	private static final int LOCATION_MIN_TIME = 5000;
 	private static final int LOCATION_MIN_DISTANCE = 100;
 	private static final String DISTANCE = "dist";
 	
@@ -89,6 +88,8 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 
 	// Binder access to service API
 	private IBinder localServiceBinder;
+	
+	private Gson gson = new Gson();
 	
 	@Override
 	public IBinder onBind(Intent intent) {
@@ -140,7 +141,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	 */
 	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
 
-		int newRadius = sharedPreferences.getInt(key, 100);
+		int newRadius = sharedPreferences.getInt(key, LOCATION_MIN_DISTANCE);
 
 		// TODO: Determine what the appropriate minimum radius is.
 		if(0 < newRadius) {
@@ -196,6 +197,14 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	}
 	
 	/*
+	 * Dispatch method for local service
+	 */
+	protected Location getLocation() {
+		
+		return currentLocation;
+	}
+	
+	/*
 	 * Method that returns a location listener
 	 */
 	private LocationListener getLocationListener() {
@@ -206,8 +215,9 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 
 				if(null != currentLocation) {
 
-					double distanceDifference = getDistanceDifference(currentLocation.getLatitude(), currentLocation.getLongitude(), location.getLatitude(), location.getLongitude());
-					Log.i(LOG_TAG, "Distance (meters) = " + distanceDifference);
+					Log.i(LOG_TAG, "Distance = " + currentLocation.distanceTo(location));
+					Log.i(LOG_TAG, "Old location accuracy = " + currentLocation.getAccuracy());
+					Log.i(LOG_TAG, "New location accuracy = " + location.getAccuracy());
 				}
 
 				currentLocation = location;
@@ -264,26 +274,6 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		notification.setLatestEventInfo(this, NOTIFICATION_CONTENT_TITLE, message, contentIntent);
 		notificationManager.notify(NOTIFICATION_ID, notification);
 	}
-
-	/*
-	 * Calculate distance between two geographic locations
-	 * Giving credit for the distance formula: http://www.movable-type.co.uk/scripts/latlong.html
-	 */
-	private double getDistanceDifference(double lat1, double lng1, double lat2, double lng2) {
-
-		// Earth's radius = 6371km
-		double earthRadius = 6371;
-		double dLat = Math.toRadians(lat2-lat1);
-		double dLng = Math.toRadians(lng2-lng1);
-		double a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) * Math.sin(dLng/2) * Math.sin(dLng/2);
-		double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-		double dist = earthRadius * c;
-
-		double meterConversion = 1000;
-
-		return dist * meterConversion;
-	}
-
 	
 	private String locationMatch() {
 
@@ -297,7 +287,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		int nameColumnIndex = cursor.getColumnIndex(DbAdapter.ART_FIELDS[DbAdapter.ART_NAME]);
 		int dataColumnIndex = cursor.getColumnIndex(DbAdapter.ART_FIELDS[DbAdapter.ART_DATA]);
 
-		List<JSONObject> items = new ArrayList<JSONObject>();
+		List<Map<String, String>> items = new ArrayList<Map<String, String>>();
 
 		int rowCount = cursor.getCount();
 		Log.i(LOG_TAG, "row count = " + rowCount);
@@ -311,7 +301,6 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 
 		/*
 		 *  Iterating over all result and calculate the distance between
-		 *  the current location and the stored location. If the distance lies within the defined
 		 *  radius, we notify the user that there is an artifact.
 		 */
 		for(;cursor.isAfterLast() == false; cursor.moveToNext()) {
@@ -320,22 +309,23 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 			String storedLatitude = cursor.getString(latitudeColumnIndex).trim();
 			String storedLongitude = cursor.getString(longitudeColumnIndex).trim();
 
-			double distanceDifference = getDistanceDifference(currentLocation.getLatitude(),
+			float[] distanceResult = new float[1];
+			Location.distanceBetween(currentLocation.getLatitude(),
 					currentLocation.getLongitude(),
 					Double.parseDouble(storedLatitude),
-					Double.parseDouble(storedLongitude));
+					Double.parseDouble(storedLongitude), distanceResult);
 
-			Log.i(LOG_TAG, "distanceDifference = " + distanceDifference);
+			Log.i(LOG_TAG, "distanceDifference = " + distanceResult[0]);
 
-			if(distanceDifference <= radius) {
+			if(distanceResult[0] <= radius) {
 
 				Map<String, String> item = new HashMap<String, String>();
 				item.put(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LATITUDE], storedLatitude);
 				item.put(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LONGITUDE], storedLongitude);
 				item.put(DbAdapter.ART_FIELDS[DbAdapter.ART_NAME], cursor.getString(nameColumnIndex));
 				item.put(DbAdapter.ART_FIELDS[DbAdapter.ART_DATA], cursor.getString(dataColumnIndex));
-				item.put(DISTANCE, Double.toString(distanceDifference));
-				items.add(new JSONObject(item));
+				item.put(DISTANCE, Float.toString(distanceResult[0]));
+				items.add(item);
 			}
 		}
 
@@ -345,7 +335,8 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 			return null;
 		}
 		else {
-			return new JSONArray(items).toString();
+
+			return gson.toJson(items);
 		}
 	}
 }

@@ -42,5 +42,12 @@ public interface LocalService {
 	 * @return
 	 */
 	public boolean stopLocationTracking();
- 
+	
+
+	/**
+	 * Get the current location, latitude, longitude, accuracy
+	 * 
+	 * @return JSON string containing latitude, longitude, accuracy
+	 */
+	public String getLocation();
 }
