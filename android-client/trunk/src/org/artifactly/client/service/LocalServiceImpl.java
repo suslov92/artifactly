@@ -18,17 +18,22 @@ package org.artifactly.client.service;
 
 import org.artifactly.client.content.DbAdapter;
 
+import android.location.Location;
 import android.os.Binder;
 import android.util.Log;
+
+import com.google.gson.Gson;
 
 public class LocalServiceImpl extends Binder implements LocalService {
 
 	// Logging
 	private static final String LOG_TAG = "** A.L.S. **";
 	
-	ArtifactlyService artifactlyService;
+	private ArtifactlyService artifactlyService;
 	
-	DbAdapter dbAdapter;
+	private DbAdapter dbAdapter;
+	
+	private Gson gson = new Gson();
 	
 	// Constructor
 	public LocalServiceImpl(ArtifactlyService artifactlyService) { 
@@ -77,6 +82,20 @@ public class LocalServiceImpl extends Binder implements LocalService {
 		else {
 
 			return false;
+		}
+	}
+
+	public String getLocation() {
+		
+		Location location = artifactlyService.getLocation();
+		
+		if(null == location) {
+			double[] data = new double[] { 0.0d, 0.0d, 0.0d };
+			return gson.toJson(data);
+		}
+		else {
+			double[] data = new double[] { location.getLatitude(), location.getLongitude(), (double)location.getAccuracy() };
+			return gson.toJson(data);
 		}
 	}
 }

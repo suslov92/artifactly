@@ -66,16 +66,15 @@ public class Artifactly extends Activity implements ApplicationConstants {
         
         setContentView(R.layout.main);
         
-        // Create the service intent and start the service
-        final Intent artifactlyService = new Intent (this, ArtifactlyService.class);
-        startService(artifactlyService);
-
+        // Bind to the service
+        bindService(new Intent(this, ArtifactlyService.class), serviceConnection, BIND_AUTO_CREATE);
+        isBound = true;
+        
         // Setting up the WebView
         webView = (WebView) findViewById(R.id.webview);
 		webView.getSettings().setJavaScriptEnabled(true);
 		
-		// Two ways to hide/disable the vertical scroll bar
-		//webView.setScrollBarStyle(WebView.SCROLLBARS_OUTSIDE_OVERLAY);
+		// Disable the vertical scroll bar
 		webView.setVerticalScrollBarEnabled(false);
 		
 		webView.setWebViewClient(new WebViewClient() {
@@ -157,8 +156,8 @@ public class Artifactly extends Activity implements ApplicationConstants {
     	Bundle extras = intent.getExtras();
 
     	if(null != extras && extras.containsKey(NOTIFICATION_INTENT_KEY)) {
+    		
     		String data = extras.getString(NOTIFICATION_INTENT_KEY);
-    		//Log.i(LOG_TAG, "Notification data = " + data);
       		callJavaScriptFunction(SHOW_SERVICE_RESULT, data);
     	}
     }
@@ -178,7 +177,6 @@ public class Artifactly extends Activity implements ApplicationConstants {
     			stringBuilder.append(JAVASCRIPT_FUNCTION_OPEN_PARENTHESIS);
     			stringBuilder.append(json);
     			stringBuilder.append(JAVASCRIPT_FUNCTION_CLOSE_PARENTHESIS);
-    			Log.i(LOG_TAG, stringBuilder.toString());
     			webView.loadUrl(stringBuilder.toString());
     		}
     	});
@@ -263,6 +261,13 @@ public class Artifactly extends Activity implements ApplicationConstants {
     		
     		SharedPreferences settings = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
     		return settings.getInt(PREFERENCE_RADIUS, PREFERENCE_RADIUS_DEFAULT);
+    	}
+    	
+    	public String getLocation() {
+    		
+    		String data = localService.getLocation();
+    		Log.i(LOG_TAG, "getLocation = " + data);
+    		return data;
     	}
     } 
     
