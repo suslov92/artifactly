@@ -23,6 +23,37 @@ $(document).ready(function() {
 		
 		$('#radiusInput').val(window.android.getRadius());
 	});
+	
+	$('#map').bind('pageshow', function() {
+		
+		var data = JSON.parse(window.android.getLocation());
+//		$('#latitude').text("Latitude: " + data[0]);
+//		$('#longitude').text("Longitude: " + data[1]);
+//		$('#accuracy').text("Accuracy: " + data[2]);
+		//$('#foo').text(data[2]);
+		
+		$('#fooLat').text(data[0]);
+		$('#fooLong').text(data[1]);
+		var latlng = new google.maps.LatLng(-34.397, 150.644);
+        
+        var myOptions = {
+              zoom: 8,
+              center: latlng,
+              mapTypeId: google.maps.MapTypeId.ROADMAP
+            };
+        
+        var map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
+        
+//        var marker = new google.maps.Marker({
+//              position: latlng, 
+//              map: map, 
+//              title:"Your Location"
+//          });
+        
+        map.panTo(latlng);
+        
+        $('#fooAcc').text(data[2]);
+	})
 
 	
 	/*
