@@ -27,33 +27,31 @@ $(document).ready(function() {
 	$('#map').bind('pageshow', function() {
 		
 		var data = JSON.parse(window.android.getLocation());
-//		$('#latitude').text("Latitude: " + data[0]);
-//		$('#longitude').text("Longitude: " + data[1]);
-//		$('#accuracy').text("Accuracy: " + data[2]);
-		//$('#foo').text(data[2]);
-		
-		$('#fooLat').text(data[0]);
-		$('#fooLong').text(data[1]);
-		var latlng = new google.maps.LatLng(-34.397, 150.644);
+		var latlng = new google.maps.LatLng(data[0], data[1]);
         
         var myOptions = {
-              zoom: 8,
+              zoom: 15,
               center: latlng,
               mapTypeId: google.maps.MapTypeId.ROADMAP
             };
         
         var map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
-        
-//        var marker = new google.maps.Marker({
-//              position: latlng, 
-//              map: map, 
-//              title:"Your Location"
-//          });
-        
         map.panTo(latlng);
+       
+        var marker = new google.maps.Marker();
+        marker.setPosition(latlng);
+        marker.setMap(map);
+        marker.setAnimation(google.maps.Animation.DROP);
         
-        $('#fooAcc').text(data[2]);
-	})
+        var content = "Latitude = " + (data[0]).toFixed(4) + "<br />Longitude = " + (data[1]).toFixed(4) +"<br />Accuracy = " + data[2] + " m";
+        var infowindow = new google.maps.InfoWindow({
+            content: content
+        });
+        
+        google.maps.event.addListener(marker, 'click', function() {
+            infowindow.open(map,marker);
+        });    
+	});
 
 	
 	/*
