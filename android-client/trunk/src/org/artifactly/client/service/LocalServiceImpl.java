@@ -17,12 +17,12 @@
 package org.artifactly.client.service;
 
 import org.artifactly.client.content.DbAdapter;
+import org.json.JSONArray;
+import org.json.JSONException;
 
 import android.location.Location;
 import android.os.Binder;
 import android.util.Log;
-
-import com.google.gson.Gson;
 
 public class LocalServiceImpl extends Binder implements LocalService {
 
@@ -32,8 +32,6 @@ public class LocalServiceImpl extends Binder implements LocalService {
 	private ArtifactlyService artifactlyService;
 	
 	private DbAdapter dbAdapter;
-	
-	private Gson gson = new Gson();
 	
 	// Constructor
 	public LocalServiceImpl(ArtifactlyService artifactlyService) { 
@@ -90,12 +88,39 @@ public class LocalServiceImpl extends Binder implements LocalService {
 		Location location = artifactlyService.getLocation();
 		
 		if(null == location) {
-			double[] data = new double[] { 0.0d, 0.0d, 0.0d };
-			return gson.toJson(data);
+			
+			JSONArray data = new JSONArray();
+			
+			try {
+			
+				data.put(0.0d);
+				data.put(0.0d);
+				data.put(0.0d);
+			}
+			catch (JSONException e) {
+			
+				Log.w(LOG_TAG, "Error while populating JSONArray");
+			}
+			
+			return data.toString();
+
 		}
 		else {
-			double[] data = new double[] { location.getLatitude(), location.getLongitude(), (double)location.getAccuracy() };
-			return gson.toJson(data);
+			
+			JSONArray data = new JSONArray();
+			
+			try {
+			
+				data.put(location.getLatitude());
+				data.put(location.getLongitude());
+				data.put(location.getAccuracy());
+			}
+			catch (JSONException e) {
+				
+				Log.w(LOG_TAG, "Error while population JSONArray");
+			}
+			
+			return data.toString();
 		}
 	}
 }

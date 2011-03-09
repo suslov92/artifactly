@@ -16,16 +16,15 @@
 
 package org.artifactly.client.service;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import org.artifactly.client.ApplicationConstants;
 import org.artifactly.client.Artifactly;
 import org.artifactly.client.R;
 import org.artifactly.client.content.DbAdapter;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -36,7 +35,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.database.Cursor;
-import android.location.GpsStatus;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -44,9 +42,6 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
-
-import com.google.gson.Gson;
-
 
 public class ArtifactlyService extends Service implements OnSharedPreferenceChangeListener, ApplicationConstants {
 
@@ -98,8 +93,6 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 
 	// Binder access to service API
 	private IBinder localServiceBinder;
-
-	private Gson gson = new Gson();
 
 	/*
 	 * (non-Javadoc)
@@ -261,8 +254,9 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		int nameColumnIndex = cursor.getColumnIndex(DbAdapter.ART_FIELDS[DbAdapter.ART_NAME]);
 		int dataColumnIndex = cursor.getColumnIndex(DbAdapter.ART_FIELDS[DbAdapter.ART_DATA]);
 
-		List<Map<String, String>> items = new ArrayList<Map<String, String>>();
-
+		// JSON array that holds the result
+		JSONArray items = new JSONArray();
+		
 		int rowCount = cursor.getCount();
 		Log.i(LOG_TAG, "row count = " + rowCount);
 
@@ -293,24 +287,33 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 
 			if(distanceResult[0] <= radius) {
 
-				Map<String, String> item = new HashMap<String, String>();
-				item.put(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LATITUDE], storedLatitude);
-				item.put(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LONGITUDE], storedLongitude);
-				item.put(DbAdapter.ART_FIELDS[DbAdapter.ART_NAME], cursor.getString(nameColumnIndex));
-				item.put(DbAdapter.ART_FIELDS[DbAdapter.ART_DATA], cursor.getString(dataColumnIndex));
-				item.put(DISTANCE, Float.toString(distanceResult[0]));
-				items.add(item);
+				JSONObject item = new JSONObject();
+
+				try {
+					
+					item.put(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LATITUDE], storedLatitude);
+					item.put(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LONGITUDE], storedLongitude);
+					item.put(DbAdapter.ART_FIELDS[DbAdapter.ART_NAME], cursor.getString(nameColumnIndex));
+					item.put(DbAdapter.ART_FIELDS[DbAdapter.ART_DATA], cursor.getString(dataColumnIndex));
+					item.put(DISTANCE, Float.toString(distanceResult[0]));
+				}
+				catch (JSONException e) {
+					Log.w(LOG_TAG, "Error while populating JSONObject");
+				}
+				
+				items.put(item);
 			}
 		}
 
 		cursor.close();
 
-		if(items.isEmpty()) {
+		if(items.length() == 0) {
+			
 			return null;
 		}
 		else {
 
-			return gson.toJson(items);
+			return items.toString();
 		}
 	}
 	
