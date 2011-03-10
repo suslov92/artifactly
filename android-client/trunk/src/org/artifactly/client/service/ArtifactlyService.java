@@ -41,7 +41,6 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
-import android.widget.Toast;
 
 public class ArtifactlyService extends Service implements OnSharedPreferenceChangeListener, ApplicationConstants {
 
@@ -53,16 +52,20 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	private SharedPreferences settings;
 
 	// Location constants
-	private static final int LOCATION_MIN_TIME = 5000; // 300000 : 5 min
+	private static final int LOCATION_MIN_TIME = 300000; // 5 min
 	private static final int LOCATION_MIN_DISTANCE = 100; // 100 m
 	private static final String DISTANCE = "dist";
-	private static final int SIGNIFICANT_LOCATION_DELTA = 200;
 
 	// Location radius
 	private int radius = 100;
 	
-	// Location experiation delta
+	// Location expiration delta is used to determine if the current location
+	// is current enough. If it's not, we enable the GPS listener if available 
 	private static final long LOCATION_TIME_EXPIRATION_DELTA = 300000; // 5 min
+	
+	// The new location can only be older than the current location plus this delta
+	// in order for it to be considered slightly inaccurate 
+	private static final long LOCATION_TIME_ALLOWED_DELTA = 300000; // 5 min
 
 	// Notification constants
 	private static final int NOTIFICATION_ID = 95691;
@@ -79,11 +82,11 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	private String mainLocationProviderName;
 	
 	// Location listeners
-	private LocationListener gpsLocationListener = getGpsLocationListener();
-	private LocationListener networkLocationListener = getNetworkLocationListener();
+	private LocationListener gpsLocationListener = getNewLocationListener();
+	private LocationListener networkLocationListener = getNewLocationListener();
 	
 	// Location state
-	private boolean startedGpsListener = false;
+	private boolean isGpsListenerEnabled = false;
 	
 	// DB adapter
 	private DbAdapter dbAdapter;
@@ -100,10 +103,32 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	 */
 	@Override
 	public IBinder onBind(Intent intent) {
+		
+		Log.i(LOG_TAG, "Service onBind called");
 		localServiceBinder = new LocalServiceImpl(this);
 		return localServiceBinder;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see android.app.Service#onUnbind(android.content.Intent)
+	 */
+	@Override
+	public boolean onUnbind(Intent intent) {
+		Log.i(LOG_TAG, "Service onUnbind called");
+		return super.onUnbind(intent);
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see android.app.Service#onRebind(android.content.Intent)
+	 */
+	@Override
+	public void onRebind(Intent intent) {
+		Log.i(LOG_TAG, "Service onRebind called");
+		super.onRebind(intent);
+	}
+	
 	/*
 	 * (non-Javadoc)
 	 * @see android.app.Service#onCreate()
@@ -112,6 +137,8 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	public void onCreate() {
 		super.onCreate();
 
+		Log.i(LOG_TAG, "Service onCreate() called");
+		
 		// Getting the constants from resources
 		NOTIFICATION_TICKER_TEXT = getResources().getString(R.string.notification_ticker_text);
 		NOTIFICATION_CONTENT_TITLE = getResources().getString(R.string.notification_content_title);
@@ -131,12 +158,8 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		// Setting up the location manager
 		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
-		mainLocationProviderName = getLocatinProvider();
-		
-		locationManager.requestLocationUpdates(mainLocationProviderName, LOCATION_MIN_TIME, LOCATION_MIN_DISTANCE, getLocationListener());
-
-		// Getting the initial location
-		currentLocation = getLastKnownLocation();
+		// Register location listener and getting last known location
+		registerLocationListener();
 	}
 
 
@@ -147,7 +170,8 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
-
+		
+		Log.i(LOG_TAG, "Service onDestroy called");
 		settings.unregisterOnSharedPreferenceChangeListener(this);
 	}
 
@@ -175,41 +199,24 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	 * DbAdater getter method
 	 */
 	protected DbAdapter getDbAdapter() {
+		
 		return dbAdapter;
 	}
 
 	/*
 	 * Dispatch method for local service
 	 */
-	protected boolean startLocationTracking() {
+	protected void startLocationTracking() {
 
-		try {
-
-			locationManager.requestLocationUpdates(mainLocationProviderName, LOCATION_MIN_TIME, LOCATION_MIN_DISTANCE, getLocationListener());
-		}
-		catch(IllegalArgumentException iae) {
-
-			return false;
-		}
-
-		return true;
+		registerLocationListener();
 	}
 
 	/*
 	 * Dispatch method for local service
 	 */
-	protected boolean stopLocationTracking() {
+	protected void stopLocationTracking() {
 
-		try {
-
-			//locationManager.removeUpdates(getLocationListener());
-		}
-		catch(IllegalArgumentException iae) {
-
-			return false;
-		}
-
-		return true;
+		unregisterLocationListeners();
 	}
 
 	/*
@@ -218,6 +225,80 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	protected Location getLocation() {
 
 		return currentLocation;
+	}
+	
+	/*
+	 * Register location listener
+	 * 1. network
+	 * 2. gps
+	 * 
+	 * Also setting currentLocation via last known location
+	 */
+	private void registerLocationListener() {
+		
+		// If location manager is null, we just return
+		if(null == locationManager) {
+			Log.e(LOG_TAG, "LocationManager instance is null");
+			return;
+		}
+
+		try {
+
+			// First, use network provided location if available
+			if(locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+
+				mainLocationProviderName = LocationManager.NETWORK_PROVIDER;
+				locationManager.requestLocationUpdates(mainLocationProviderName, LOCATION_MIN_TIME, LOCATION_MIN_DISTANCE, networkLocationListener);
+				currentLocation = locationManager.getLastKnownLocation(mainLocationProviderName);
+				Log.i(LOG_TAG, "registerLocationListener() -> NETWORK_PROVIDER");
+			}
+			else if(locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+
+				mainLocationProviderName = LocationManager.GPS_PROVIDER;
+				locationManager.requestLocationUpdates(mainLocationProviderName, LOCATION_MIN_TIME, LOCATION_MIN_DISTANCE, gpsLocationListener);
+				currentLocation = locationManager.getLastKnownLocation(mainLocationProviderName);
+				Log.i(LOG_TAG, "registerLocationListener() -> GPS_PROVIDER");
+			}
+			else {
+
+				Log.w(LOG_TAG, "All available location providers [network, gps] are not available");
+			}
+		}
+		catch(IllegalArgumentException iae) {
+			
+			Log.w(LOG_TAG, "registerLocationListener() IllegalArgumentException");
+		}
+		catch(SecurityException se) {
+			
+			Log.w(LOG_TAG, "registerLocationListener() SecurityException");
+
+		}
+		catch(RuntimeException re) {
+			
+			Log.w(LOG_TAG, "registerLocationListener() RuntimeException");
+		}
+	}
+	
+	/*
+	 * Unregister location listeners
+	 * 
+	 */
+	private void unregisterLocationListeners() {
+		
+		if(null == locationManager) {
+			Log.e(LOG_TAG, "LocationManager instance is null");
+			return;
+		}
+
+		try {
+		
+			locationManager.removeUpdates(networkLocationListener);
+			locationManager.removeUpdates(gpsLocationListener);
+		}
+		catch(IllegalArgumentException iae) {
+			
+			Log.w(LOG_TAG, "IllegalArgumentException thrown while removing location listener updates");
+		}
 	}
 
 	/*
@@ -316,24 +397,6 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 			return items.toString();
 		}
 	}
-	
-	/*
-	 * Get location lister
-	 * 
-	 */
-	private LocationListener getLocationListener() {
-		
-		if(null != mainLocationProviderName && mainLocationProviderName.equals(LocationManager.NETWORK_PROVIDER)) {
-			
-			return networkLocationListener;
-		}
-		else if(null != mainLocationProviderName && mainLocationProviderName.equals(LocationManager.GPS_PROVIDER)) {
-			
-			return gpsLocationListener;
-		}
-		
-		return null;
-	}
 
 	/*
 	 * Method that determines if a new location is more accurate the the currently saved location
@@ -347,43 +410,38 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		if(null != currentLocation && null == newLocation) {
 			return false;
 		}
-
-		boolean isNewer = false;
+		
+		// Check if the new location's accuracy lies within the defined search radius
+		if(newLocation.hasAccuracy() && newLocation.getAccuracy() > radius) {
+			Log.i(LOG_TAG, "The new location accuracy is less accurate then the defined radius");
+			return false;
+		}
+		
 		boolean isMoreAccurate = false;
-		boolean isSignificantlyLessAccurate = false;
-		boolean hasCurrentLocationTimeExpired = false;
+		boolean isMoreCurrent = false;
+		boolean isSlightlyLessCurrent = false;
 		
-		// Get current system time
-		long expirationTime = System.currentTimeMillis() - LOCATION_TIME_EXPIRATION_DELTA;
-		if(currentLocation.getTime() < expirationTime) {
-			
-			hasCurrentLocationTimeExpired = true;
-			Log.i(LOG_TAG, "Current location time(" + currentLocation.getTime() + ") has expired. Expiration time = " + expirationTime);
-		}
-		
-		// Check time difference
-		long locationTimeDelta = newLocation.getTime() - currentLocation.getTime();
-		isNewer = locationTimeDelta > 0;
+		// Check if the new location is more accurate 
+		if(currentLocation.hasAccuracy() && newLocation.hasAccuracy()) {
 
-		// Check accuracy difference
-		if(newLocation.hasAccuracy() && currentLocation.hasAccuracy()) {
-			
-			Log.i(LOG_TAG, "isMoreAccurate() both location have accuracy information");
-			float locationAccuracyDelta = newLocation.getAccuracy() - currentLocation.getAccuracy();
-			isMoreAccurate = locationAccuracyDelta < 0;
-			isSignificantlyLessAccurate = locationAccuracyDelta > SIGNIFICANT_LOCATION_DELTA;
+			float accuracyDelta = currentLocation.getAccuracy() - newLocation.getAccuracy();
+			isMoreAccurate = accuracyDelta >= 0;
 		}
 		
-		if(isMoreAccurate) {
+		// Check if the new location is more current in terms of location fix time
+		long locationTimeDelta = currentLocation.getTime() - newLocation.getTime();
+		isMoreCurrent = locationTimeDelta <= 0;
+		
+		isSlightlyLessCurrent = (locationTimeDelta > 0 && locationTimeDelta < LOCATION_TIME_ALLOWED_DELTA);
+		
+		if(isMoreAccurate && isMoreCurrent) {
 			
+			Log.i(LOG_TAG, "New location is more accurate and more current");
 			return true;
 		}
-		else if(isNewer && !isSignificantlyLessAccurate) {
+		else if(isMoreAccurate && isSlightlyLessCurrent) {
 			
-			return true;
-		}
-		else if(isNewer && hasCurrentLocationTimeExpired) {
-			
+			Log.i(LOG_TAG, "New location is more accurate and slightly less current");
 			return true;
 		}
 		
@@ -392,116 +450,15 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	
 	
 	/*
-	 * Method that returns a location provider string:
-	 * 1. Network provider
-	 * 2. GPS provider
-	 * 
+	 * Create a location listener
 	 */
-	private String getLocatinProvider() {
-		
-		if(null == locationManager) {
-			return null;
-		}
-		
-		// Use network provided location if available
-		if(locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
-			
-			return LocationManager.NETWORK_PROVIDER;
-		}
-		else {
-			
-			Log.i(LOG_TAG, "LOCATION NETWORK PROVIDER is disabled");
-		}
-		
-		if(locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-			
-			return LocationManager.GPS_PROVIDER;
-		}
-		else {
-			
-			Log.i(LOG_TAG, "LOCATION GPS PROVIDER is disabled");
-		}
-		
-		return null;	
-	}
-
-	/*
-	 * Method that gets the Last Known Location. Trying to get location from:
-	 * 1. network provider
-	 * 2. gps provider 
-	 * 
-	 */
-	private Location getLastKnownLocation() {
-		
-		if(null == locationManager) {
-			return null;
-		}
-		
-		// Use network provided location if available
-		if(locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
-			
-			return locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-		}
-		else {
-			
-			Log.i(LOG_TAG, "LOCATION NETWORK PROVIDER is disabled");
-		}
-		
-		if(locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-			
-			return locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);	
-		}
-		else {
-			
-			Log.i(LOG_TAG, "LOCATION GPS PROVIDER is disabled");
-		}
-		
-		return null;	
-	}
-	
-	/*
-	 * GPS Location Listener
-	 */
-	private LocationListener getGpsLocationListener() {
+	private LocationListener getNewLocationListener() {
 		
 		return new LocationListener() {
 
-			public void onLocationChanged(Location location) {
-			
+			public void onLocationChanged(final Location location) {
+				
 				locationChanged(location);
-				
-			}
-
-			public void onProviderDisabled(String provider) {
-				
-				locationProviderDisabled(provider);
-				
-			}
-
-			public void onProviderEnabled(String provider) {
-				
-				locationProviderEnabled(provider);
-				
-			}
-
-			public void onStatusChanged(String provider, int status, Bundle extras) {
-				
-				locationStatusChanged(provider, status, extras);
-			}
-		};
-	}
-	
-	/*
-	 * Network Location Listener
-	 */
-	private LocationListener getNetworkLocationListener() {
-		
-		return new LocationListener() {
-
-			public void onLocationChanged(Location location) {
-			
-				locationChanged(location);
-				
 			}
 
 			public void onProviderDisabled(String provider) {
@@ -531,22 +488,46 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 
 		if(null != currentLocation) {
 			
-			Log.i(LOG_TAG, "Location Provider = " + location.getProvider());
-			Log.i(LOG_TAG, "Distance = " + currentLocation.distanceTo(location));
-			Log.i(LOG_TAG, "Old location accuracy = " + currentLocation.getAccuracy());
-			Log.i(LOG_TAG, "New location accuracy = " + location.getAccuracy());
-			Log.i(LOG_TAG, "startedGpsListener flag = " + startedGpsListener);
+			Log.i(LOG_TAG, "===============================================");
+			Log.i(LOG_TAG, "Location Provider: " + location.getProvider());
+			Log.i(LOG_TAG, "Distance:          " + currentLocation.distanceTo(location));
+			Log.i(LOG_TAG, "CL accuracy:       " + currentLocation.getAccuracy());
+			Log.i(LOG_TAG, "NL accuracy:       " + location.getAccuracy());
+			Log.i(LOG_TAG, "CL time:           " + new Date(currentLocation.getTime()));
+			Log.i(LOG_TAG, "NL time:           " + new Date(location.getTime()));
+			Log.i(LOG_TAG, "isGpsListenerEnabled flag: " + isGpsListenerEnabled);
+			Log.i(LOG_TAG, "===============================================");
 		}
 
 		// First we check if the new location is more accurate
 		if(isMoreAccurate(location)) {
 			
-			// FIXME: remove Toast
-			Toast toast = Toast.makeText(getApplicationContext(), "New location is more accurate (" + location.getAccuracy() + ")", Toast.LENGTH_SHORT);
-			toast.show();
-			Log.i(LOG_TAG, "New location is more accureate (" + location.getAccuracy() + "). Setting current location to new location");
+			Log.i(LOG_TAG, "New location is better, thus setting currentLocation to newLocation");
 			
+			// Update the current location with the new one
 			currentLocation = location;
+			
+			// Since we are getting a more accurate location, we should check if the 
+			// GPS listener is still enabled. If it is enabled we can turn it off
+			if(isGpsListenerEnabled) {
+				
+				try {
+					
+					locationManager.removeUpdates(gpsLocationListener);
+					isGpsListenerEnabled = false;
+					Log.i(LOG_TAG, "Removing GPS listener updates");
+				}
+				catch(IllegalArgumentException iae) {
+					
+					isGpsListenerEnabled = false;
+					Log.w(LOG_TAG, "Was not able to remove GPS listener updates");
+				}
+			}
+			
+			// FIXME: This is just experimental and will change. The correct way of doing this is to 
+			// notify the activity to get the location artifacts from the service
+			
+			// Getting all the artifact location matches and send it to the Activity via a notification
 			String match = getArtifactsForCurrentLocation();
 			if(null != match) {
 				sendNotification(match);
@@ -554,62 +535,34 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		}
 		else {
 			
-			// FIXME: remove Toast
-			Toast toast = Toast.makeText(getApplicationContext(), "New location is less accureate (" + location.getAccuracy() + ")", Toast.LENGTH_SHORT);
-			toast.show();
-			Log.i(LOG_TAG, "New location is less accureate (" + location.getAccuracy() + ")");
-		}
-		
-		// Handling the case where the location's accuracy is greater than the search radius, in
-		// which case we activate the GPS location listener
-		int locationAccuracy = (currentLocation.hasAccuracy()) ? (int)currentLocation.getAccuracy() : -1;
-		if(location != null && radius < locationAccuracy && location.getProvider().equals(LocationManager.NETWORK_PROVIDER)) {
+			// Check if the currentLocation has been updated recently
+			Log.i(LOG_TAG, "The currentLocation time = " + new Date(currentLocation.getTime()));
 			
-			Log.i(LOG_TAG, "Location accuracy(" + locationAccuracy + ") is less than the defined search radius(" + radius + ")");
-			
-			// If we are using the network location provider, try to get new location updates from the GPS provider
-			if(null != mainLocationProviderName && mainLocationProviderName.equals(LocationManager.NETWORK_PROVIDER)) {
+			long expirationTime = System.currentTimeMillis() - currentLocation.getTime() - LOCATION_TIME_EXPIRATION_DELTA;
+			if(expirationTime > 0) {
 				
-				// Make sure the provider is enabled and we are not already using the GPS provider
-				if(locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) &&
-				   !mainLocationProviderName.equals(LocationManager.GPS_PROVIDER)) {
-					
-					// Setting flag so the consecutive network listener updates don't try to add the GPS listener as well
-					if(!startedGpsListener) {
+				Log.i(LOG_TAG, "The current location's fix time is too old.");
+				
+				// The current location's fix time is too old. Check if GPS provider is 
+				// available and try to get a better fix from it
+				if(locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) && !isGpsListenerEnabled) {
+
+					try {
 						
-						startedGpsListener = true;
-						
+						isGpsListenerEnabled = true;
 						locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, LOCATION_MIN_TIME, LOCATION_MIN_DISTANCE, gpsLocationListener);
 						
-						Log.i(LOG_TAG, "## Activating GPS location listener ##");
+						Log.i(LOG_TAG, "Enabling GPS listener updates");
 					}
+					catch(Exception e) {
+						
+						isGpsListenerEnabled = false;
+						Log.w(LOG_TAG, "Was not able to start GPS listener");
+					}
+					
 				}
 			}
-		}
-		
-		// Once the accuracy is better than the defined radius, and we are using the GPS location listener, we can turn it off
-		if(null != location && radius >= locationAccuracy && location.getProvider().equals(LocationManager.GPS_PROVIDER)) {
-			
-			// We only disable the GPS listener if the GPS location time is current
-			long expirationTime = System.currentTimeMillis() - LOCATION_TIME_EXPIRATION_DELTA;
-			if(location.getTime() > expirationTime) {
-				
-				Log.i(LOG_TAG, "Location time = " + new Date(location.getTime()));
-				// In case the GPS location listener is active, we remove it
-				try {
-
-					locationManager.removeUpdates(gpsLocationListener);
-				}
-				catch(IllegalArgumentException iae) {
-
-					Log.w(LOG_TAG, "locationManager.removeUpdates(...)");
-				}
-
-				startedGpsListener = false;
-
-				Log.i(LOG_TAG, "## Removing GPS location lister ##");
-			}
-		}
+		}	
 	}
 
 	/*
