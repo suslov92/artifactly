@@ -62,12 +62,14 @@ public class LocalServiceImpl extends Binder implements LocalService {
 		
 		if(null != artifactlyService) {
 			
-			return artifactlyService.startLocationTracking();
+			artifactlyService.startLocationTracking();
 		}
 		else {
 			
 			return false;
 		}
+		
+		return true;
 	}
 	
 	// API method
@@ -75,12 +77,14 @@ public class LocalServiceImpl extends Binder implements LocalService {
 
 		if(null != artifactlyService) {
 
-			return artifactlyService.stopLocationTracking();
+			artifactlyService.stopLocationTracking();
 		}
 		else {
 
 			return false;
 		}
+		
+		return true;
 	}
 
 	public String getLocation() {
