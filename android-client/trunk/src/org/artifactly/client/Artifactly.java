@@ -30,6 +30,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
+import android.webkit.ConsoleMessage;
+import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
@@ -80,12 +82,22 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		// Disable the vertical scroll bar
 		webView.setVerticalScrollBarEnabled(false);
 
-		webView.setWebViewClient(new WebViewClient() {
-			@Override
-			public void onPageFinished(WebView view, String url) {
-				// Nothing to do
-			}
-		});
+//		webView.setWebViewClient(new WebViewClient() {
+//			@Override
+//			public void onPageFinished(WebView view, String url) {
+//				// Nothing to do
+//			}
+//		});
+		
+		
+		webView.setWebChromeClient(new WebChromeClient() {
+			  public boolean onConsoleMessage(ConsoleMessage cm) {
+			    Log.d("MyApplication", cm.message() + " -- From line "
+			                         + cm.lineNumber() + " of "
+			                         + cm.sourceId() );
+			    return true;
+			  }
+			});
 
 		webView.loadUrl(ARTIFACTLY_URL);
 

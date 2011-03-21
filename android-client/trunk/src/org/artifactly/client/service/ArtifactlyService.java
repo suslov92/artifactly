@@ -32,6 +32,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.database.Cursor;
@@ -52,12 +53,18 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	private SharedPreferences settings;
 
 	// Location constants
-	private static final int LOCATION_MIN_TIME = 300000; // 5 min
-	private static final int LOCATION_MIN_DISTANCE = 100; // 100 m
+	private static final int GPS_LOCATION_MIN_TIME = 300000; // 5 min
+	private static final int GPS_LOCATION_MIN_DISTANCE = 100; // 100 m
+	private static final int NET_LOCATION_MIN_TIME = 240000; // 3 min
+	private static final int NET_LOCATION_MIN_DISTANCE = 100; // 100 m
 	private static final String DISTANCE = "dist";
 
 	// Location radius
-	private int radius = 100;
+	private static final int DEFAULT_RADIS = 100;
+	private int radius = DEFAULT_RADIS;
+	
+	// Location data tracking
+	private long  lastLocationChangedEvent = 0;
 	
 	// Location expiration delta is used to determine if the current location
 	// is current enough. If it's not, we enable the GPS listener if available 
@@ -97,6 +104,36 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	// Binder access to service API
 	private IBinder localServiceBinder;
 
+	/*
+	 * (non-Javadoc)
+	 * @see android.app.Service#onStartCommand(android.content.Intent, int, int)
+	 */
+	@Override
+	public int onStartCommand(Intent intent, int flags, int startId) {
+		Log.i(LOG_TAG, "Service onStartCommand called : intent = " + (null == intent ? "IS NULL" : "IS NOT NULL"));
+	    return START_STICKY;
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see android.content.ContextWrapper#bindService(android.content.Intent, android.content.ServiceConnection, int)
+	 */
+	@Override
+	public boolean bindService(Intent service, ServiceConnection conn, int flags) {
+		Log.i(LOG_TAG, "Service bindService called");
+		return super.bindService(service, conn, flags);
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see android.app.Service#onLowMemory()
+	 */
+	@Override
+	public void onLowMemory() {
+		Log.i(LOG_TAG, "Service onLowMemory called");
+		super.onLowMemory();
+	}
+	
 	/*
 	 * (non-Javadoc)
 	 * @see android.app.Service#onBind(android.content.Intent)
@@ -181,7 +218,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	 */
 	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
 
-		int newRadius = sharedPreferences.getInt(key, LOCATION_MIN_DISTANCE);
+		int newRadius = sharedPreferences.getInt(key, DEFAULT_RADIS);
 
 		// TODO: Determine what the appropriate minimum radius is.
 		if(0 < newRadius) {
@@ -248,14 +285,14 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 			if(locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
 
 				mainLocationProviderName = LocationManager.NETWORK_PROVIDER;
-				locationManager.requestLocationUpdates(mainLocationProviderName, LOCATION_MIN_TIME, LOCATION_MIN_DISTANCE, networkLocationListener);
+				locationManager.requestLocationUpdates(mainLocationProviderName, NET_LOCATION_MIN_TIME, NET_LOCATION_MIN_DISTANCE, networkLocationListener);
 				currentLocation = locationManager.getLastKnownLocation(mainLocationProviderName);
 				Log.i(LOG_TAG, "registerLocationListener() -> NETWORK_PROVIDER");
 			}
 			else if(locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
 
 				mainLocationProviderName = LocationManager.GPS_PROVIDER;
-				locationManager.requestLocationUpdates(mainLocationProviderName, LOCATION_MIN_TIME, LOCATION_MIN_DISTANCE, gpsLocationListener);
+				locationManager.requestLocationUpdates(mainLocationProviderName, GPS_LOCATION_MIN_TIME, GPS_LOCATION_MIN_DISTANCE, gpsLocationListener);
 				currentLocation = locationManager.getLastKnownLocation(mainLocationProviderName);
 				Log.i(LOG_TAG, "registerLocationListener() -> GPS_PROVIDER");
 			}
@@ -498,6 +535,8 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 			Log.i(LOG_TAG, "isGpsListenerEnabled flag: " + isGpsListenerEnabled);
 			Log.i(LOG_TAG, "===============================================");
 		}
+		
+		lastLocationChangedEvent = System.currentTimeMillis();
 
 		// First we check if the new location is more accurate
 		if(isMoreAccurate(location)) {
@@ -550,7 +589,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 					try {
 						
 						isGpsListenerEnabled = true;
-						locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, LOCATION_MIN_TIME, LOCATION_MIN_DISTANCE, gpsLocationListener);
+						locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, GPS_LOCATION_MIN_TIME, GPS_LOCATION_MIN_DISTANCE, gpsLocationListener);
 						
 						Log.i(LOG_TAG, "Enabling GPS listener updates");
 					}
