@@ -19,11 +19,11 @@ $(document).ready(function() {
 	/*
 	 * Initialize
 	 */
-	$('#preferences').bind('pageshow', function(){
+	$('#options').bind('pageshow', function(){
 		
-		$('#radiusInput').val(window.android.getRadius());
+		$('#radius-input').val(window.android.getRadius());
 	});
-	
+		
 	$('#map').bind('pageshow', function() {
 		
 		var data = JSON.parse(window.android.getLocation());
@@ -35,7 +35,7 @@ $(document).ready(function() {
               mapTypeId: google.maps.MapTypeId.ROADMAP
             };
         
-        var map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
+        var map = new google.maps.Map(document.getElementById("map-canvas"), myOptions);
         map.panTo(latlng);
        
         var marker = new google.maps.Marker();
@@ -54,44 +54,32 @@ $(document).ready(function() {
 	});
 
 	
+	$('#close-and-home').click(function() {
+		$.mobile.changePage("#main", "fade", false, false);
+	});
+	
 	/*
 	 * Set radius button click handler
 	 */
-	$('#setRadius').click(function() {
+	$('#set-radius').click(function() {
 		
-		var radius = $('#radiusInput').val();
+		var radius = $('#radius-input').val();
 		window.android.setRadius(+radius);
 	});
 
 	/*
 	 * Get radius button click handler
 	 */
-	$('#getRadius').click(function() {
+	$('#get-radius').click(function() {
 		
 		var radius = window.android.getRadius();
-		$('#radiusOutput').text("Radius: " + radius);
-	});
-	
-	/*
-	 * Stop location tracking click handler
-	 */
-	$('#stopLocationTracking').click(function() {
-		
-		window.android.stopLocationTracking();
-	});
-	
-	/*
-	 * Start location tracking click handler
-	 */
-	$('#startLocationTracking').click(function() {
-		
-		window.android.startLocationTracking();
+		$('#radius-output').text("Radius: " + radius);
 	});
 	
 	/*
 	 * Create artifact click handler
 	 */
-	$('#createArtifact').click(function() {
+	$('#create-artifact').click(function() {
 		
 		window.android.createArtifact();
 	});
@@ -99,13 +87,37 @@ $(document).ready(function() {
 	/*
 	 * Get location click handler
 	 */
-	$('#getLocation').click(function() {
+	$('#get-location').click(function() {
 	
-		//var data = jQuery.parseJSON(window.android.getLocation());
 		var data = JSON.parse(window.android.getLocation());
 		$('#latitude').text("Latitude: " + data[0]);
 		$('#longitude').text("Longitude: " + data[1]);
 		$('#accuracy').text("Accuracy: " + data[2]);
+	});
+	
+	/*
+	 * Show map page
+	 */
+	$('#show-map').click(function() {
+		
+		$.mobile.changePage("#map", "fade", false, false);
+	});
+	
+	/*
+	 * Create artifact cancel button
+	 */
+	$('#cancel-artifact-button').click(function() {
+		
+		$.mobile.changePage("#main", "fade", false, false);
+	});
+	
+	/*
+	 * Create artifact add button
+	 */
+	$('#add-artifact-button').click(function() {
+		// TODO: User form data
+		window.android.createArtifact();
+		$.mobile.changePage("#main", "fade", false, false);
 	});
 	
 });
@@ -113,15 +125,9 @@ $(document).ready(function() {
 function showServiceResult(data) {
 	
 	$.each(data, function(i, val) {
-		$('#artifactlyList ul').append('<li>' + val.name + '</li>');
+		$('#artifactly-list ul').append('<li><a href="#location-result">' + val.name + '</a></li>');
 	});
-	$('#artifactlyList ul').listview('refresh');
-	
-//	$('#latitude').text("Latitude: " + data[0].lat);
-//	$('#longitude').text("Longitude: " + data[0].long);
-//	$('#artifactName').text("Name: " + data[0].name);
-//	$('#artifactData').text("Data: " + data[0].data);
-//	$('#distance').text("Distance: " + data[0].dist);
+	$('#artifactly-list ul').listview('refresh');
 }
 
 
