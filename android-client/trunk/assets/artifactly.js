@@ -26,6 +26,13 @@ $(document).ready(function() {
 		
 	$('#map').bind('pageshow', function() {
 		
+		// First we check if we have Internet access
+		var canAccessInternet = window.android.canAccessInternet();
+		if(!canAccessInternet) {
+			
+			return;
+		}
+		
 		var data = JSON.parse(window.android.getLocation());
 		var latlng = new google.maps.LatLng(data[0], data[1]);
         
@@ -53,7 +60,6 @@ $(document).ready(function() {
         });    
 	});
 
-	
 	$('#close-and-home').click(function() {
 		$.mobile.changePage("#main", "fade", false, false);
 	});
@@ -90,9 +96,10 @@ $(document).ready(function() {
 	$('#get-location').click(function() {
 	
 		var data = JSON.parse(window.android.getLocation());
-		$('#latitude').text("Latitude: " + data[0]);
-		$('#longitude').text("Longitude: " + data[1]);
-		$('#accuracy').text("Accuracy: " + data[2]);
+		$('#log-latitude').text("Latitude: " + data[0].toFixed(4));
+		$('#log-longitude').text("Longitude: " + data[1].toFixed(4));
+		$('#log-accuracy').text("Accuracy: " + data[2]);
+		$('#log-time').text("Time: " + data[3]);
 	});
 	
 	/*
@@ -115,9 +122,30 @@ $(document).ready(function() {
 	 * Create artifact add button
 	 */
 	$('#add-artifact-button').click(function() {
-		// TODO: User form data
-		window.android.createArtifact();
-		$.mobile.changePage("#main", "fade", false, false);
+		
+		var name = $('#artifact-name').val();
+		var data = $('#artifact-data').val();
+		window.android.createArtifact(name, data);
+		
+		$('#artifact-name').val('');
+		$('#artifact-data').val('');
+	});
+	
+	/*
+	 * Log artifacts
+	 */
+	$('#log-artifacts').click(function() {
+		
+		var artifacts = JSON.parse(window.android.logArtifacts());
+		
+		$('#artifactly-list li').remove();
+		$('#artifactly-list ul').listview('refresh');
+		
+		$.each(artifacts, function(i, val) {
+			$('#artifactly-list ul').append('<li><a href="#location-result">' + val.name + '</a></li>');
+		});
+		$('#artifactly-list ul').listview('refresh');
+		
 	});
 	
 });
@@ -127,6 +155,12 @@ function showServiceResult(data) {
 	$.each(data, function(i, val) {
 		$('#artifactly-list ul').append('<li><a href="#location-result">' + val.name + '</a></li>');
 	});
+	$('#artifactly-list ul').listview('refresh');
+}
+
+function initWebView() {
+	
+	$('#artifactly-list li').remove();
 	$('#artifactly-list ul').listview('refresh');
 }
 

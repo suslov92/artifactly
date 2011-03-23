@@ -19,7 +19,7 @@ package org.artifactly.client.service;
 public interface LocalService {
 
 	/**
-	 * Creates an Artifact in the DB
+	 * Creates an Artifact for the provided location
 	 * 
 	 * @param name Artifact name
 	 * @param data Artifact data
@@ -28,6 +28,15 @@ public interface LocalService {
 	 * @return false on error, otherwise true
 	 */
 	public boolean createArtifact(String name, String data, String latitude, String longitude);
+	
+	/**
+	 * Creates an Artifact at the current location
+	 * @param name Artifact name
+	 * @param data Artifact data
+	 * @return false on error, otherwise true
+	 */
+	public boolean createArtifact(String name, String data);
+	
 	
 	/**
 	 * Starts the location updates
@@ -50,4 +59,20 @@ public interface LocalService {
 	 * @return JSON string containing latitude, longitude, accuracy
 	 */
 	public String getLocation();
+	
+	/**
+	 * Get all artifacts
+	 * 
+	 * @return JSON all artifacts
+	 */
+	public String getArtifacts();
+	
+	/**
+	 * Check if Internet access is available 
+	 * 
+	 * @return false if no Internet access is available, otherwise true
+	 */
+	public boolean canAccessInternet();
+	
+	
 }

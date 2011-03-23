@@ -16,6 +16,8 @@
 
 package org.artifactly.client.service;
 
+import java.util.Date;
+
 import org.artifactly.client.content.DbAdapter;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -87,6 +89,7 @@ public class LocalServiceImpl extends Binder implements LocalService {
 		return true;
 	}
 
+	// API method
 	public String getLocation() {
 		
 		Location location = artifactlyService.getLocation();
@@ -97,6 +100,7 @@ public class LocalServiceImpl extends Binder implements LocalService {
 			
 			try {
 			
+				data.put(0.0d);
 				data.put(0.0d);
 				data.put(0.0d);
 				data.put(0.0d);
@@ -118,6 +122,7 @@ public class LocalServiceImpl extends Binder implements LocalService {
 				data.put(location.getLatitude());
 				data.put(location.getLongitude());
 				data.put(location.getAccuracy());
+				data.put(new Date(location.getTime()));
 			}
 			catch (JSONException e) {
 				
@@ -126,5 +131,32 @@ public class LocalServiceImpl extends Binder implements LocalService {
 			
 			return data.toString();
 		}
+	}
+
+	// API method
+	public boolean createArtifact(String name, String data) {
+		
+		Location currentLocation = artifactlyService.getLocation();
+		
+		if(null != currentLocation) {
+		
+			return createArtifact(name, data, Double.toString(currentLocation.getLatitude()), Double.toString(currentLocation.getLongitude()));
+		}
+		else {
+			
+			return false;
+		}
+	}
+
+	// API method
+	public String getArtifacts() {
+		
+		return artifactlyService.getArtifacts();
+	}
+
+	// API method
+	public boolean canAccessInternet() {
+		
+		return artifactlyService.canAccessInternet();
 	}
 }
