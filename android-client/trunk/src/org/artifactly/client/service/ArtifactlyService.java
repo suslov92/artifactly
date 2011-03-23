@@ -39,6 +39,8 @@ import android.database.Cursor;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
@@ -54,17 +56,14 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 
 	// Location constants
 	private static final int GPS_LOCATION_MIN_TIME = 300000; // 5 min
-	private static final int GPS_LOCATION_MIN_DISTANCE = 100; // 100 m
+	private static final int GPS_LOCATION_MIN_DISTANCE = 50; // 50 m
 	private static final int NET_LOCATION_MIN_TIME = 240000; // 3 min
 	private static final int NET_LOCATION_MIN_DISTANCE = 100; // 100 m
 	private static final String DISTANCE = "dist";
 
 	// Location radius
-	private static final int DEFAULT_RADIS = 100;
+	private static final int DEFAULT_RADIS = 100; // 100 m
 	private int radius = DEFAULT_RADIS;
-	
-	// Location data tracking
-	private long  lastLocationChangedEvent = 0;
 	
 	// Location expiration delta is used to determine if the current location
 	// is current enough. If it's not, we enable the GPS listener if available 
@@ -74,6 +73,9 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	// in order for it to be considered slightly inaccurate 
 	private static final long LOCATION_TIME_ALLOWED_DELTA = 300000; // 5 min
 
+	// Max allowed location accuracy delta
+	private static final int LOCATION_MAX_ACCURACY_DELTA = 3000; // 3 km
+	
 	// Notification constants
 	private static final int NOTIFICATION_ID = 95691;
 
@@ -275,6 +277,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		
 		// If location manager is null, we just return
 		if(null == locationManager) {
+			
 			Log.e(LOG_TAG, "LocationManager instance is null");
 			return;
 		}
@@ -435,6 +438,97 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		}
 	}
 
+	/**
+	 * Check if Internet access is available 
+	 * 
+	 * @return false if no Internet access is available, otherwise true
+	 */
+	protected boolean canAccessInternet() {
+		
+		ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+	    
+		if(null == connectivityManager) {
+			
+			return false;
+		}
+		
+		NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+		
+		if(null != networkInfo && networkInfo.isAvailable() && networkInfo.isConnected()) {
+			
+			return true;
+		}
+		else {
+			
+			return false;
+		}
+	}
+	
+	/*
+	 * Method that retrieves all artifacts from the database
+	 * 
+	 * @return All the artifacts in JSON format
+	 */
+	protected String getArtifacts() {
+
+		// Getting all the locations
+		Cursor cursor = dbAdapter.select();
+		cursor.moveToFirst();
+
+		// Determine the table column indexes 
+		int longitudeColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LONGITUDE]);
+		int latitudeColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LATITUDE]);
+		int nameColumnIndex = cursor.getColumnIndex(DbAdapter.ART_FIELDS[DbAdapter.ART_NAME]);
+		int dataColumnIndex = cursor.getColumnIndex(DbAdapter.ART_FIELDS[DbAdapter.ART_DATA]);
+
+		// JSON array that holds the result
+		JSONArray items = new JSONArray();
+		
+		int rowCount = cursor.getCount();
+		Log.i(LOG_TAG, "row count = " + rowCount);
+
+		// If there are no results, we return
+		if(0 == rowCount) {
+
+			cursor.close();
+			return null;
+		}
+
+		/*
+		 *  Iterating over all result and calculate the distance between
+		 *  radius, we notify the user that there is an artifact.
+		 */
+		for(;cursor.isAfterLast() == false; cursor.moveToNext()) {
+
+			JSONObject item = new JSONObject();
+
+			try {
+
+				item.put(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LATITUDE], cursor.getString(latitudeColumnIndex));
+				item.put(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LONGITUDE], cursor.getString(longitudeColumnIndex));
+				item.put(DbAdapter.ART_FIELDS[DbAdapter.ART_NAME], cursor.getString(nameColumnIndex));
+				item.put(DbAdapter.ART_FIELDS[DbAdapter.ART_DATA], cursor.getString(dataColumnIndex));
+			}
+			catch (JSONException e) {
+				Log.w(LOG_TAG, "Error while populating JSONObject");
+			}
+
+			items.put(item);
+
+		}
+
+		cursor.close();
+
+		if(items.length() == 0) {
+
+			return null;
+		}
+		else {
+
+			return items.toString();
+		}
+	}
+	
 	/*
 	 * Method that determines if a new location is more accurate the the currently saved location
 	 */
@@ -449,14 +543,15 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		}
 		
 		// Check if the new location's accuracy lies within the defined search radius
-		if(newLocation.hasAccuracy() && newLocation.getAccuracy() > radius) {
-			Log.i(LOG_TAG, "The new location accuracy is less accurate then the defined radius");
+		if(newLocation.hasAccuracy() &&
+		   newLocation.getAccuracy() > radius &&
+		   newLocation.getAccuracy() > LOCATION_MAX_ACCURACY_DELTA) {
+			
+			Log.i(LOG_TAG, "New location is less accurate radius("+ radius +") or the max accuracy Delta(" + LOCATION_MAX_ACCURACY_DELTA + ")");
 			return false;
 		}
 		
 		boolean isMoreAccurate = false;
-		boolean isMoreCurrent = false;
-		boolean isSlightlyLessCurrent = false;
 		
 		// Check if the new location is more accurate 
 		if(currentLocation.hasAccuracy() && newLocation.hasAccuracy()) {
@@ -467,18 +562,26 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		
 		// Check if the new location is more current in terms of location fix time
 		long locationTimeDelta = currentLocation.getTime() - newLocation.getTime();
-		isMoreCurrent = locationTimeDelta <= 0;
-		
-		isSlightlyLessCurrent = (locationTimeDelta > 0 && locationTimeDelta < LOCATION_TIME_ALLOWED_DELTA);
+		boolean isMoreCurrent = locationTimeDelta <= 0;
 		
 		if(isMoreAccurate && isMoreCurrent) {
 			
-			Log.i(LOG_TAG, "New location is more accurate and more current");
+			Log.i(LOG_TAG, "IS_MORE_ACCURATE : New location is more accurate and more current");
 			return true;
 		}
-		else if(isMoreAccurate && isSlightlyLessCurrent) {
+		
+		boolean isSlightlyLessCurrent = (locationTimeDelta > 0 && locationTimeDelta < LOCATION_TIME_ALLOWED_DELTA);
+		
+		if(isMoreAccurate && isSlightlyLessCurrent) {
 			
-			Log.i(LOG_TAG, "New location is more accurate and slightly less current");
+			Log.i(LOG_TAG, "IS_MORE_ACCURATE : New location is more accurate and slightly less current");
+			return true;
+		}
+		
+		boolean isSlightlyLessAccurate = (newLocation.hasAccuracy() && newLocation.getAccuracy() <= LOCATION_MAX_ACCURACY_DELTA);
+		if(isSlightlyLessAccurate && isMoreCurrent) {
+			
+			Log.i(LOG_TAG, "IS_MORE_ACCURATE : New location is slightly less accurate but more current");
 			return true;
 		}
 		
@@ -523,7 +626,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	 */
 	private void locationChanged(Location location) {
 
-		if(null != currentLocation) {
+		if(null != currentLocation && null != location) {
 			
 			Log.i(LOG_TAG, "===============================================");
 			Log.i(LOG_TAG, "Location Provider: " + location.getProvider());
@@ -535,8 +638,6 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 			Log.i(LOG_TAG, "isGpsListenerEnabled flag: " + isGpsListenerEnabled);
 			Log.i(LOG_TAG, "===============================================");
 		}
-		
-		lastLocationChangedEvent = System.currentTimeMillis();
 
 		// First we check if the new location is more accurate
 		if(isMoreAccurate(location)) {
@@ -559,7 +660,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 				catch(IllegalArgumentException iae) {
 					
 					isGpsListenerEnabled = false;
-					Log.w(LOG_TAG, "Was not able to remove GPS listener updates");
+					Log.i(LOG_TAG, "Was not able to remove GPS listener updates");
 				}
 			}
 			
@@ -591,14 +692,18 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 						isGpsListenerEnabled = true;
 						locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, GPS_LOCATION_MIN_TIME, GPS_LOCATION_MIN_DISTANCE, gpsLocationListener);
 						
-						Log.i(LOG_TAG, "Enabling GPS listener updates");
+						Log.i(LOG_TAG, "!!!! Enabling GPS listener updates !!!!");
 					}
 					catch(Exception e) {
 						
 						isGpsListenerEnabled = false;
-						Log.w(LOG_TAG, "Was not able to start GPS listener");
+						Log.i(LOG_TAG, "Was not able to start GPS listener");
 					}
 					
+				}
+				else {
+					
+					Log.i(LOG_TAG, "Didn't start GPS updates because GPS Listener Flag is set to = " + isGpsListenerEnabled);
 				}
 			}
 		}	

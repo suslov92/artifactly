@@ -33,7 +33,6 @@ import android.util.Log;
 import android.webkit.ConsoleMessage;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
-import android.webkit.WebViewClient;
 import android.widget.Toast;
 
 public class Artifactly extends Activity implements ApplicationConstants {
@@ -45,13 +44,19 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	// Preferences
 	private static final String PREFS_NAME = "ArtifactlyPrefsFile";
 
-	// JavaScript functions
+	// Constants
+	private static final String EMPTY_STRING = "";
+	
+	// JavaScript function constants
 	private static final String JAVASCRIPT_PREFIX = "javascript:";
 	private static final String JAVASCRIPT_FUNCTION_OPEN_PARENTHESIS = "(";
 	private static final String JAVASCRIPT_FUNCTION_CLOSE_PARENTHESIS = ")";
-	private static final String SHOW_SERVICE_RESULT = "showServiceResult";
 	private static final String JAVASCRIPT_BRIDGE_PREFIX = "android";
-
+	
+	// JavaScript functions
+	private static final String SHOW_SERVICE_RESULT = "showServiceResult";
+	private static final String INIT_WEBVIEW = "initWebView";
+	
 	private WebView webView = null;
 
 	private Handler mHandler = new Handler();
@@ -81,18 +86,10 @@ public class Artifactly extends Activity implements ApplicationConstants {
 
 		// Disable the vertical scroll bar
 		webView.setVerticalScrollBarEnabled(false);
-
-//		webView.setWebViewClient(new WebViewClient() {
-//			@Override
-//			public void onPageFinished(WebView view, String url) {
-//				// Nothing to do
-//			}
-//		});
-		
 		
 		webView.setWebChromeClient(new WebChromeClient() {
 			  public boolean onConsoleMessage(ConsoleMessage cm) {
-			    Log.d("MyApplication", cm.message() + " -- From line "
+			    Log.d("** A.A - JS **", cm.message() + " -- From line "
 			                         + cm.lineNumber() + " of "
 			                         + cm.sourceId() );
 			    return true;
@@ -118,7 +115,8 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			isBound = true;
 			Log.i(LOG_TAG, "onStart Binding service done");
 		}
-
+		
+		initWebViewContent();
 	}
 
 	/*
@@ -199,6 +197,14 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	}
 
 	/*
+	 * Initialize the webview content
+	 */
+	private void initWebViewContent() {
+		
+		callJavaScriptFunction(INIT_WEBVIEW, "");
+	}
+	
+	/*
 	 * Helper method to call JavaScript methods
 	 */
 	private void callJavaScriptFunction(final String functionName, final String json) {
@@ -232,8 +238,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			if(PREFERENCE_RADIUS_DEFAULT < radius) {
 
 				String message = String.format(getResources().getString(R.string.set_location_radius), radius);
-				Toast toast = Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT);
-				toast.show();
+				Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
 
 				SharedPreferences settings = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
 				SharedPreferences.Editor editor = settings.edit();
@@ -242,22 +247,27 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			}
 		}
 
-		public void createArtifact() {
-			Log.i(LOG_TAG, "called createArtifact");
-			// FIXME: This is for testing until we send the real user data from the UI
+		public void createArtifact(String name, String data) {
+			
+			Log.i(LOG_TAG, "called createArtifact name = " + name + " : data = " + data);
+			
+			if(null == name || EMPTY_STRING.equals(name)) {
+				
+				Toast.makeText(getApplicationContext(), R.string.create_artifact_name_error, Toast.LENGTH_SHORT).show();
+				return;
+			}
+			
 			Random r = new Random();
 			int randomNumber = r.nextInt(latitudes.length);
-			boolean isSuccess = localService.createArtifact("Name " + randomNumber, "Data " + randomNumber, latitudes[randomNumber], longitudes[randomNumber]);
+			boolean isSuccess = localService.createArtifact(name, data, latitudes[randomNumber], longitudes[randomNumber]);
 
 			if(isSuccess) {
 
-				Toast toast = Toast.makeText(getApplicationContext(), R.string.create_artifact_success, Toast.LENGTH_SHORT);
-				toast.show();
+				Toast.makeText(getApplicationContext(), R.string.create_artifact_success, Toast.LENGTH_SHORT).show();
 			}
 			else {
 
-				Toast toast = Toast.makeText(getApplicationContext(), R.string.create_artifact_failure, Toast.LENGTH_SHORT);
-				toast.show();
+				Toast.makeText(getApplicationContext(), R.string.create_artifact_failure, Toast.LENGTH_SHORT).show();
 			}
 		}
 
@@ -267,13 +277,11 @@ public class Artifactly extends Activity implements ApplicationConstants {
 
 			if(isSuccess) {
 
-				Toast toast = Toast.makeText(getApplicationContext(), R.string.start_location_tracking_success, Toast.LENGTH_SHORT);
-				toast.show();
+				Toast.makeText(getApplicationContext(), R.string.start_location_tracking_success, Toast.LENGTH_SHORT).show();
 			}
 			else {
 
-				Toast toast = Toast.makeText(getApplicationContext(), R.string.start_location_tracking_failure, Toast.LENGTH_SHORT);
-				toast.show();
+				Toast.makeText(getApplicationContext(), R.string.start_location_tracking_failure, Toast.LENGTH_SHORT).show();
 			}
 		}
 
@@ -283,13 +291,11 @@ public class Artifactly extends Activity implements ApplicationConstants {
 
 			if(isSuccess) {
 
-				Toast toast = Toast.makeText(getApplicationContext(), R.string.stop_location_tracking_success, Toast.LENGTH_SHORT);
-				toast.show();
+				Toast.makeText(getApplicationContext(), R.string.stop_location_tracking_success, Toast.LENGTH_SHORT).show();
 			}
 			else {
 
-				Toast toast = Toast.makeText(getApplicationContext(), R.string.stop_location_tracking_failure, Toast.LENGTH_SHORT);
-				toast.show();
+				Toast.makeText(getApplicationContext(), R.string.stop_location_tracking_failure, Toast.LENGTH_SHORT).show();
 			}
 		}
 
@@ -304,6 +310,25 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			String data = localService.getLocation();
 			Log.i(LOG_TAG, "getLocation = " + data);
 			return data;
+		}
+		
+		public String logArtifacts() {
+			
+			String artifacts = localService.getArtifacts();
+			Log.i(LOG_TAG, "All Artifacts");
+			Log.i(LOG_TAG, artifacts);
+			
+			return artifacts;
+		}
+		
+		public boolean canAccessInternet() {
+			
+			boolean canAccessInternet = localService.canAccessInternet();
+			
+			if(!canAccessInternet) {
+				Toast.makeText(getApplicationContext(), R.string.can_access_internet_error, Toast.LENGTH_LONG).show();
+			}
+			return canAccessInternet;
 		}
 	} 
 

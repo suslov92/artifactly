@@ -27,7 +27,7 @@ import android.util.Log;
 
 public class DbAdapter {
 
-	private static final String TAG = "Artifactly Db Adapter";
+	private static final String LOG_TAG = "** A.S.DB **";
 
 	private DatabaseHelper mDatabaseHelper;
 	private SQLiteDatabase mSQLiteDatabase;
@@ -138,8 +138,10 @@ public class DbAdapter {
 			locToArtRowId = mSQLiteDatabase.insert(DB_TABLE_LOC_TO_ART, null, contentValues);
 		}
 
+		Log.i(LOG_TAG, "Inserted artifact in db");
+		
 		// Returning the relevant rowIds
-		return  new long[] {locationRowID, artifactRowId, locToArtRowId};
+		return new long[] {locationRowID, artifactRowId, locToArtRowId};
 	}
 
 	/*
@@ -304,7 +306,7 @@ public class DbAdapter {
 		@Override
 		public void onUpgrade(SQLiteDatabase arg0, int oldVersion, int newVersion) {
 			
-			Log.w(TAG, "Upgrading database from verison " + oldVersion + " to " + newVersion + ", which will destroy all existing data");
+			Log.w(LOG_TAG, "Upgrading database from verison " + oldVersion + " to " + newVersion + ", which will destroy all existing data");
 		}
 	}
 }
