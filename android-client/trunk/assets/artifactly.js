@@ -100,6 +100,7 @@ $(document).ready(function() {
 		$('#log-longitude').text("Longitude: " + data[1].toFixed(4));
 		$('#log-accuracy').text("Accuracy: " + data[2]);
 		$('#log-time').text("Time: " + data[3]);
+		$('#log-time-latest').text("Last: " + data[4]);
 	});
 	
 	/*
@@ -152,6 +153,7 @@ $(document).ready(function() {
 
 function showServiceResult(data) {
 	
+	$('#artifactly-list li').remove();
 	$.each(data, function(i, val) {
 		$('#artifactly-list ul').append('<li><a href="#location-result">' + val.name + '</a></li>');
 	});

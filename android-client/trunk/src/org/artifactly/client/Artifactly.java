@@ -65,6 +65,9 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	private ServiceConnection serviceConnection = getServiceConnection();
 	private LocalService localService = null;
 	private boolean isBound = false;
+	
+	// Handling notification onNewIntent
+	private boolean hasNewIntent = false;
 
 	/*
 	 * (non-Javadoc)
@@ -73,6 +76,8 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
+		Log.i(LOG_TAG, "onCreate()");
 
 		setContentView(R.layout.main);
 
@@ -109,14 +114,21 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	public void onStart() {
 		super.onStart();
 
+		Log.i(LOG_TAG, "onStart()");
+		
 		if(!isBound) {
 			// Connect to the local service API
 			bindService(new Intent(this, ArtifactlyService.class), serviceConnection, BIND_AUTO_CREATE);
 			isBound = true;
 			Log.i(LOG_TAG, "onStart Binding service done");
 		}
-		
-		initWebViewContent();
+
+		// We only want to initialize the webview if a onNewIntent wasn't called before
+		if(!hasNewIntent) {
+	
+			initWebViewContent();
+			hasNewIntent = false;
+		}
 	}
 
 	/*
@@ -127,6 +139,8 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	public void onResume() {
 		super.onResume();
 
+		Log.i(LOG_TAG, "onResume()");
+		
 		if(!isBound) {
 			// Connect to the local service API
 			bindService(new Intent(this, ArtifactlyService.class), serviceConnection, BIND_AUTO_CREATE);
@@ -143,6 +157,8 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	public void onPause() {
 		super.onPause();
 
+		Log.i(LOG_TAG, "onPause()");
+		
 		if(isBound) {
 
 			isBound = false;
@@ -158,6 +174,8 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	public void onStop() {
 		super.onStop();
 
+		Log.i(LOG_TAG, "onStop()");
+		
 		if(isBound) {
 
 			isBound = false;
@@ -173,6 +191,8 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	public void onDestroy() {
 		super.onDestroy();
 
+		Log.i(LOG_TAG, "onDestroy()");
+		
 		if(isBound) {
 
 			isBound = false;
@@ -187,10 +207,13 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	@Override
 	public void onNewIntent(Intent intent) {
 
+		Log.i(LOG_TAG, "onNewIntent()");
+		
 		Bundle extras = intent.getExtras();
 
 		if(null != extras && extras.containsKey(NOTIFICATION_INTENT_KEY)) {
-
+			
+			hasNewIntent = true;
 			String data = extras.getString(NOTIFICATION_INTENT_KEY);
 			callJavaScriptFunction(SHOW_SERVICE_RESULT, data);
 		}
