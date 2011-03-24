@@ -32,7 +32,6 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.database.Cursor;
@@ -83,6 +82,9 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	private String NOTIFICATION_TICKER_TEXT;
 	private String NOTIFICATION_CONTENT_TITLE;
 
+	// Initialization flag
+	private boolean runInit = true;
+	
 	// Managers
 	private LocationManager locationManager;
 	private NotificationManager notificationManager;
@@ -97,6 +99,9 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	// Location state
 	private boolean isGpsListenerEnabled = false;
 	
+	// Location last location update
+	private long lastLocationUpdateTime = 0;
+	
 	// DB adapter
 	private DbAdapter dbAdapter;
 
@@ -106,24 +111,36 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	// Binder access to service API
 	private IBinder localServiceBinder;
 
+	public ArtifactlyService() {
+		
+		super();
+		
+		Log.i(LOG_TAG, "ArtifactlyService Constructor");
+	}
+	
 	/*
 	 * (non-Javadoc)
 	 * @see android.app.Service#onStartCommand(android.content.Intent, int, int)
 	 */
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		Log.i(LOG_TAG, "Service onStartCommand called : intent = " + (null == intent ? "IS NULL" : "IS NOT NULL"));
+		Log.i(LOG_TAG, "onStartCommand() : intent = " + (null == intent ? "IS NULL" : "IS NOT NULL"));
+		
+		// Initialize the service if needed
+		if(runInit) {
+			
+			try {
+			
+				init();
+			}
+			catch(Exception e) {
+				
+				Log.w(LOG_TAG, "Exception occured");
+				runInit = true;
+			}
+		}
+		
 	    return START_STICKY;
-	}
-	
-	/*
-	 * (non-Javadoc)
-	 * @see android.content.ContextWrapper#bindService(android.content.Intent, android.content.ServiceConnection, int)
-	 */
-	@Override
-	public boolean bindService(Intent service, ServiceConnection conn, int flags) {
-		Log.i(LOG_TAG, "Service bindService called");
-		return super.bindService(service, conn, flags);
 	}
 	
 	/*
@@ -132,7 +149,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	 */
 	@Override
 	public void onLowMemory() {
-		Log.i(LOG_TAG, "Service onLowMemory called");
+		Log.i(LOG_TAG, "onLowMemory()");
 		super.onLowMemory();
 	}
 	
@@ -143,7 +160,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	@Override
 	public IBinder onBind(Intent intent) {
 		
-		Log.i(LOG_TAG, "Service onBind called");
+		Log.i(LOG_TAG, "onBind()");
 		localServiceBinder = new LocalServiceImpl(this);
 		return localServiceBinder;
 	}
@@ -154,7 +171,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	 */
 	@Override
 	public boolean onUnbind(Intent intent) {
-		Log.i(LOG_TAG, "Service onUnbind called");
+		Log.i(LOG_TAG, "onUnbind()");
 		return super.onUnbind(intent);
 	}
 	
@@ -164,7 +181,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	 */
 	@Override
 	public void onRebind(Intent intent) {
-		Log.i(LOG_TAG, "Service onRebind called");
+		Log.i(LOG_TAG, "onRebind()");
 		super.onRebind(intent);
 	}
 	
@@ -176,29 +193,13 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	public void onCreate() {
 		super.onCreate();
 
-		Log.i(LOG_TAG, "Service onCreate() called");
+		Log.i(LOG_TAG, "onCreate()");
 		
-		// Getting the constants from resources
-		NOTIFICATION_TICKER_TEXT = getResources().getString(R.string.notification_ticker_text);
-		NOTIFICATION_CONTENT_TITLE = getResources().getString(R.string.notification_content_title);
-
-		// Getting shared preferences such as search radius, etc.
-		settings = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-		settings.registerOnSharedPreferenceChangeListener(this);
-		radius = settings.getInt(PREFERENCE_RADIUS, PREFERENCE_RADIUS_DEFAULT);
-		Log.i(LOG_TAG, "Preferences radius = " + radius);
-
-		// Setting up the database
-		dbAdapter = new DbAdapter(this);
-
-		// Setting up the notification manager
-		notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-
-		// Setting up the location manager
-		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-
-		// Register location listener and getting last known location
-		registerLocationListener();
+		// Initialize the service if needed
+		if(runInit) {
+			
+			init();
+		}
 	}
 
 
@@ -210,7 +211,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	public void onDestroy() {
 		super.onDestroy();
 		
-		Log.i(LOG_TAG, "Service onDestroy called");
+		Log.i(LOG_TAG, "onDestroy()");
 		settings.unregisterOnSharedPreferenceChangeListener(this);
 	}
 
@@ -234,6 +235,41 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		}
 	}
 
+	/*
+	 * Initialization 
+	 */
+	private synchronized void init() {
+		
+		// Setting the init flag
+		runInit = false;
+		
+		Log.i(LOG_TAG, "init() start");
+		
+		// Getting the constants from resources
+		NOTIFICATION_TICKER_TEXT = getResources().getString(R.string.notification_ticker_text);
+		NOTIFICATION_CONTENT_TITLE = getResources().getString(R.string.notification_content_title);
+
+		// Getting shared preferences such as search radius, etc.
+		settings = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+		settings.registerOnSharedPreferenceChangeListener(this);
+		radius = settings.getInt(PREFERENCE_RADIUS, PREFERENCE_RADIUS_DEFAULT);
+		Log.i(LOG_TAG, "Preferences radius = " + radius);
+
+		// Setting up the database
+		dbAdapter = new DbAdapter(this);
+
+		// Setting up the notification manager
+		notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+		// Setting up the location manager
+		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+		// Register location listener and getting last known location
+		registerLocationListener();
+		
+		Log.i(LOG_TAG, "init() end");
+	}
+	
 	/*
 	 * DbAdater getter method
 	 */
@@ -264,6 +300,14 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	protected Location getLocation() {
 
 		return currentLocation;
+	}
+	
+	/*
+	 * Dispatch method for local service
+	 */
+	protected long getLastLocationUpdateTime() {
+		
+		return lastLocationUpdateTime;
 	}
 	
 	/*
@@ -638,6 +682,8 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 			Log.i(LOG_TAG, "isGpsListenerEnabled flag: " + isGpsListenerEnabled);
 			Log.i(LOG_TAG, "===============================================");
 		}
+		
+		lastLocationUpdateTime = System.currentTimeMillis();
 
 		// First we check if the new location is more accurate
 		if(isMoreAccurate(location)) {

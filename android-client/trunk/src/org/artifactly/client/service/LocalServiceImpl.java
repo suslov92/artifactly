@@ -104,6 +104,7 @@ public class LocalServiceImpl extends Binder implements LocalService {
 				data.put(0.0d);
 				data.put(0.0d);
 				data.put(0.0d);
+				data.put(0.0d);
 			}
 			catch (JSONException e) {
 			
@@ -123,6 +124,7 @@ public class LocalServiceImpl extends Binder implements LocalService {
 				data.put(location.getLongitude());
 				data.put(location.getAccuracy());
 				data.put(new Date(location.getTime()));
+				data.put(new Date(artifactlyService.getLastLocationUpdateTime()));
 			}
 			catch (JSONException e) {
 				
