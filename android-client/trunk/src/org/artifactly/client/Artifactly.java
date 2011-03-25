@@ -81,6 +81,12 @@ public class Artifactly extends Activity implements ApplicationConstants {
 
 		setContentView(R.layout.main);
 
+		/*
+		 * Calling startService so that the service keeps running. e.g. After application installation
+		 * The start of the service at boot is handled via a BroadcastReceiver and the BOOT_COMPLETED action
+		 */
+		startService(new Intent(this, ArtifactlyService.class));
+		
 		// Bind to the service
 		bindService(new Intent(this, ArtifactlyService.class), serviceConnection, BIND_AUTO_CREATE);
 		isBound = true;

@@ -73,7 +73,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	private static final long LOCATION_TIME_ALLOWED_DELTA = 300000; // 5 min
 
 	// Max allowed location accuracy delta
-	private static final int LOCATION_MAX_ACCURACY_DELTA = 3000; // 3 km
+	private static final int LOCATION_MAX_ACCURACY_DELTA = 2000; // 2 km
 	
 	// Notification constants
 	private static final int NOTIFICATION_ID = 95691;
@@ -125,24 +125,21 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		Log.i(LOG_TAG, "onStartCommand() : intent = " + (null == intent ? "IS NULL" : "IS NOT NULL"));
-		
-		// Initialize the service if needed
-		if(runInit) {
-			
-			try {
-			
-				init();
-			}
-			catch(Exception e) {
-				
-				Log.w(LOG_TAG, "Exception occured");
-				runInit = true;
-			}
+
+		// Initialize the service
+		try {
+
+			init();
 		}
-		
-	    return START_STICKY;
+		catch(Exception e) {
+
+			Log.w(LOG_TAG, "Exception occured");
+			runInit = true;
+		}
+
+		return START_STICKY;
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * @see android.app.Service#onLowMemory()
@@ -194,15 +191,19 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		super.onCreate();
 
 		Log.i(LOG_TAG, "onCreate()");
-		
-		// Initialize the service if needed
-		if(runInit) {
-			
+
+		// Initialize the service
+		try {
+
 			init();
 		}
+		catch(Exception e) {
+
+			Log.w(LOG_TAG, "Exception occured");
+			runInit = true;
+		}
 	}
-
-
+	
 	/*
 	 * (non-Javadoc)
 	 * @see android.app.Service#onDestroy()
@@ -238,10 +239,18 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	/*
 	 * Initialization 
 	 */
-	private synchronized void init() {
+	private void init() {
 		
-		// Setting the init flag
-		runInit = false;
+		Log.i(LOG_TAG, "init()");
+		// Determine if we actually need to initialize
+		synchronized(this) {
+			
+			if(!runInit) {
+				return;
+			}
+			
+			runInit = false;
+		}
 		
 		Log.i(LOG_TAG, "init() start");
 		
@@ -370,6 +379,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	private void unregisterLocationListeners() {
 		
 		if(null == locationManager) {
+			
 			Log.e(LOG_TAG, "LocationManager instance is null");
 			return;
 		}
