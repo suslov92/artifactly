@@ -419,28 +419,38 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	 */
 	private String getArtifactsForCurrentLocation() {
 
+		// JSON array that holds the result
+		JSONArray items = new JSONArray();
+		
+		if(null == dbAdapter) {
+			
+			Log.w(LOG_TAG, "DB Adapter is null");
+			return items.toString();
+		}
+		
 		// Getting all the locations
 		Cursor cursor = dbAdapter.select();
-		cursor.moveToFirst();
+		if(null == cursor) {
+			
+			Log.w(LOG_TAG, "Cursor is null");
+			return items.toString();
+		}
+		
+		// Checking if the cursor set has any items
+		boolean hasItems = cursor.moveToFirst();
+		
+		if(!hasItems) {
+			
+			Log.i(LOG_TAG, "DB has not items");
+			cursor.close();
+			return items.toString();
+		}
 
 		// Determine the table column indexes 
 		int longitudeColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LONGITUDE]);
 		int latitudeColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LATITUDE]);
 		int nameColumnIndex = cursor.getColumnIndex(DbAdapter.ART_FIELDS[DbAdapter.ART_NAME]);
 		int dataColumnIndex = cursor.getColumnIndex(DbAdapter.ART_FIELDS[DbAdapter.ART_DATA]);
-
-		// JSON array that holds the result
-		JSONArray items = new JSONArray();
-		
-		int rowCount = cursor.getCount();
-		Log.i(LOG_TAG, "row count = " + rowCount);
-
-		// If there are no results, we return
-		if(0 == rowCount) {
-
-			cursor.close();
-			return null;
-		}
 
 		/*
 		 *  Iterating over all result and calculate the distance between
@@ -525,28 +535,38 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	 */
 	protected String getArtifacts() {
 
+		// JSON array that holds the result
+		JSONArray items = new JSONArray();
+		
+		if(null == dbAdapter) {
+			
+			Log.w(LOG_TAG, "DB Adapter is null");
+			return items.toString();
+		}
+		
 		// Getting all the locations
 		Cursor cursor = dbAdapter.select();
-		cursor.moveToFirst();
+		if(null == cursor) {
+			
+			Log.w(LOG_TAG, "Cursor is null");
+			return items.toString();
+		}
+		
+		// Checking if the cursor set has any items
+		boolean hasItems = cursor.moveToFirst();
+		
+		if(!hasItems) {
+			
+			Log.i(LOG_TAG, "DB has not items");
+			cursor.close();
+			return items.toString();
+		}
 
 		// Determine the table column indexes 
 		int longitudeColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LONGITUDE]);
 		int latitudeColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LATITUDE]);
 		int nameColumnIndex = cursor.getColumnIndex(DbAdapter.ART_FIELDS[DbAdapter.ART_NAME]);
 		int dataColumnIndex = cursor.getColumnIndex(DbAdapter.ART_FIELDS[DbAdapter.ART_DATA]);
-
-		// JSON array that holds the result
-		JSONArray items = new JSONArray();
-		
-		int rowCount = cursor.getCount();
-		Log.i(LOG_TAG, "row count = " + rowCount);
-
-		// If there are no results, we return
-		if(0 == rowCount) {
-
-			cursor.close();
-			return null;
-		}
 
 		/*
 		 *  Iterating over all result and calculate the distance between
