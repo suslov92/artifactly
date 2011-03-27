@@ -68,6 +68,13 @@ public interface LocalService {
 	public String getArtifacts();
 	
 	/**
+	 * Get artifacts for current location
+	 * 
+	 * @return JSON current location artifacts
+	 */
+	public String getArtifactsForCurrentLocation();
+	
+	/**
 	 * Check if Internet access is available 
 	 * 
 	 * @return false if no Internet access is available, otherwise true
