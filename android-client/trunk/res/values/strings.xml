@@ -3,6 +3,7 @@
     <string name="app_name">Artifactly</string>
     <string name="notification_ticker_text">Artifactly</string>
     <string name="notification_content_title">Artifactly</string>
+    <string name="notification_message">There are Artifacts close by</string>
     <string name="create_artifact_success">Created Artifact</string>
     <string name="create_artifact_failure">Failed to create Artifact</string>
     <string name="create_artifact_name_error">Artifact name is not valid</string>

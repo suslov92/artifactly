@@ -81,6 +81,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	// Context Resources
 	private String NOTIFICATION_TICKER_TEXT;
 	private String NOTIFICATION_CONTENT_TITLE;
+	private String NOTIFICATION_MESSAGE;
 
 	// Initialization flag
 	private boolean runInit = true;
@@ -257,6 +258,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		// Getting the constants from resources
 		NOTIFICATION_TICKER_TEXT = getResources().getString(R.string.notification_ticker_text);
 		NOTIFICATION_CONTENT_TITLE = getResources().getString(R.string.notification_content_title);
+		NOTIFICATION_MESSAGE = getResources().getString(R.string.notification_message);
 
 		// Getting shared preferences such as search radius, etc.
 		settings = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
@@ -399,25 +401,90 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	 * This method sends a message using Android's notification notification manager.
 	 * It set up an intent so that the UI can be launched from within the notification message.
 	 */
-	private void sendNotification(String message) {
+	private void sendNotification() {
 
 		Intent notificationIntent = new Intent(this, Artifactly.class);
 		notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-		notificationIntent.putExtra(NOTIFICATION_INTENT_KEY, message);
+		//notificationIntent.putExtra(NOTIFICATION_INTENT_KEY, "Some data ...");
 		// Setting FLAG_UPDATE_CURRENT, so that the extra content is updated for each notification
 		PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 		Notification notification = new Notification(R.drawable.icon, NOTIFICATION_TICKER_TEXT, System.currentTimeMillis());
 		notification.flags = Notification.DEFAULT_LIGHTS | Notification.FLAG_AUTO_CANCEL | Notification.DEFAULT_SOUND;
-		notification.setLatestEventInfo(this, NOTIFICATION_CONTENT_TITLE, message, contentIntent);
+		notification.setLatestEventInfo(this, NOTIFICATION_CONTENT_TITLE, NOTIFICATION_MESSAGE, contentIntent);
 		notificationManager.notify(NOTIFICATION_ID, notification);
 	}
 
+	/*
+	 * Method that checks if there are any artifacts that are close to the current 
+	 * location. It uses the defined radius to determine the closeness
+	 */
+	protected boolean hasArtifactsForCurrentLocation() {
+		
+		if(null == dbAdapter) {
+			
+			Log.w(LOG_TAG, "DB Adapter is null");
+			return false;
+		}
+		
+		// Getting all the locations
+		Cursor cursor = dbAdapter.select();
+		if(null == cursor) {
+			
+			Log.w(LOG_TAG, "Cursor is null");
+			return false;
+		}
+		
+		// Checking if the cursor set has any items
+		boolean hasItems = cursor.moveToFirst();
+		
+		if(!hasItems) {
+			
+			Log.i(LOG_TAG, "DB has not items");
+			cursor.close();
+			return false;
+		}
+
+		// Determine the table column indexes 
+		int longitudeColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LONGITUDE]);
+		int latitudeColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LATITUDE]);
+
+		/*
+		 *  Iterating over all result and calculate the distance between
+		 *  radius, we notify the user that there is an artifact.
+		 */
+		for(;cursor.isAfterLast() == false; cursor.moveToNext()) {
+
+			// Getting latitude and longitude
+			String storedLatitude = cursor.getString(latitudeColumnIndex).trim();
+			String storedLongitude = cursor.getString(longitudeColumnIndex).trim();
+
+			float[] distanceResult = new float[1];
+			Location.distanceBetween(currentLocation.getLatitude(),
+					currentLocation.getLongitude(),
+					Double.parseDouble(storedLatitude),
+					Double.parseDouble(storedLongitude), distanceResult);
+
+			Log.i(LOG_TAG, "distanceDifference = " + distanceResult[0]);
+
+			if(distanceResult[0] <= radius) {
+				
+				cursor.close();
+				return true;
+			}
+		}
+
+		cursor.close();
+
+		return false;
+	}
+	
+	
 	/*
 	 * Method that retrieves all artifacts from the database that match the current location
 	 * 
 	 * @return All the artifacts in JSON format
 	 */
-	private String getArtifactsForCurrentLocation() {
+	protected String getArtifactsForCurrentLocation() {
 
 		// JSON array that holds the result
 		JSONArray items = new JSONArray();
@@ -492,14 +559,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 
 		cursor.close();
 
-		if(items.length() == 0) {
-			
-			return null;
-		}
-		else {
-
-			return items.toString();
-		}
+		return items.toString();
 	}
 
 	/**
@@ -739,14 +799,15 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 					Log.i(LOG_TAG, "Was not able to remove GPS listener updates");
 				}
 			}
+
 			
-			// FIXME: This is just experimental and will change. The correct way of doing this is to 
-			// notify the activity to get the location artifacts from the service
-			
-			// Getting all the artifact location matches and send it to the Activity via a notification
-			String match = getArtifactsForCurrentLocation();
-			if(null != match) {
-				sendNotification(match);
+			/*
+			 * Check if there are any artifacts close to the current location. If there are,
+			 * we send a notification.
+			 * 
+			 */
+			if(hasArtifactsForCurrentLocation()) {
+				sendNotification();
 			}
 		}
 		else {

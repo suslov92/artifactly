@@ -55,7 +55,6 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	
 	// JavaScript functions
 	private static final String SHOW_SERVICE_RESULT = "showServiceResult";
-	private static final String INIT_WEBVIEW = "initWebView";
 	
 	private WebView webView = null;
 
@@ -65,9 +64,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	private ServiceConnection serviceConnection = getServiceConnection();
 	private LocalService localService = null;
 	private boolean isBound = false;
-	
-	// Handling notification onNewIntent
-	private boolean hasNewIntent = false;
+
 
 	/*
 	 * (non-Javadoc)
@@ -98,6 +95,8 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		// Disable the vertical scroll bar
 		webView.setVerticalScrollBarEnabled(false);
 		
+		webView.addJavascriptInterface(new JavaScriptInterface(), JAVASCRIPT_BRIDGE_PREFIX);
+		
 		webView.setWebChromeClient(new WebChromeClient() {
 			  public boolean onConsoleMessage(ConsoleMessage cm) {
 			    Log.d("** A.A - JS **", cm.message() + " -- From line "
@@ -109,7 +108,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 
 		webView.loadUrl(ARTIFACTLY_URL);
 
-		webView.addJavascriptInterface(new JavaScriptInterface(), JAVASCRIPT_BRIDGE_PREFIX);
+		
 	}
 
 	/*
@@ -127,13 +126,6 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			bindService(new Intent(this, ArtifactlyService.class), serviceConnection, BIND_AUTO_CREATE);
 			isBound = true;
 			Log.i(LOG_TAG, "onStart Binding service done");
-		}
-
-		// We only want to initialize the webview if a onNewIntent wasn't called before
-		if(!hasNewIntent) {
-	
-			initWebViewContent();
-			hasNewIntent = false;
 		}
 	}
 
@@ -219,18 +211,9 @@ public class Artifactly extends Activity implements ApplicationConstants {
 
 		if(null != extras && extras.containsKey(NOTIFICATION_INTENT_KEY)) {
 			
-			hasNewIntent = true;
 			String data = extras.getString(NOTIFICATION_INTENT_KEY);
 			callJavaScriptFunction(SHOW_SERVICE_RESULT, data);
 		}
-	}
-
-	/*
-	 * Initialize the webview content
-	 */
-	private void initWebViewContent() {
-		
-		callJavaScriptFunction(INIT_WEBVIEW, "");
 	}
 	
 	/*
@@ -333,21 +316,28 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			SharedPreferences settings = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
 			return settings.getInt(PREFERENCE_RADIUS, PREFERENCE_RADIUS_DEFAULT);
 		}
+		
+		public void showRadius() {
+			
+			SharedPreferences settings = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+			int radius = settings.getInt(PREFERENCE_RADIUS, PREFERENCE_RADIUS_DEFAULT);
+			String message = String.format(getResources().getString(R.string.set_location_radius), radius);
+			Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
+		}
 
 		public String getLocation() {
 
-			String data = localService.getLocation();
-			Log.i(LOG_TAG, "getLocation = " + data);
-			return data;
+			return localService.getLocation();
 		}
 		
 		public String logArtifacts() {
 			
-			String artifacts = localService.getArtifacts();
-			Log.i(LOG_TAG, "All Artifacts");
-			Log.i(LOG_TAG, artifacts);
-			
-			return artifacts;
+			return localService.getArtifacts();
+		}
+		
+		public String getArtifactsForCurrentLocation() {
+
+			return localService.getArtifactsForCurrentLocation();
 		}
 		
 		public boolean canAccessInternet() {

@@ -16,12 +16,30 @@
 
 $(document).ready(function() {
 	
-	/*
-	 * Initialize
-	 */
+
+	$('#main').bind("pageshow", function() {
+		
+		var artifacts = JSON.parse(window.android.getArtifactsForCurrentLocation());
+		
+		$('#artifactly-list li').remove();
+		$('#artifactly-list ul').listview('refresh');
+		
+		if(artifacts.length < 1) {
+			$('#artifactly-message').text("There are no close by Artifacts");
+		}
+		else {
+		
+			$.each(artifacts, function(i, val) {
+				$('#artifactly-list ul').append('<li><a href="#location-result">' + val.name + '</a></li>');
+			});
+			$('#artifactly-list ul').listview('refresh');
+		}
+	});
+	
 	$('#options').bind('pageshow', function(){
 		
 		$('#radius-input').val(window.android.getRadius());
+		$('#radius-input').slider('refresh');	
 	});
 		
 	$('#map').bind('pageshow', function() {
@@ -61,7 +79,7 @@ $(document).ready(function() {
 	});
 
 	$('#close-and-home').click(function() {
-		$.mobile.changePage("#main", "fade", false, false);
+		$.mobile.changePage("#main", "none");
 	});
 	
 	/*
@@ -78,8 +96,7 @@ $(document).ready(function() {
 	 */
 	$('#get-radius').click(function() {
 		
-		var radius = window.android.getRadius();
-		$('#radius-output').text("Radius: " + radius);
+		window.android.showRadius();
 	});
 	
 	/*
@@ -91,32 +108,11 @@ $(document).ready(function() {
 	});
 	
 	/*
-	 * Get location click handler
-	 */
-	$('#get-location').click(function() {
-	
-		var data = JSON.parse(window.android.getLocation());
-		$('#log-latitude').text("Latitude: " + data[0].toFixed(4));
-		$('#log-longitude').text("Longitude: " + data[1].toFixed(4));
-		$('#log-accuracy').text("Accuracy: " + data[2]);
-		$('#log-time').text("Time: " + data[3]);
-		$('#log-time-latest').text("Last: " + data[4]);
-	});
-	
-	/*
-	 * Show map page
-	 */
-	$('#show-map').click(function() {
-		
-		$.mobile.changePage("#map", "fade", false, false);
-	});
-	
-	/*
 	 * Create artifact cancel button
 	 */
 	$('#cancel-artifact-button').click(function() {
 		
-		$.mobile.changePage("#main", "fade", false, false);
+		$.mobile.changePage("#main", "none");
 	});
 	
 	/*
@@ -133,20 +129,40 @@ $(document).ready(function() {
 	});
 	
 	/*
-	 * Log artifacts
+	 * Debug select menu
 	 */
-	$('#log-artifacts').click(function() {
+	$('#select-debug').change(function() {
 		
-		var artifacts = JSON.parse(window.android.logArtifacts());
+		var selected = $('#select-debug option:selected');
 		
-		$('#artifactly-list li').remove();
-		$('#artifactly-list ul').listview('refresh');
-		
-		$.each(artifacts, function(i, val) {
-			$('#artifactly-list ul').append('<li><a href="#location-result">' + val.name + '</a></li>');
-		});
-		$('#artifactly-list ul').listview('refresh');
-		
+		if(selected.val() == "get-location") {
+			
+			var data = JSON.parse(window.android.getLocation());
+			$('#log-latitude').text("Latitude: " + data[0].toFixed(4));
+			$('#log-longitude').text("Longitude: " + data[1].toFixed(4));
+			$('#log-accuracy').text("Accuracy: " + data[2]);
+			$('#log-time').text("Time: " + data[3]);
+			$('#log-time-latest').text("Last: " + data[4]);
+			
+		}
+		else if(selected.val() == "show-map") {
+			
+			$.mobile.changePage("#map", "none");
+		}
+		else if(selected.val() == "get-artifacts") {
+			
+			$.mobile.changePage("#debug-result", "none");
+			
+			var artifacts = JSON.parse(window.android.logArtifacts());
+			
+			$('#artifactly-list-debug li').remove();
+			$('#artifactly-list-debug ul').listview('refresh');
+			
+			$.each(artifacts, function(i, val) {
+				$('#artifactly-list-debug ul').append('<li><a href="#location-result">' + val.name + '</a></li>');
+			});
+			$('#artifactly-list-debug ul').listview('refresh');
+		}
 	});
 	
 });

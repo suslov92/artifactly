@@ -161,4 +161,10 @@ public class LocalServiceImpl extends Binder implements LocalService {
 		
 		return artifactlyService.canAccessInternet();
 	}
+
+	// API method
+	public String getArtifactsForCurrentLocation() {
+		
+		return artifactlyService.getArtifactsForCurrentLocation();
+	}
 }
