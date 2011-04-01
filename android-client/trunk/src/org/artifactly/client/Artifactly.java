@@ -107,8 +107,6 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			});
 
 		webView.loadUrl(ARTIFACTLY_URL);
-
-		
 	}
 
 	/*

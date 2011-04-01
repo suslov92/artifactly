@@ -25,12 +25,12 @@ $(document).ready(function() {
 		$('#artifactly-list ul').listview('refresh');
 		
 		if(artifacts.length < 1) {
-			$('#artifactly-message').text("There are no close by Artifacts");
+			$('#artifactly-message').text("There are no Artifacts close by");
 		}
 		else {
 		
 			$.each(artifacts, function(i, val) {
-				$('#artifactly-list ul').append('<li><a href="#location-result">' + val.name + '</a></li>');
+				$('#artifactly-list ul').append('<li><a href="#location-result" data-transition="none">' + val.name + '</a></li>');
 			});
 			$('#artifactly-list ul').listview('refresh');
 		}
@@ -159,7 +159,7 @@ $(document).ready(function() {
 			$('#artifactly-list-debug ul').listview('refresh');
 			
 			$.each(artifacts, function(i, val) {
-				$('#artifactly-list-debug ul').append('<li><a href="#location-result">' + val.name + '</a></li>');
+				$('#artifactly-list-debug ul').append('<li><a href="#location-result" data-transition="none">' + val.name + '</a></li>');
 			});
 			$('#artifactly-list-debug ul').listview('refresh');
 		}
@@ -171,7 +171,7 @@ function showServiceResult(data) {
 	
 	$('#artifactly-list li').remove();
 	$.each(data, function(i, val) {
-		$('#artifactly-list ul').append('<li><a href="#location-result">' + val.name + '</a></li>');
+		$('#artifactly-list ul').append('<li><a href="#location-result" data-transition="none">' + val.name + '</a></li>');
 	});
 	$('#artifactly-list ul').listview('refresh');
 }
