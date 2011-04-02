@@ -489,6 +489,10 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		// JSON array that holds the result
 		JSONArray items = new JSONArray();
 		
+		if(null == currentLocation) {
+			return items.toString();
+		}
+		
 		if(null == dbAdapter) {
 			
 			Log.w(LOG_TAG, "DB Adapter is null");
