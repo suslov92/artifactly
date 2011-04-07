@@ -100,14 +100,6 @@ $(document).ready(function() {
 	});
 	
 	/*
-	 * Create artifact click handler
-	 */
-	$('#create-artifact').click(function() {
-		
-		window.android.createArtifact();
-	});
-	
-	/*
 	 * Create artifact cancel button
 	 */
 	$('#cancel-artifact-button').click(function() {
@@ -158,10 +150,16 @@ $(document).ready(function() {
 			$('#artifactly-list-debug li').remove();
 			$('#artifactly-list-debug ul').listview('refresh');
 			
-			$.each(artifacts, function(i, val) {
-				$('#artifactly-list-debug ul').append('<li><a href="#location-result" data-transition="none">' + val.name + '</a></li>');
-			});
-			$('#artifactly-list-debug ul').listview('refresh');
+			if(artifacts.length < 1) {
+				$('#artifactly-message-debug').text("There are no Artifacts");
+			}
+			else {
+
+				$.each(artifacts, function(i, val) {
+					$('#artifactly-list-debug ul').append('<li><a href="#location-result" data-transition="none">' + val.name + '</a></li>');
+				});
+				$('#artifactly-list-debug ul').listview('refresh');
+			}
 		}
 	});
 	
