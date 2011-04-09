@@ -29,7 +29,7 @@ if(typeof window.android == "undefined") {
 
 	window.android.getArtifactsForCurrentLocation = function () {
 
-		return "[]";
+		return '[{"data":"1","long":"-121.57983","lat":"38.535298","dist":"517.08154","name":"milk "},{"data":"large ","long":"-121.57983","lat":"38.535298","dist":"517.08154","name":"pizza"},{"data":"4 sandwitches","long":"-121.57983","lat":"38.535298","dist":"517.08154","name":"subway"}]';
 	};
 
 	window.android.getRadius = function () {
