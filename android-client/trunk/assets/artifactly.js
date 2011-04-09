@@ -34,6 +34,12 @@ $(document).ready(function() {
 			});
 			$('#artifactly-list ul').listview('refresh');
 		}
+		
+		$('#artifactly-list li').each(function (idx) {
+			$(this).bind('swiperight', function(event,ui) {
+				$(this).remove();
+			});
+		});
 	});
 	
 	$('#options').bind('pageshow', function(){
@@ -162,7 +168,6 @@ $(document).ready(function() {
 			}
 		}
 	});
-	
 });
 
 function showServiceResult(data) {

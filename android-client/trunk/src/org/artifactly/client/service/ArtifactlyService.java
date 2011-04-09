@@ -562,7 +562,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		}
 
 		cursor.close();
-
+		
 		return items.toString();
 	}
 
