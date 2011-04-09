@@ -29,6 +29,7 @@ $(document).ready(function() {
 		}
 		else {
 		
+			$('#artifactly-message').text("");
 			$.each(artifacts, function(i, val) {
 				$('#artifactly-list ul').append('<li><a href="#location-result" data-transition="none">' + val.name + '</a></li>');
 			});

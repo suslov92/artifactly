@@ -237,10 +237,6 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	// Define methods that are called from JavaScript
 	public class JavaScriptInterface {
 
-		// TEST data
-		String[] latitudes = { "38.540013", "38.535298", "38.540095" };
-		String[] longitudes = { "-121.57983", "-121.57983", "-121.549062" };
-
 		public void setRadius(int radius) {
 
 			Log.i(LOG_TAG, "A setRadius to " + radius);
@@ -267,9 +263,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 				return;
 			}
 			
-			Random r = new Random();
-			int randomNumber = r.nextInt(latitudes.length);
-			boolean isSuccess = localService.createArtifact(name, data, latitudes[randomNumber], longitudes[randomNumber]);
+			boolean isSuccess = localService.createArtifact(name, data);
 
 			if(isSuccess) {
 
