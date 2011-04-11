@@ -413,6 +413,14 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		notification.setLatestEventInfo(this, NOTIFICATION_CONTENT_TITLE, NOTIFICATION_MESSAGE, contentIntent);
 		notificationManager.notify(NOTIFICATION_ID, notification);
 	}
+	
+	/*
+	 * Method that removes all notifications
+	 */
+	private void cancelNotificaiton() {
+	
+		notificationManager.cancel(NOTIFICATION_ID);
+	}
 
 	/*
 	 * Method that checks if there are any artifacts that are close to the current 
@@ -518,10 +526,11 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		}
 
 		// Determine the table column indexes 
-		int longitudeColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LONGITUDE]);
-		int latitudeColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LATITUDE]);
+		int artIdColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_ART_FIELDS[DbAdapter.FK_ART_ID]);
 		int nameColumnIndex = cursor.getColumnIndex(DbAdapter.ART_FIELDS[DbAdapter.ART_NAME]);
 		int dataColumnIndex = cursor.getColumnIndex(DbAdapter.ART_FIELDS[DbAdapter.ART_DATA]);
+		int longitudeColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LONGITUDE]);
+		int latitudeColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LATITUDE]);
 
 		/*
 		 *  Iterating over all result and calculate the distance between
@@ -547,10 +556,11 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 
 				try {
 					
-					item.put(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LATITUDE], storedLatitude);
-					item.put(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LONGITUDE], storedLongitude);
+					item.put(DbAdapter.LOC_ART_FIELDS[DbAdapter.FK_ART_ID], cursor.getInt(artIdColumnIndex));
 					item.put(DbAdapter.ART_FIELDS[DbAdapter.ART_NAME], cursor.getString(nameColumnIndex));
 					item.put(DbAdapter.ART_FIELDS[DbAdapter.ART_DATA], cursor.getString(dataColumnIndex));
+					item.put(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LATITUDE], storedLatitude);
+					item.put(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LONGITUDE], storedLongitude);
 					item.put(DISTANCE, Float.toString(distanceResult[0]));
 				}
 				catch (JSONException e) {
@@ -627,10 +637,11 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		}
 
 		// Determine the table column indexes 
-		int longitudeColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LONGITUDE]);
-		int latitudeColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LATITUDE]);
+		int artIdColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_ART_FIELDS[DbAdapter.FK_ART_ID]);
 		int nameColumnIndex = cursor.getColumnIndex(DbAdapter.ART_FIELDS[DbAdapter.ART_NAME]);
 		int dataColumnIndex = cursor.getColumnIndex(DbAdapter.ART_FIELDS[DbAdapter.ART_DATA]);
+		int longitudeColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LONGITUDE]);
+		int latitudeColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LATITUDE]);
 
 		/*
 		 *  Iterating over all result and calculate the distance between
@@ -641,11 +652,12 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 			JSONObject item = new JSONObject();
 
 			try {
-
-				item.put(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LATITUDE], cursor.getString(latitudeColumnIndex));
-				item.put(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LONGITUDE], cursor.getString(longitudeColumnIndex));
+				
+				item.put(DbAdapter.LOC_ART_FIELDS[DbAdapter.FK_ART_ID], cursor.getInt(artIdColumnIndex));
 				item.put(DbAdapter.ART_FIELDS[DbAdapter.ART_NAME], cursor.getString(nameColumnIndex));
 				item.put(DbAdapter.ART_FIELDS[DbAdapter.ART_DATA], cursor.getString(dataColumnIndex));
+				item.put(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LATITUDE], cursor.getString(latitudeColumnIndex));
+				item.put(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LONGITUDE], cursor.getString(longitudeColumnIndex));
 			}
 			catch (JSONException e) {
 				Log.w(LOG_TAG, "Error while populating JSONObject");
@@ -663,6 +675,10 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		}
 		else {
 
+			// TODO: Remove, this is just for debug
+			System.out.println("#### " + items.toString());
+			
+			
 			return items.toString();
 		}
 	}
@@ -812,6 +828,11 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 			 */
 			if(hasArtifactsForCurrentLocation()) {
 				sendNotification();
+			}
+			else {
+				
+				// Clear any old notifications
+				cancelNotificaiton();
 			}
 		}
 		else {

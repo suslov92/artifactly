@@ -29,7 +29,7 @@ if(typeof window.android == "undefined") {
 
 	window.android.getArtifactsForCurrentLocation = function () {
 
-		return '[{"data":"1","long":"-121.57983","lat":"38.535298","dist":"517.08154","name":"milk "},{"data":"large ","long":"-121.57983","lat":"38.535298","dist":"517.08154","name":"pizza"},{"data":"4 sandwitches","long":"-121.57983","lat":"38.535298","dist":"517.08154","name":"subway"}]';
+		return '[{"data":"prius 20 k","artId":1,"long":"-121.4020047","lat":"38.6300699","name":"car service"},{"data":"","artId":2,"long":"-121.5799187","lat":"38.5400857","name":"home "},{"data":"art","artId":3,"long":"-121.4763178","lat":"38.5745222","name":"art beast "},{"data":"2","artId":4,"long":"-121.55368518","lat":"38.586812609999996","name":"bed"}]';
 	};
 
 	window.android.getRadius = function () {
@@ -65,6 +65,6 @@ if(typeof window.android == "undefined") {
 
 	window.android.logArtifacts = function() {
 
-		return "[]";
+		return '[{"data":"prius 20 k","artId":1,"long":"-121.4020047","lat":"38.6300699","name":"car service"},{"data":"","artId":2,"long":"-121.5799187","lat":"38.5400857","name":"home "},{"data":"art","artId":3,"long":"-121.4763178","lat":"38.5745222","name":"art beast "},{"data":"2","artId":4,"long":"-121.55368518","lat":"38.586812609999996","name":"bed"}]';
 	}
 }

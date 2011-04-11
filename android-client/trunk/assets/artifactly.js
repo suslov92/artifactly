@@ -31,7 +31,7 @@ $(document).ready(function() {
 		
 			$('#artifactly-message').text("");
 			$.each(artifacts, function(i, val) {
-				$('#artifactly-list ul').append('<li><a href="#location-result" data-transition="none">' + val.name + '</a></li>');
+				$('#artifactly-list ul').append('<li title="' + val.artId + '"><a href="#location-result" data-transition="none">' + val.artId + ' : ' + val.name + ' : ' + val.data +'</a></li>');
 			});
 			$('#artifactly-list ul').listview('refresh');
 		}
@@ -39,6 +39,7 @@ $(document).ready(function() {
 		$('#artifactly-list li').each(function (idx) {
 			$(this).bind('swiperight', function(event,ui) {
 				$(this).remove();
+				window.android.deleteArtifact(+($(this).attr('title')));
 			});
 		});
 	});

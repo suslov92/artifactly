@@ -13,4 +13,7 @@
     <string name="start_location_tracking_failure">Failed to start location tracking</string>
     <string name="can_access_internet_error">No Internet access available</string>
     <string name="set_location_radius">Location radius is %1$d</string>
+    <string name="delete_artifact_success">Deleted Artifact</string>
+    <string name="delete_artifact_failure">Failed to delete Artifact</string>
+    
 </resources>
