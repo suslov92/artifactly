@@ -84,10 +84,19 @@ public interface LocalService {
 	
 	/**
 	 * Delete an artifact
+	 * 
 	 * @param id Artifact DB row id
 	 * @return false on error, otherwise true
 	 */
 	public boolean deleteArtifact(long id);
+	
+	/**
+	 * Get an artifact that matches the provided id
+	 * 
+	 * @param id Artifact DB row id
+	 * @return JSON artifact that matches the provied id
+	 */
+	public String getAtrifact(long id);
 	
 	
 }

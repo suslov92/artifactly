@@ -91,6 +91,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		// Setting up the WebView
 		webView = (WebView) findViewById(R.id.webview);
 		webView.getSettings().setJavaScriptEnabled(true);
+		webView.getSettings().setDomStorageEnabled(true);
 
 		// Disable the vertical scroll bar
 		webView.setVerticalScrollBarEnabled(false);
@@ -254,14 +255,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		}
 
 		public void deleteArtifact(long id) {
-			
-			Log.i(LOG_TAG, "artifactId = " + id);
-			
-//			if(null == id) {
-//				Toast.makeText(getApplicationContext(), R.string.delete_artifact_failure, Toast.LENGTH_SHORT).show();
-//				return;
-//			}
-			
+						
 			boolean isSuccess = localService.deleteArtifact(id);
 			 
 			if(isSuccess) {
@@ -343,6 +337,11 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		public String getLocation() {
 
 			return localService.getLocation();
+		}
+		
+		public String getArtifact(long id) {
+			
+			return localService.getAtrifact(id);
 		}
 		
 		public String logArtifacts() {

@@ -182,6 +182,25 @@ public class DbAdapter {
 					new String[] {Long.toString(locationRowId)});
 		}
 	}
+	
+	/*
+	 * Select one artifact 
+	 */
+	public Cursor select(long artifactRowId) {
+		
+		SQLiteQueryBuilder queryBuilder = new SQLiteQueryBuilder();
+		queryBuilder.setTables("LocToArt JOIN Artifact ON (LocToArt.artId=Artifact._id) JOIN Location ON (LocToArt.locId=Location._id)");
+		queryBuilder.setDistinct(true);
+		return queryBuilder.query(mSQLiteDatabase,
+				new String[] {"Artifact._id AS artId",
+							  "Location._id AS locId",
+							  "Artifact.name AS name",
+							  "Artifact.data AS data",
+							  "Location.lat AS lat",
+							  "Location.long AS long"},
+							  LOC_ART_FIELDS[FK_ART_ID] + "=?", new String[] {Long.toString(artifactRowId)}, null, null, null);
+	}
+	
 	/*
 	 * Select all the location and artifact relationships
 	 * NOTE: Caller must call cursor.close();
