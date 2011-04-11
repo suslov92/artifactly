@@ -21,7 +21,9 @@ import java.util.Date;
 import org.artifactly.client.content.DbAdapter;
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
+import android.database.Cursor;
 import android.database.sqlite.SQLiteException;
 import android.location.Location;
 import android.os.Binder;
@@ -161,7 +163,78 @@ public class LocalServiceImpl extends Binder implements LocalService {
 	// API method
 	public String getArtifacts() {
 		
-		return artifactlyService.getArtifacts();
+		// JSON array that holds the result
+		JSONArray items = new JSONArray();
+		
+		if(null == dbAdapter) {
+			
+			Log.w(LOG_TAG, "DB Adapter is null");
+			return items.toString();
+		}
+		
+		// Getting all the locations
+		Cursor cursor = dbAdapter.select();
+		if(null == cursor) {
+			
+			Log.w(LOG_TAG, "Cursor is null");
+			return items.toString();
+		}
+		
+		// Checking if the cursor set has any items
+		boolean hasItems = cursor.moveToFirst();
+		
+		if(!hasItems) {
+			
+			Log.i(LOG_TAG, "DB has not items");
+			cursor.close();
+			return items.toString();
+		}
+
+		// Determine the table column indexes 
+		int artIdColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_ART_FIELDS[DbAdapter.FK_ART_ID]);
+		int nameColumnIndex = cursor.getColumnIndex(DbAdapter.ART_FIELDS[DbAdapter.ART_NAME]);
+		int dataColumnIndex = cursor.getColumnIndex(DbAdapter.ART_FIELDS[DbAdapter.ART_DATA]);
+		int longitudeColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LONGITUDE]);
+		int latitudeColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LATITUDE]);
+
+		/*
+		 *  Iterating over all result and calculate the distance between
+		 *  radius, we notify the user that there is an artifact.
+		 */
+		for(;cursor.isAfterLast() == false; cursor.moveToNext()) {
+
+			JSONObject item = new JSONObject();
+
+			try {
+				
+				item.put(DbAdapter.LOC_ART_FIELDS[DbAdapter.FK_ART_ID], cursor.getInt(artIdColumnIndex));
+				item.put(DbAdapter.ART_FIELDS[DbAdapter.ART_NAME], cursor.getString(nameColumnIndex));
+				item.put(DbAdapter.ART_FIELDS[DbAdapter.ART_DATA], cursor.getString(dataColumnIndex));
+				item.put(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LATITUDE], cursor.getString(latitudeColumnIndex));
+				item.put(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LONGITUDE], cursor.getString(longitudeColumnIndex));
+			}
+			catch (JSONException e) {
+				Log.w(LOG_TAG, "Error while populating JSONObject");
+			}
+
+			items.put(item);
+
+		}
+
+		cursor.close();
+
+		if(items.length() == 0) {
+
+			return null;
+		}
+		else {
+
+			// TODO: Remove, this is just for debug
+			System.out.println("#### " + items.toString());
+			
+			
+			return items.toString();
+		}
 	}
 
 	// API method
@@ -173,9 +246,92 @@ public class LocalServiceImpl extends Binder implements LocalService {
 	// API method
 	public String getArtifactsForCurrentLocation() {
 		
-		return artifactlyService.getArtifactsForCurrentLocation();
+		Location currentLocation = artifactlyService.getLocation();
+		int radius = artifactlyService.getRadius();
+		
+		// JSON array that holds the result
+		JSONArray items = new JSONArray();
+		
+		if(null == currentLocation) {
+			return items.toString();
+		}
+		
+		if(null == dbAdapter) {
+			
+			Log.w(LOG_TAG, "DB Adapter is null");
+			return items.toString();
+		}
+		
+		// Getting all the locations
+		Cursor cursor = dbAdapter.select();
+		if(null == cursor) {
+			
+			Log.w(LOG_TAG, "Cursor is null");
+			return items.toString();
+		}
+		
+		// Checking if the cursor set has any items
+		boolean hasItems = cursor.moveToFirst();
+		
+		if(!hasItems) {
+			
+			Log.i(LOG_TAG, "DB has not items");
+			cursor.close();
+			return items.toString();
+		}
+
+		// Determine the table column indexes 
+		int artIdColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_ART_FIELDS[DbAdapter.FK_ART_ID]);
+		int nameColumnIndex = cursor.getColumnIndex(DbAdapter.ART_FIELDS[DbAdapter.ART_NAME]);
+		int dataColumnIndex = cursor.getColumnIndex(DbAdapter.ART_FIELDS[DbAdapter.ART_DATA]);
+		int longitudeColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LONGITUDE]);
+		int latitudeColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LATITUDE]);
+
+		/*
+		 *  Iterating over all result and calculate the distance between
+		 *  radius, we notify the user that there is an artifact.
+		 */
+		for(;cursor.isAfterLast() == false; cursor.moveToNext()) {
+
+			// Getting latitude and longitude
+			String storedLatitude = cursor.getString(latitudeColumnIndex).trim();
+			String storedLongitude = cursor.getString(longitudeColumnIndex).trim();
+
+			float[] distanceResult = new float[1];
+			Location.distanceBetween(currentLocation.getLatitude(),
+					currentLocation.getLongitude(),
+					Double.parseDouble(storedLatitude),
+					Double.parseDouble(storedLongitude), distanceResult);
+
+			Log.i(LOG_TAG, "distanceDifference = " + distanceResult[0]);
+
+			if(distanceResult[0] <= radius) {
+
+				JSONObject item = new JSONObject();
+
+				try {
+					
+					item.put(DbAdapter.LOC_ART_FIELDS[DbAdapter.FK_ART_ID], cursor.getInt(artIdColumnIndex));
+					item.put(DbAdapter.ART_FIELDS[DbAdapter.ART_NAME], cursor.getString(nameColumnIndex));
+					item.put(DbAdapter.ART_FIELDS[DbAdapter.ART_DATA], cursor.getString(dataColumnIndex));
+					item.put(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LATITUDE], storedLatitude);
+					item.put(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LONGITUDE], storedLongitude);
+					item.put(ArtifactlyService.DISTANCE, Float.toString(distanceResult[0]));
+				}
+				catch (JSONException e) {
+					Log.w(LOG_TAG, "Error while populating JSONObject");
+				}
+				
+				items.put(item);
+			}
+		}
+
+		cursor.close();
+		
+		return items.toString();
 	}
 
+	// API method
 	public boolean deleteArtifact(long id) {
 		
 		if(null == dbAdapter) {
@@ -192,5 +348,70 @@ public class LocalServiceImpl extends Binder implements LocalService {
 		}
 		
 		return true;
+	}
+	
+	// API method
+	public String getAtrifact(long id) {
+	
+		// JSON array that holds the result
+		JSONArray items = new JSONArray();
+		
+		if(null == dbAdapter) {
+			
+			Log.w(LOG_TAG, "DB Adapter is null");
+			return items.toString();
+		}
+		
+		// Getting all the locations
+		Cursor cursor = dbAdapter.select(id);
+		if(null == cursor) {
+			
+			Log.w(LOG_TAG, "Cursor is null");
+			return items.toString();
+		}
+		
+		// Checking if the cursor set has any items
+		boolean hasItems = cursor.moveToFirst();
+		
+		if(!hasItems) {
+			
+			Log.i(LOG_TAG, "DB has not items");
+			cursor.close();
+			return items.toString();
+		}
+
+		if(cursor.getCount() != 1) {
+			
+			Log.w(LOG_TAG, "Expetecd the cursor to have only one row");
+		}
+		
+		// Determine the table column indexes 
+		int artIdColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_ART_FIELDS[DbAdapter.FK_ART_ID]);
+		int nameColumnIndex = cursor.getColumnIndex(DbAdapter.ART_FIELDS[DbAdapter.ART_NAME]);
+		int dataColumnIndex = cursor.getColumnIndex(DbAdapter.ART_FIELDS[DbAdapter.ART_DATA]);
+		int longitudeColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LONGITUDE]);
+		int latitudeColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LATITUDE]);
+
+		
+		JSONObject item = new JSONObject();
+
+		try {
+			
+			item.put(DbAdapter.LOC_ART_FIELDS[DbAdapter.FK_ART_ID], cursor.getInt(artIdColumnIndex));
+			item.put(DbAdapter.ART_FIELDS[DbAdapter.ART_NAME], cursor.getString(nameColumnIndex));
+			item.put(DbAdapter.ART_FIELDS[DbAdapter.ART_DATA], cursor.getString(dataColumnIndex));
+			item.put(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LATITUDE], cursor.getString(latitudeColumnIndex));
+			item.put(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LONGITUDE], cursor.getString(longitudeColumnIndex));
+		}
+		catch (JSONException e) {
+			
+			Log.w(LOG_TAG, "Error while populating JSONObject");
+		}
+
+		items.put(item);
+
+		cursor.close();
+		
+		return items.toString();
 	}
 }
