@@ -22,6 +22,7 @@ import org.artifactly.client.content.DbAdapter;
 import org.json.JSONArray;
 import org.json.JSONException;
 
+import android.database.sqlite.SQLiteException;
 import android.location.Location;
 import android.os.Binder;
 import android.util.Log;
@@ -54,7 +55,14 @@ public class LocalServiceImpl extends Binder implements LocalService {
 			return false;
 		}
 		
-		dbAdapter.insert(latitude, longitude, name, data);
+		try {
+			
+			dbAdapter.insert(latitude, longitude, name, data);
+		}
+		catch(SQLiteException e) {
+			
+			return false;
+		}
 		
 		return true;
 	}
@@ -166,5 +174,23 @@ public class LocalServiceImpl extends Binder implements LocalService {
 	public String getArtifactsForCurrentLocation() {
 		
 		return artifactlyService.getArtifactsForCurrentLocation();
+	}
+
+	public boolean deleteArtifact(long id) {
+		
+		if(null == dbAdapter) {
+			Log.e(LOG_TAG, "LocalService : deleteArtifact : dbAdapter is null");
+			return false;
+		}
+		
+		try {
+			
+			dbAdapter.delete(id);
+		}
+		catch(SQLiteException e) {
+			return false;
+		}
+		
+		return true;
 	}
 }

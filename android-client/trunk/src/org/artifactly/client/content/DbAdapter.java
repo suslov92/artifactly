@@ -145,6 +145,16 @@ public class DbAdapter {
 	}
 
 	/*
+	 * Deleting an artifact
+	 */
+	public void delete(long artifactRowId) {
+		
+		mSQLiteDatabase.delete(DB_TABLE_ARTIFACT,
+				ART_FIELDS[ART_ID] + "=?", new String[] {Long.toString(artifactRowId)});
+	}
+	
+	
+	/*
 	 * Deleting the location and artifact relationship. We only delete the location and or artifact if they
 	 * are not referenced in any other relationship.
 	 */
@@ -182,8 +192,8 @@ public class DbAdapter {
 		queryBuilder.setTables("LocToArt JOIN Artifact ON (LocToArt.artId=Artifact._id) JOIN Location ON (LocToArt.locId=Location._id)");
 		queryBuilder.setDistinct(true);
 		return queryBuilder.query(mSQLiteDatabase,
-				new String[] {"Artifact._id AS artifactid",
-							  "Location._id AS locationid",
+				new String[] {"Artifact._id AS artId",
+							  "Location._id AS locId",
 							  "Artifact.name AS name",
 							  "Artifact.data AS data",
 							  "Location.lat AS lat",

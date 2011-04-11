@@ -82,4 +82,12 @@ public interface LocalService {
 	public boolean canAccessInternet();
 	
 	
+	/**
+	 * Delete an artifact
+	 * @param id Artifact DB row id
+	 * @return false on error, otherwise true
+	 */
+	public boolean deleteArtifact(long id);
+	
+	
 }
