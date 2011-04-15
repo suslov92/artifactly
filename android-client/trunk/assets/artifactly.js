@@ -69,12 +69,7 @@ $(document).ready(function() {
 	$('#selection-result').bind('pageshow', function() {
 	
 		var id = localStorage.getItem('artifactId');
-		var artifact = JSON.parse(window.android.getArtifact(+id))[0];
-		$('#selection-result-id').val(artifact.artId);
-		$('#selection-result-name').val(artifact.name);
-		$('#selection-result-data').val(artifact.data);
-		$('#selection-result-lat').val((+artifact.lat).toFixed(6));
-		$('#selection-result-long').val((+artifact.long).toFixed(6));
+		window.android.getArtifact(+id);
 	});
 	
 	/*
@@ -191,47 +186,61 @@ $(document).ready(function() {
 			
 			$.mobile.changePage("#debug-result", "none");
 			
-			var artifacts = JSON.parse(window.android.logArtifacts());
-			
-			$('#artifactly-list-debug li').remove();
-			$('#artifactly-list-debug ul').listview('refresh');
-			
-			if(artifacts.length < 1) {
-				$('#artifactly-message-debug').text("There are no Artifacts");
-			}
-			else {
-				
-				$('#artifactly-message-debug').text("");
-				$.each(artifacts, function(i, val) {
-					$('#artifactly-list-debug ul').append('<li title="' + val.artId + '"><a href="#selection-result" data-transition="none">' + val.name + '</a></li>');
-				});
-				$('#artifactly-list-debug ul').listview('refresh');
-			}
-			
-			$('#artifactly-list-debug li').each(function (idx) {
-				$(this).bind('swiperight', function(event,ui) {
-					$(this).remove();
-					window.android.deleteArtifact(+($(this).attr('title')));
-				});
-			});
-			
+			window.android.getArtifacts();			
 		}
 	});
 });
 
 function showServiceResult(data) {
-	
-	$('#artifactly-list li').remove();
-	$.each(data, function(i, val) {
-		$('#artifactly-list ul').append('<li><a href="#selection-result" data-transition="none">' + val.name + '</a></li>');
+
+	$(document).ready(function() {
+		
+		$('#artifactly-list li').remove();
+		$.each(data, function(i, val) {
+			$('#artifactly-list ul').append('<li><a href="#selection-result" data-transition="none">' + val.name + '</a></li>');
+		});
+		$('#artifactly-list ul').listview('refresh');
 	});
-	$('#artifactly-list ul').listview('refresh');
 }
 
-function initWebView() {
-	
-	$('#artifactly-list li').remove();
-	$('#artifactly-list ul').listview('refresh');
+function getArtifactsCallback(artifacts) {
+		
+	$(document).ready(function() {
+		
+		$('#artifactly-list-debug li').remove();
+		$('#artifactly-list-debug ul').listview('refresh');
+
+		if(artifacts.length < 1) {
+			$('#artifactly-message-debug').text("There are no Artifacts");
+		}
+		else {
+
+			$('#artifactly-message-debug').text("");
+			$.each(artifacts, function(i, val) {
+				$('#artifactly-list-debug ul').append('<li title="' + val.artId + '"><a href="#selection-result" data-transition="none">' + val.name + '</a></li>');
+			});
+			$('#artifactly-list-debug ul').listview('refresh');
+		}
+
+		$('#artifactly-list-debug li').each(function (idx) {
+			$(this).bind('swiperight', function(event,ui) {
+				$(this).remove();
+				window.android.deleteArtifact(+($(this).attr('title')));
+			});
+		});
+	});
+}
+
+function getArtifactCallback(artifact) {
+
+	$(document).ready(function() {
+		
+		$('#selection-result-id').val(artifact[0].artId);
+		$('#selection-result-name').val(artifact[0].name);
+		$('#selection-result-data').val(artifact[0].data);
+		$('#selection-result-lat').val((+artifact[0].lat).toFixed(6));
+		$('#selection-result-long').val((+artifact[0].long).toFixed(6));
+	});
 }
 
 

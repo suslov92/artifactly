@@ -351,7 +351,7 @@ public class LocalServiceImpl extends Binder implements LocalService {
 	}
 	
 	// API method
-	public String getAtrifact(long id) {
+	public String getAtrifact(Long id) {
 	
 		// JSON array that holds the result
 		JSONArray items = new JSONArray();
