@@ -17,6 +17,8 @@
 package org.artifactly.client.service;
 
 import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import org.artifactly.client.ApplicationConstants;
 import org.artifactly.client.Artifactly;
@@ -75,6 +77,12 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	// Notification constants
 	private static final int NOTIFICATION_ID = 95691;
 
+	// Location Monitoring Timer Task Interval
+	private static final int TIMER_TASK_PERIDO = 360000; // 6 min
+	
+	// Location monitoring allowed last location fix time delta
+	private static final long MAX_LOCATION_UPDATE_DELAY = 360000; // 6 min
+	
 	// Context Resources
 	private String NOTIFICATION_TICKER_TEXT;
 	private String NOTIFICATION_CONTENT_TITLE;
@@ -108,6 +116,9 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 
 	// Binder access to service API
 	private IBinder localServiceBinder;
+	
+	// Timer to check on location updates
+	private Timer timer;
 
 	public ArtifactlyService() {
 		
@@ -275,6 +286,9 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		// Register location listener and getting last known location
 		registerLocationListener();
 		
+		timer = new Timer();
+		timer.scheduleAtFixedRate(new MonitorLocationUpdateTask(), 1000, TIMER_TASK_PERIDO);
+		
 		Log.i(LOG_TAG, "init() end");
 	}
 	
@@ -324,6 +338,29 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	protected long getLastLocationUpdateTime() {
 		
 		return lastLocationUpdateTime;
+	}
+	
+	/*
+	 * Timer Task that checks the state of the location update 
+	 */
+	private class MonitorLocationUpdateTask extends TimerTask {
+
+		@Override
+		public void run() {
+			
+			long timeReference = System.currentTimeMillis() + MAX_LOCATION_UPDATE_DELAY;
+			
+			// TODO: check for user configured "no tracking" time periods and or phone movement
+			if(timeReference < lastLocationUpdateTime) {
+				Log.i(LOG_TAG, "We haven't received any location update. Resetting locaiton listener");
+				stopLocationTracking();
+				startLocationTracking();
+			}
+			else {
+				
+				Log.i(LOG_TAG, "Location updates are current.");
+			}
+		}
 	}
 	
 	/*
@@ -394,7 +431,6 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		try {
 		
 			locationManager.removeUpdates(networkLocationListener);
-			locationManager.removeUpdates(gpsLocationListener);
 		}
 		catch(IllegalArgumentException iae) {
 			

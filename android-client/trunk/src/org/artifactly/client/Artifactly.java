@@ -16,8 +16,6 @@
 
 package org.artifactly.client;
 
-import java.util.Random;
-
 import org.artifactly.client.service.ArtifactlyService;
 import org.artifactly.client.service.LocalService;
 
@@ -26,6 +24,7 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -55,6 +54,8 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	
 	// JavaScript functions
 	private static final String SHOW_SERVICE_RESULT = "showServiceResult";
+	private static final String GET_ARTIFACTS_CALLBACK = "getArtifactsCallback";
+	private static final String GET_ARTIFACT_CALLBACK = "getArtifactCallback";
 	
 	private WebView webView = null;
 
@@ -339,14 +340,14 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			return localService.getLocation();
 		}
 		
-		public String getArtifact(long id) {
+		public void getArtifact(long id) {
 			
-			return localService.getAtrifact(id);
+			new GetArtifactTask().execute(new Long(id));
 		}
 		
-		public String logArtifacts() {
+		public void getArtifacts() {
 			
-			return localService.getArtifacts();
+			new GetArtifactsTask().execute();
 		}
 		
 		public String getArtifactsForCurrentLocation() {
@@ -384,5 +385,28 @@ public class Artifactly extends Activity implements ApplicationConstants {
 				Log.i(LOG_TAG, "onServiceDisconnected called");
 			}
 		};
+	}
+	
+	private class GetArtifactsTask extends AsyncTask<Void, Void, Void> {
+
+		@Override
+		protected Void doInBackground(Void... arg0) {
+			
+			String result = localService.getArtifacts();
+			callJavaScriptFunction(GET_ARTIFACTS_CALLBACK, result);
+			return null;
+		}	
+	}
+	
+	private class GetArtifactTask extends AsyncTask<Long, Void, Void> {
+
+		@Override
+		protected Void doInBackground(Long... ids) {
+			
+			String result = localService.getAtrifact(ids[0]);
+			callJavaScriptFunction(GET_ARTIFACT_CALLBACK, result);
+			return null;
+		}
+		
 	}
 }

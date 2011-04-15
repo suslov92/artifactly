@@ -186,7 +186,7 @@ public class DbAdapter {
 	/*
 	 * Select one artifact 
 	 */
-	public Cursor select(long artifactRowId) {
+	public Cursor select(Long artifactRowId) {
 		
 		SQLiteQueryBuilder queryBuilder = new SQLiteQueryBuilder();
 		queryBuilder.setTables("LocToArt JOIN Artifact ON (LocToArt.artId=Artifact._id) JOIN Location ON (LocToArt.locId=Location._id)");
@@ -198,7 +198,7 @@ public class DbAdapter {
 							  "Artifact.data AS data",
 							  "Location.lat AS lat",
 							  "Location.long AS long"},
-							  LOC_ART_FIELDS[FK_ART_ID] + "=?", new String[] {Long.toString(artifactRowId)}, null, null, null);
+							  LOC_ART_FIELDS[FK_ART_ID] + "=?", new String[] {artifactRowId.toString()}, null, null, null);
 	}
 	
 	/*

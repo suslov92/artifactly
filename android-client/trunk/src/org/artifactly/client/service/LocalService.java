@@ -96,7 +96,7 @@ public interface LocalService {
 	 * @param id Artifact DB row id
 	 * @return JSON artifact that matches the provied id
 	 */
-	public String getAtrifact(long id);
+	public String getAtrifact(Long id);
 	
 	
 }
