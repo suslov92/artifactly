@@ -352,7 +352,14 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		
 		public String getArtifactsForCurrentLocation() {
 
-			return localService.getArtifactsForCurrentLocation();
+			if(null == localService) {
+				
+				return "[]";
+			}
+			else {
+			
+				return localService.getArtifactsForCurrentLocation();
+			}
 		}
 		
 		public boolean canAccessInternet() {

@@ -17,8 +17,6 @@
 package org.artifactly.client.service;
 
 import java.util.Date;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import org.artifactly.client.ApplicationConstants;
 import org.artifactly.client.Artifactly;
@@ -40,7 +38,6 @@ import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
@@ -80,7 +77,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	private static final int NOTIFICATION_ID = 95691;
 
 	// Location Monitoring Timer Task Interval
-	private static final int TIMER_TASK_PERIDO = 360000; // 6 min
+	private static final int SERVICE_MAINTENANCE_THREADT_PERIDO = 360000; // 6 min
 	
 	// Location monitoring allowed last location fix time delta
 	private static final long MAX_LOCATION_UPDATE_DELAY = 360000; // 6 min
@@ -119,8 +116,9 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	// Binder access to service API
 	private IBinder localServiceBinder;
 	
-	// Timer to check on location updates
-	private Timer timer;
+	// Service maintenance thread
+	Thread serviceMaintenanceThread;
+	
 
 	public ArtifactlyService() {
 		
@@ -288,8 +286,9 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		// Register location listener and getting last known location
 		registerLocationListener();
 		
-		timer = new Timer();
-		timer.scheduleAtFixedRate(new MonitorLocationUpdateTask(), 1000, TIMER_TASK_PERIDO);
+		// Start the service maintenance thread
+		serviceMaintenanceThread = new Thread(new ServiceMaintenanceRunnable());
+		serviceMaintenanceThread.start();
 		
 		Log.i(LOG_TAG, "init() end");
 	}
@@ -341,42 +340,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		
 		return lastLocationUpdateTime;
 	}
-	
-	/*
-	 * Timer Task that checks the state of the location update 
-	 */
-	private class MonitorLocationUpdateTask extends TimerTask {
 
-		// Using a handler to prevent Looper errors:
-		// http://stackoverflow.com/questions/4187960/asynctask-and-looper-prepare-error
-		private Handler handler = new Handler(Looper.getMainLooper());
-		
-		@Override
-		public void run() {
-			
-			handler.post(new Runnable() {
-
-				public void run() {
-					
-					//Looper.prepare();
-					long currentTime = System.currentTimeMillis();
-					long timeReference = lastLocationUpdateTime + MAX_LOCATION_UPDATE_DELAY;
-					
-					// TODO: check for user configured "no tracking" time periods and or phone movement
-					if(timeReference < currentTime) {
-						Log.i(LOG_TAG, "*** >>> We haven't received any location updates recently. Resetting location listener");
-						unregisterLocationListeners();
-						registerLocationListener();
-					}
-					else {
-						
-						Log.i(LOG_TAG, "*** >>> Location updates are current.");
-					}
-				}
-			});
-		}
-	}
-	
 	/*
 	 * Register location listener
 	 * 1. network
@@ -708,8 +672,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 					Log.i(LOG_TAG, "Was not able to remove GPS listener updates");
 				}
 			}
-
-			
+		
 			/*
 			 * Check if there are any artifacts close to the current location. If there are,
 			 * we send a notification.
@@ -750,7 +713,6 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 						isGpsListenerEnabled = false;
 						Log.i(LOG_TAG, "Was not able to start GPS listener");
 					}
-					
 				}
 				else {
 					
@@ -788,5 +750,38 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		Log.i(LOG_TAG, "LocationListener.onStatusChanged()");
 		Log.i(LOG_TAG, "provider = " + provider);
 		Log.i(LOG_TAG, "status = " + status);
+	}
+	
+	public class ServiceMaintenanceRunnable implements Runnable{
+
+		public void run() {
+			
+			Looper.prepare();
+			while(true) {
+				
+				try {
+					
+					Thread.sleep(SERVICE_MAINTENANCE_THREADT_PERIDO);
+				}
+				catch (InterruptedException e) {
+					
+					Log.e(LOG_TAG, "Exception ocurred during Thread.sleep()", e);
+				}
+				
+				long currentTime = System.currentTimeMillis();
+				long timeReference = lastLocationUpdateTime + MAX_LOCATION_UPDATE_DELAY;
+				
+				// TODO: check for user configured "no tracking" time periods and or phone movement
+				if(timeReference < currentTime) {
+					Log.i(LOG_TAG, "*** >>> We haven't received any location updates recently. Resetting location listener");
+					unregisterLocationListeners();
+					registerLocationListener();
+				}
+				else {
+					
+					Log.i(LOG_TAG, "*** >>> Location updates are current.");
+				}
+			}
+		}
 	}
 }

@@ -228,11 +228,7 @@ public class LocalServiceImpl extends Binder implements LocalService {
 			return null;
 		}
 		else {
-
-			// TODO: Remove, this is just for debug
-			System.out.println("#### " + items.toString());
-			
-			
+	
 			return items.toString();
 		}
 	}
