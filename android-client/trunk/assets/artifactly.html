@@ -18,7 +18,7 @@
 
 	<div data-role="header" data-position="inline">
 		<a href="#new" data-icon="plus" data-transition="none" data-backbtn="false">New</a>
-		<h1>v0.0.1-a9</h1>
+		<h1>v0.0.1-a10</h1>
 		<a href="#options" data-icon="gear" data-transition="none">Options</a>
 	</div>
 
@@ -143,7 +143,7 @@
 
 <div data-role="page" id="debug-result">
 
-	<div data-role="header" data-backbtn="false" data-position="inline">
+	<div data-role="header" data-backbtn="false" data-position="fixed">
 		<a href="#main" data-icon="home" data-transition="none">Home</a>
 		<h1>Debug Results</h1>
 	</div>
@@ -156,6 +156,20 @@
 		</div>
 	</div>
 
+</div>
+
+<div data-role="dialog" id="dialog">
+
+	<div data-role="header" data-position="inline">
+		<h1>Dialog</h1>
+	</div>
+	
+	<div data-role="content">
+		<h1>Delete Artifact</h1>
+		<p>Are you sure you want to delete the artifact?</p>
+		<a href="#main" id="delete-artifact-yes" data-role="button" data-rel="back">Yes</a>
+		<a href="#main" id="delete-artifact-cancel" data-role="button" data-rel="back">Cancel</a>
+	</div>
 </div>
 
 </body>

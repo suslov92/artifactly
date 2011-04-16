@@ -41,8 +41,10 @@ $(document).ready(function() {
 		
 		$('#artifactly-list li').each(function (idx) {
 			$(this).bind('swiperight', function(event,ui) {
-				$(this).remove();
-				window.android.deleteArtifact(+($(this).attr('title')));
+				// Showing dialog. Data is removed if the user clicks on the dialog's yes button
+				$.mobile.changePage("#dialog", "none");
+				localStorage['deleteArtifactId'] = $(this).attr('title');
+
 			});
 		});
 	});
@@ -53,6 +55,16 @@ $(document).ready(function() {
 	$('#artifactly-list').delegate('li', 'click', function(event) {  
 
 		localStorage['artifactId'] = $(this).attr('title');
+	});
+	
+	/*
+	 * Clicking on the artifact deletion dialog yes button
+	 */
+	$('#delete-artifact-yes').click(function(event) {
+		
+		var id = localStorage['deleteArtifactId'];
+		window.android.deleteArtifact(+id);
+		$('#artifactly-list li').remove('[title="' + id + '"]');
 	});
 	
 	/*
