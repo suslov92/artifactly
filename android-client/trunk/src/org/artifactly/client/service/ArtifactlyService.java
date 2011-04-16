@@ -56,7 +56,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	private static final int GPS_LOCATION_MIN_TIME = 300000; // 5 min
 	private static final int GPS_LOCATION_MIN_DISTANCE = 50; // 50 m
 	private static final int NET_LOCATION_MIN_TIME = 240000; // 3 min
-	private static final int NET_LOCATION_MIN_DISTANCE = 100; // 100 m
+	private static final int NET_LOCATION_MIN_DISTANCE = 50; // 50 m
 	protected static final String DISTANCE = "dist";
 
 	// Location radius
@@ -348,17 +348,18 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		@Override
 		public void run() {
 			
-			long timeReference = System.currentTimeMillis() + MAX_LOCATION_UPDATE_DELAY;
+			long currentTime = System.currentTimeMillis();
+			long timeReference = lastLocationUpdateTime + MAX_LOCATION_UPDATE_DELAY;
 			
 			// TODO: check for user configured "no tracking" time periods and or phone movement
-			if(timeReference < lastLocationUpdateTime) {
-				Log.i(LOG_TAG, "We haven't received any location update. Resetting locaiton listener");
+			if(timeReference < currentTime) {
+				Log.i(LOG_TAG, "*** >>> We haven't received any location update. Resetting locaiton listener");
 				stopLocationTracking();
 				startLocationTracking();
 			}
 			else {
 				
-				Log.i(LOG_TAG, "Location updates are current.");
+				Log.i(LOG_TAG, "*** >>> Location updates are current.");
 			}
 		}
 	}
