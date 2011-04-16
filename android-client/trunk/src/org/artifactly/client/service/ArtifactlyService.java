@@ -40,7 +40,9 @@ import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.util.Log;
 
 public class ArtifactlyService extends Service implements OnSharedPreferenceChangeListener, ApplicationConstants {
@@ -345,22 +347,33 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	 */
 	private class MonitorLocationUpdateTask extends TimerTask {
 
+		// Using a handler to prevent Looper errors:
+		// http://stackoverflow.com/questions/4187960/asynctask-and-looper-prepare-error
+		private Handler handler = new Handler(Looper.getMainLooper());
+		
 		@Override
 		public void run() {
 			
-			long currentTime = System.currentTimeMillis();
-			long timeReference = lastLocationUpdateTime + MAX_LOCATION_UPDATE_DELAY;
-			
-			// TODO: check for user configured "no tracking" time periods and or phone movement
-			if(timeReference < currentTime) {
-				Log.i(LOG_TAG, "*** >>> We haven't received any location update. Resetting locaiton listener");
-				stopLocationTracking();
-				startLocationTracking();
-			}
-			else {
-				
-				Log.i(LOG_TAG, "*** >>> Location updates are current.");
-			}
+			handler.post(new Runnable() {
+
+				public void run() {
+					
+					//Looper.prepare();
+					long currentTime = System.currentTimeMillis();
+					long timeReference = lastLocationUpdateTime + MAX_LOCATION_UPDATE_DELAY;
+					
+					// TODO: check for user configured "no tracking" time periods and or phone movement
+					if(timeReference < currentTime) {
+						Log.i(LOG_TAG, "*** >>> We haven't received any location updates recently. Resetting location listener");
+						unregisterLocationListeners();
+						registerLocationListener();
+					}
+					else {
+						
+						Log.i(LOG_TAG, "*** >>> Location updates are current.");
+					}
+				}
+			});
 		}
 	}
 	
@@ -413,7 +426,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		}
 		catch(RuntimeException re) {
 			
-			Log.w(LOG_TAG, "registerLocationListener() RuntimeException");
+			Log.w(LOG_TAG, "registerLocationListener() RuntimeException", re);
 		}
 	}
 	
@@ -436,6 +449,10 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		catch(IllegalArgumentException iae) {
 			
 			Log.w(LOG_TAG, "IllegalArgumentException thrown while removing location listener updates");
+		}
+		catch(RuntimeException re) {
+			
+			Log.w(LOG_TAG, "unregisterLocationListeners() RuntimeException", re);
 		}
 	}
 
