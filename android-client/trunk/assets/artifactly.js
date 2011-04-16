@@ -246,7 +246,6 @@ function getArtifactsCallback(artifacts) {
 function getArtifactCallback(artifact) {
 
 	$(document).ready(function() {
-		
 		$('#selection-result-id').val(artifact[0].artId);
 		$('#selection-result-name').val(artifact[0].name);
 		$('#selection-result-data').val(artifact[0].data);
