@@ -39,7 +39,6 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.os.Looper;
 import android.util.Log;
 
 public class ArtifactlyService extends Service implements OnSharedPreferenceChangeListener, ApplicationConstants {
@@ -56,7 +55,12 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	private static final int GPS_LOCATION_MIN_DISTANCE = 50; // 50 m
 	private static final int NET_LOCATION_MIN_TIME = 240000; // 3 min
 	private static final int NET_LOCATION_MIN_DISTANCE = 50; // 50 m
+	private static final int PAS_LOCATION_MIN_TIME = 30000; // 30 sec
+	private static final int PAS_LOCATION_MIN_DISTANCE = 0; // 0 m
 	protected static final String DISTANCE = "dist";
+	private static final String GPS_PROVIDER = "GPS";
+	private static final String NET_PROVIDER = "NET";
+	private static final String PAS_PROVIDER = "PAS";
 
 	// Location radius
 	private static final int DEFAULT_RADIS = 100; // 100 m
@@ -75,12 +79,6 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	
 	// Notification constants
 	private static final int NOTIFICATION_ID = 95691;
-
-	// Location Monitoring Timer Task Interval
-	private static final int SERVICE_MAINTENANCE_THREADT_PERIDO = 360000; // 6 min
-	
-	// Location monitoring allowed last location fix time delta
-	private static final long MAX_LOCATION_UPDATE_DELAY = 360000; // 6 min
 	
 	// Context Resources
 	private String NOTIFICATION_TICKER_TEXT;
@@ -98,14 +96,19 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	private String mainLocationProviderName;
 	
 	// Location listeners
-	private LocationListener gpsLocationListener = getNewLocationListener();
-	private LocationListener networkLocationListener = getNewLocationListener();
+	private LocationListener gpsLocationListener;
+	private LocationListener networkLocationListener;
+	private LocationListener passiveLocationListener;
 	
 	// Location state
 	private boolean isGpsListenerEnabled = false;
 	
-	// Location last location update
+	// Last location update
 	private long lastLocationUpdateTime = 0;
+	
+	// Last send notification time
+	private long lastSendNotificationTime = 0;
+	private int lastSendNotificationTimeDelta = 20000; // 20 sec
 	
 	// DB adapter
 	private DbAdapter dbAdapter;
@@ -115,10 +118,6 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 
 	// Binder access to service API
 	private IBinder localServiceBinder;
-	
-	// Service maintenance thread
-	Thread serviceMaintenanceThread;
-	
 
 	public ArtifactlyService() {
 		
@@ -285,11 +284,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 
 		// Register location listener and getting last known location
 		registerLocationListener();
-		
-		// Start the service maintenance thread
-		serviceMaintenanceThread = new Thread(new ServiceMaintenanceRunnable());
-		serviceMaintenanceThread.start();
-		
+				
 		Log.i(LOG_TAG, "init() end");
 	}
 	
@@ -345,6 +340,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	 * Register location listener
 	 * 1. network
 	 * 2. gps
+	 * ... and passive provider
 	 * 
 	 * Also setting currentLocation via last known location
 	 */
@@ -353,8 +349,14 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		// If location manager is null, we just return
 		if(null == locationManager) {
 			
-			Log.e(LOG_TAG, "LocationManager instance is null");
-			return;
+			Log.e(LOG_TAG, "LocationManager instance is null. Tyring to get it via getSystemService() ...");
+			locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+			
+			if(null == locationManager) {
+				
+				Log.e(LOG_TAG, "Was not able to get LocationManager instance via getSystemService()");
+				return;
+			}
 		}
 
 		try {
@@ -363,6 +365,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 			if(locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
 
 				mainLocationProviderName = LocationManager.NETWORK_PROVIDER;
+				networkLocationListener = getNewLocationListener(NET_PROVIDER);
 				locationManager.requestLocationUpdates(mainLocationProviderName, NET_LOCATION_MIN_TIME, NET_LOCATION_MIN_DISTANCE, networkLocationListener);
 				currentLocation = locationManager.getLastKnownLocation(mainLocationProviderName);
 				Log.i(LOG_TAG, "registerLocationListener() -> NETWORK_PROVIDER");
@@ -370,6 +373,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 			else if(locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
 
 				mainLocationProviderName = LocationManager.GPS_PROVIDER;
+				gpsLocationListener = getNewLocationListener(GPS_PROVIDER);
 				locationManager.requestLocationUpdates(mainLocationProviderName, GPS_LOCATION_MIN_TIME, GPS_LOCATION_MIN_DISTANCE, gpsLocationListener);
 				currentLocation = locationManager.getLastKnownLocation(mainLocationProviderName);
 				Log.i(LOG_TAG, "registerLocationListener() -> GPS_PROVIDER");
@@ -377,6 +381,14 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 			else {
 
 				Log.w(LOG_TAG, "All available location providers [network, gps] are not available");
+			}
+			
+			// Also enable Passive provider
+			if(locationManager.isProviderEnabled(LocationManager.PASSIVE_PROVIDER)) {
+				
+				passiveLocationListener = getNewLocationListener(PAS_PROVIDER);
+				locationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, PAS_LOCATION_MIN_TIME, PAS_LOCATION_MIN_DISTANCE, passiveLocationListener);
+				Log.i(LOG_TAG, "registerLocationListener() -> PASSIVE_PROVIDER");
 			}
 		}
 		catch(IllegalArgumentException iae) {
@@ -409,6 +421,9 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		try {
 		
 			locationManager.removeUpdates(networkLocationListener);
+			networkLocationListener = null;
+			locationManager.removeUpdates(passiveLocationListener);
+			passiveLocationListener = null;
 		}
 		catch(IllegalArgumentException iae) {
 			
@@ -426,6 +441,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	 */
 	private void sendNotification() {
 
+		Log.i(LOG_TAG, ">>>> Sending Notification >>>>");
 		Intent notificationIntent = new Intent(this, Artifactly.class);
 		notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
 		//notificationIntent.putExtra(NOTIFICATION_INTENT_KEY, "Some data ...");
@@ -599,13 +615,16 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	/*
 	 * Create a location listener
 	 */
-	private LocationListener getNewLocationListener() {
+	private LocationListener getNewLocationListener(final String listenerName) {
 		
 		return new LocationListener() {
 
+			public String name = listenerName;
 			public void onLocationChanged(final Location location) {
 				
+				Log.i(LOG_TAG, "## Start onLocationChanged() Listener Provider = " + name);
 				locationChanged(location);
+				Log.i(LOG_TAG, "## End onLocationChanged()");
 			}
 
 			public void onProviderDisabled(String provider) {
@@ -663,6 +682,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 				try {
 					
 					locationManager.removeUpdates(gpsLocationListener);
+					gpsLocationListener = null;
 					isGpsListenerEnabled = false;
 					Log.i(LOG_TAG, "Removing GPS listener updates");
 				}
@@ -673,12 +693,17 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 				}
 			}
 		
+			// Make sure that we don't send to many notifications
+			boolean canSendNotificaiton = (lastSendNotificationTime + lastSendNotificationTimeDelta <= System.currentTimeMillis()) ? true : false;
+			
 			/*
 			 * Check if there are any artifacts close to the current location. If there are,
 			 * we send a notification.
 			 * 
 			 */
-			if(hasArtifactsForCurrentLocation()) {
+			if(canSendNotificaiton && hasArtifactsForCurrentLocation()) {
+				lastSendNotificationTime = System.currentTimeMillis();
+				cancelNotificaiton();
 				sendNotification();
 			}
 			else {
@@ -704,6 +729,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 					try {
 						
 						isGpsListenerEnabled = true;
+						gpsLocationListener = getNewLocationListener(GPS_PROVIDER);
 						locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, GPS_LOCATION_MIN_TIME, GPS_LOCATION_MIN_DISTANCE, gpsLocationListener);
 						
 						Log.i(LOG_TAG, "!!!! Enabling GPS listener updates !!!!");
@@ -750,38 +776,5 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		Log.i(LOG_TAG, "LocationListener.onStatusChanged()");
 		Log.i(LOG_TAG, "provider = " + provider);
 		Log.i(LOG_TAG, "status = " + status);
-	}
-	
-	public class ServiceMaintenanceRunnable implements Runnable{
-
-		public void run() {
-			
-			Looper.prepare();
-			while(true) {
-				
-				try {
-					
-					Thread.sleep(SERVICE_MAINTENANCE_THREADT_PERIDO);
-				}
-				catch (InterruptedException e) {
-					
-					Log.e(LOG_TAG, "Exception ocurred during Thread.sleep()", e);
-				}
-				
-				long currentTime = System.currentTimeMillis();
-				long timeReference = lastLocationUpdateTime + MAX_LOCATION_UPDATE_DELAY;
-				
-				// TODO: check for user configured "no tracking" time periods and or phone movement
-				if(timeReference < currentTime) {
-					Log.i(LOG_TAG, "*** >>> We haven't received any location updates recently. Resetting location listener");
-					unregisterLocationListeners();
-					registerLocationListener();
-				}
-				else {
-					
-					Log.i(LOG_TAG, "*** >>> Location updates are current.");
-				}
-			}
-		}
 	}
 }

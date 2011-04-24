@@ -15,5 +15,6 @@
     <string name="set_location_radius">Location radius is %1$d</string>
     <string name="delete_artifact_success">Deleted Artifact</string>
     <string name="delete_artifact_failure">Failed to delete Artifact</string>
+    <string name="get_artifact_failure">Was not able to get the Artifact</string>
     
 </resources>
