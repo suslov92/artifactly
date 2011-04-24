@@ -45,18 +45,19 @@ public class Artifactly extends Activity implements ApplicationConstants {
 
 	// Constants
 	private static final String EMPTY_STRING = "";
-	
+
 	// JavaScript function constants
 	private static final String JAVASCRIPT_PREFIX = "javascript:";
 	private static final String JAVASCRIPT_FUNCTION_OPEN_PARENTHESIS = "(";
 	private static final String JAVASCRIPT_FUNCTION_CLOSE_PARENTHESIS = ")";
 	private static final String JAVASCRIPT_BRIDGE_PREFIX = "android";
-	
+
 	// JavaScript functions
 	private static final String SHOW_SERVICE_RESULT = "showServiceResult";
 	private static final String GET_ARTIFACTS_CALLBACK = "getArtifactsCallback";
 	private static final String GET_ARTIFACT_CALLBACK = "getArtifactCallback";
-	
+	private static final String GET_ARTIFACTS_FOR_CURRENT_LOCATION = "getArtifactsForCurrentLocation";
+
 	private WebView webView = null;
 
 	private Handler mHandler = new Handler();
@@ -74,7 +75,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
+
 		Log.i(LOG_TAG, "onCreate()");
 
 		setContentView(R.layout.main);
@@ -84,7 +85,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		 * The start of the service at boot is handled via a BroadcastReceiver and the BOOT_COMPLETED action
 		 */
 		startService(new Intent(this, ArtifactlyService.class));
-		
+
 		// Bind to the service
 		bindService(new Intent(this, ArtifactlyService.class), serviceConnection, BIND_AUTO_CREATE);
 		isBound = true;
@@ -96,17 +97,17 @@ public class Artifactly extends Activity implements ApplicationConstants {
 
 		// Disable the vertical scroll bar
 		webView.setVerticalScrollBarEnabled(false);
-		
+
 		webView.addJavascriptInterface(new JavaScriptInterface(), JAVASCRIPT_BRIDGE_PREFIX);
-		
+
 		webView.setWebChromeClient(new WebChromeClient() {
-			  public boolean onConsoleMessage(ConsoleMessage cm) {
-			    Log.d("** A.A - JS **", cm.message() + " -- From line "
-			                         + cm.lineNumber() + " of "
-			                         + cm.sourceId() );
-			    return true;
-			  }
-			});
+			public boolean onConsoleMessage(ConsoleMessage cm) {
+				Log.d("** A.A - JS **", cm.message() + " -- From line "
+						+ cm.lineNumber() + " of "
+						+ cm.sourceId() );
+				return true;
+			}
+		});
 
 		webView.loadUrl(ARTIFACTLY_URL);
 	}
@@ -120,7 +121,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		super.onStart();
 
 		Log.i(LOG_TAG, "onStart()");
-		
+
 		if(!isBound) {
 			// Connect to the local service API
 			bindService(new Intent(this, ArtifactlyService.class), serviceConnection, BIND_AUTO_CREATE);
@@ -138,13 +139,15 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		super.onResume();
 
 		Log.i(LOG_TAG, "onResume()");
-		
+
 		if(!isBound) {
 			// Connect to the local service API
 			bindService(new Intent(this, ArtifactlyService.class), serviceConnection, BIND_AUTO_CREATE);
 			isBound = true;
 			Log.i(LOG_TAG, "onResume Binding service done");
 		}
+
+		new GetArtifactsForCurrentLocation().execute();
 	}
 
 	/*
@@ -156,11 +159,18 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		super.onPause();
 
 		Log.i(LOG_TAG, "onPause()");
-		
+
 		if(isBound) {
 
 			isBound = false;
-			unbindService(serviceConnection);
+			try {
+				
+				unbindService(serviceConnection);
+			}
+			catch(IllegalArgumentException e) {
+				
+				Log.w(LOG_TAG, "onPause() -> unbindService() caused an IllegalArgumentException");
+			}
 		}
 	}
 
@@ -173,11 +183,18 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		super.onStop();
 
 		Log.i(LOG_TAG, "onStop()");
-		
+
 		if(isBound) {
 
 			isBound = false;
-			unbindService(serviceConnection);
+			try {
+				
+				unbindService(serviceConnection);
+			}
+			catch(IllegalArgumentException e) {
+				
+				Log.w(LOG_TAG, "onStop() -> unbindService() caused an IllegalArgumentException");
+			}
 		}
 	}
 
@@ -190,11 +207,18 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		super.onDestroy();
 
 		Log.i(LOG_TAG, "onDestroy()");
-		
+
 		if(isBound) {
 
 			isBound = false;
-			unbindService(serviceConnection);
+			try {
+			
+				unbindService(serviceConnection);
+			}
+			catch(IllegalArgumentException e) {
+				
+				Log.w(LOG_TAG, "onDestroy() -> unbindService() caused an IllegalArgumentException");
+			}
 		}
 	}
 
@@ -206,16 +230,16 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	public void onNewIntent(Intent intent) {
 
 		Log.i(LOG_TAG, "onNewIntent()");
-		
+
 		Bundle extras = intent.getExtras();
 
 		if(null != extras && extras.containsKey(NOTIFICATION_INTENT_KEY)) {
-			
+
 			String data = extras.getString(NOTIFICATION_INTENT_KEY);
 			callJavaScriptFunction(SHOW_SERVICE_RESULT, data);
 		}
 	}
-	
+
 	/*
 	 * Helper method to call JavaScript methods
 	 */
@@ -238,7 +262,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 
 	// Define methods that are called from JavaScript
 	public class JavaScriptInterface {
-
+		
 		public void setRadius(int radius) {
 
 			Log.i(LOG_TAG, "A setRadius to " + radius);
@@ -256,31 +280,31 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		}
 
 		public void deleteArtifact(long id) {
-						
+
 			boolean isSuccess = localService.deleteArtifact(id);
-			 
+
 			if(isSuccess) {
-				
+
 				Toast.makeText(getApplicationContext(), R.string.delete_artifact_success, Toast.LENGTH_SHORT).show();
-			
+
 			}
 			else {
-				
+
 				Toast.makeText(getApplicationContext(), R.string.delete_artifact_failure, Toast.LENGTH_SHORT).show();
 			}
 		}
-		
-		
+
+
 		public void createArtifact(String name, String data) {
-			
+
 			Log.i(LOG_TAG, "called createArtifact name = " + name + " : data = " + data);
-			
+
 			if(null == name || EMPTY_STRING.equals(name)) {
-				
+
 				Toast.makeText(getApplicationContext(), R.string.create_artifact_name_error, Toast.LENGTH_SHORT).show();
 				return;
 			}
-			
+
 			boolean isSuccess = localService.createArtifact(name, data);
 
 			if(isSuccess) {
@@ -326,9 +350,9 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			SharedPreferences settings = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
 			return settings.getInt(PREFERENCE_RADIUS, PREFERENCE_RADIUS_DEFAULT);
 		}
-		
+
 		public void showRadius() {
-			
+
 			SharedPreferences settings = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
 			int radius = settings.getInt(PREFERENCE_RADIUS, PREFERENCE_RADIUS_DEFAULT);
 			String message = String.format(getResources().getString(R.string.set_location_radius), radius);
@@ -339,33 +363,26 @@ public class Artifactly extends Activity implements ApplicationConstants {
 
 			return localService.getLocation();
 		}
-		
+
 		public void getArtifact(long id) {
-			
+
 			new GetArtifactTask().execute(new Long(id));
 		}
-		
+
 		public void getArtifacts() {
-			
+
 			new GetArtifactsTask().execute();
 		}
-		
-		public String getArtifactsForCurrentLocation() {
 
-			if(null == localService) {
-				
-				return "[]";
-			}
-			else {
-			
-				return localService.getArtifactsForCurrentLocation();
-			}
+		public void getArtifactsForCurrentLocation() {
+
+			new GetArtifactsForCurrentLocation().execute();
 		}
-		
+
 		public boolean canAccessInternet() {
-			
+
 			boolean canAccessInternet = localService.canAccessInternet();
-			
+
 			if(!canAccessInternet) {
 				Toast.makeText(getApplicationContext(), R.string.can_access_internet_error, Toast.LENGTH_LONG).show();
 			}
@@ -393,27 +410,67 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			}
 		};
 	}
-	
+
+	private class GetArtifactsForCurrentLocation extends AsyncTask<Void, Void, Void> {
+
+		@Override
+		protected Void doInBackground(Void... params) {
+
+			if(null == localService) {
+				
+				Log.e(LOG_TAG, "LocalService instance is null : getArtifactsForCurrentLocation()");
+				callJavaScriptFunction(GET_ARTIFACTS_FOR_CURRENT_LOCATION, "[]");
+			}
+			else {
+
+				String result = localService.getArtifactsForCurrentLocation();
+				callJavaScriptFunction(GET_ARTIFACTS_FOR_CURRENT_LOCATION, result);
+			}
+
+			return null;
+		}
+
+	}
+
 	private class GetArtifactsTask extends AsyncTask<Void, Void, Void> {
 
 		@Override
 		protected Void doInBackground(Void... arg0) {
+
+			if(null == localService) {
+
+				Log.e(LOG_TAG, "LocalService instance is null : getArtifacts()");
+				callJavaScriptFunction(GET_ARTIFACTS_CALLBACK, "[]");
+			}
+			else {
+
+				String result = localService.getArtifacts();
+				callJavaScriptFunction(GET_ARTIFACTS_CALLBACK, result);
+				
+			}
 			
-			String result = localService.getArtifacts();
-			callJavaScriptFunction(GET_ARTIFACTS_CALLBACK, result);
 			return null;
 		}	
 	}
-	
+
 	private class GetArtifactTask extends AsyncTask<Long, Void, Void> {
 
 		@Override
 		protected Void doInBackground(Long... ids) {
-			
-			String result = localService.getAtrifact(ids[0]);
-			callJavaScriptFunction(GET_ARTIFACT_CALLBACK, result);
+
+			if(null == localService) {
+				
+				Toast.makeText(getApplicationContext(), R.string.get_artifact_failure, Toast.LENGTH_LONG).show();
+				Log.e(LOG_TAG, "LocalService instance is null : getAtrifact()");
+				callJavaScriptFunction(GET_ARTIFACT_CALLBACK, "[]");
+			}
+			else {
+				
+				String result = localService.getAtrifact(ids[0]);
+				callJavaScriptFunction(GET_ARTIFACT_CALLBACK, result);
+			}
+
 			return null;
 		}
-		
 	}
 }

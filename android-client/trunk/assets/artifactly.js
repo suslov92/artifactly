@@ -22,31 +22,8 @@ $(document).ready(function() {
 	 */
 	$('#main').bind("pageshow", function() {
 		
-		var artifacts = JSON.parse(window.android.getArtifactsForCurrentLocation());
-		
-		$('#artifactly-list li').remove();
-		$('#artifactly-list ul').listview('refresh');
-		
-		if(artifacts.length < 1) {
-			$('#artifactly-message').text("There are no Artifacts close by");
-		}
-		else {
-		
-			$('#artifactly-message').text("");
-			$.each(artifacts, function(i, val) {
-				$('#artifactly-list ul').append('<li title="' + val.artId + '"><a href="#selection-result" data-transition="none">' + val.name + '</a></li>');
-			});
-			$('#artifactly-list ul').listview('refresh');
-		}
-		
-		$('#artifactly-list li').each(function (idx) {
-			$(this).bind('swiperight', function(event,ui) {
-				// Showing dialog. Data is removed if the user clicks on the dialog's yes button
-				$.mobile.changePage("#dialog", "none");
-				localStorage['deleteArtifactId'] = $(this).attr('title');
-
-			});
-		});
+		window.android.getArtifactsForCurrentLocation();
+		 
 	});
 
 	/*
@@ -142,6 +119,7 @@ $(document).ready(function() {
 	$('#set-radius').click(function() {
 		
 		var radius = $('#radius-input').val();
+		window.android.setRadius(+radius);
 	});
 
 	/*
@@ -188,7 +166,6 @@ $(document).ready(function() {
 			$('#log-accuracy').text("Accuracy: " + data[2]);
 			$('#log-time').text("Time: " + data[3]);
 			$('#log-time-latest').text("Last: " + data[4]);
-			
 		}
 		else if(selected.val() == "show-map") {
 			
@@ -208,9 +185,12 @@ function showServiceResult(data) {
 	$(document).ready(function() {
 		
 		$('#artifactly-list li').remove();
+		
 		$.each(data, function(i, val) {
+		
 			$('#artifactly-list ul').append('<li><a href="#selection-result" data-transition="none">' + val.name + '</a></li>');
 		});
+		
 		$('#artifactly-list ul').listview('refresh');
 	});
 }
@@ -223,34 +203,81 @@ function getArtifactsCallback(artifacts) {
 		$('#artifactly-list-debug ul').listview('refresh');
 
 		if(artifacts.length < 1) {
+			
 			$('#artifactly-message-debug').text("There are no Artifacts");
 		}
 		else {
 
 			$('#artifactly-message-debug').text("");
 			$.each(artifacts, function(i, val) {
+				
 				$('#artifactly-list-debug ul').append('<li title="' + val.artId + '"><a href="#selection-result" data-transition="none">' + val.name + '</a></li>');
 			});
+			
 			$('#artifactly-list-debug ul').listview('refresh');
 		}
 
-		$('#artifactly-list-debug li').each(function (idx) {
-			$(this).bind('swiperight', function(event,ui) {
-				$(this).remove();
-				window.android.deleteArtifact(+($(this).attr('title')));
-			});
-		});
+//		$('#artifactly-list-debug li').each(function (idx) {
+//			
+//			$(this).bind('swiperight', function(event,ui) {
+//			
+//				$(this).remove();
+//				window.android.deleteArtifact(+($(this).attr('title')));
+//			});
+//		});
 	});
 }
 
 function getArtifactCallback(artifact) {
 
+	if(artifact.length != 1) {
+		
+		// In case of an error, we go back to the main page
+		$.mobile.changePage("#main", "none");
+	}
+	else {
+
+		$(document).ready(function() {
+			//$('#selection-result-id').val(artifact[0].artId);
+			$('#selection-result-name').val(artifact[0].name);
+			$('#selection-result-data').val(artifact[0].data);
+			$('#selection-result-lat').val((+artifact[0].lat).toFixed(6));
+			$('#selection-result-long').val((+artifact[0].long).toFixed(6));
+		});
+	}
+}
+
+function getArtifactsForCurrentLocation(artifacts) {
+	
 	$(document).ready(function() {
-		$('#selection-result-id').val(artifact[0].artId);
-		$('#selection-result-name').val(artifact[0].name);
-		$('#selection-result-data').val(artifact[0].data);
-		$('#selection-result-lat').val((+artifact[0].lat).toFixed(6));
-		$('#selection-result-long').val((+artifact[0].long).toFixed(6));
+		
+		$('#artifactly-list li').remove();
+		$('#artifactly-list ul').listview('refresh');
+		
+		if(artifacts.length < 1) {
+			
+			$('#artifactly-message').text("There are no Artifacts close by");
+		}
+		else {
+		
+			$('#artifactly-message').text("");
+			$.each(artifacts, function(i, val) {
+				
+				$('#artifactly-list ul').append('<li title="' + val.artId + '"><a href="#selection-result" data-transition="none">' + val.name + '</a></li>');
+			});
+			
+			$('#artifactly-list ul').listview('refresh');
+		}
+		
+		$('#artifactly-list li').each(function (idx) {
+			
+			$(this).bind('swiperight', function(event,ui) {
+			
+				// Showing dialog. Data is removed if the user clicks on the dialog's yes button
+				$.mobile.changePage("#dialog", "none");
+				localStorage['deleteArtifactId'] = $(this).attr('title');
+			});
+		});
 	});
 }
 
