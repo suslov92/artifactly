@@ -15,15 +15,16 @@
  */
 
 $(document).ready(function() {
-	
 
 	/*
 	 * Initialize main page
 	 */
 	$('#main').bind("pageshow", function() {
+
+		if(typeof window.android != "undefined") {
 		
-		window.android.getArtifactsForCurrentLocation();
-		 
+			window.android.getArtifactsForCurrentLocation();
+		}
 	});
 
 	/*
@@ -33,17 +34,17 @@ $(document).ready(function() {
 
 		localStorage['artifactId'] = $(this).attr('title');
 	});
-	
+
 	/*
 	 * Clicking on the artifact deletion dialog yes button
 	 */
 	$('#delete-artifact-yes').click(function(event) {
-		
+
 		var id = localStorage['deleteArtifactId'];
 		window.android.deleteArtifact(+id);
 		$('#artifactly-list li').remove('[title="' + id + '"]');
 	});
-	
+
 	/*
 	 * Clicking on the a list item, stores the item's id in localStorage
 	 */
@@ -56,68 +57,48 @@ $(document).ready(function() {
 	 * Show the result after clicking on a list item
 	 */
 	$('#selection-result').bind('pageshow', function() {
-	
+
 		var id = localStorage.getItem('artifactId');
 		window.android.getArtifact(+id);
 	});
-	
+
 	/*
 	 * Initialize the option's page
 	 */
 	$('#options').bind('pageshow', function(){
-		
+
 		$('#radius-input').val(window.android.getRadius());
 		$('#radius-input').slider('refresh');	
 	});
-		
+
 	/*
 	 * Loading the map and marker on the map page
 	 */
 	$('#map').bind('pageshow', function() {
-		
-		// First we check if we have Internet access
+
+		/*
+		 * First we check if we have Internet access. The Activity will show a 
+		 * message if we don't have Internet access
+		 */
 		var canAccessInternet = window.android.canAccessInternet();
 		if(!canAccessInternet) {
-			
+
 			return;
 		}
-		
-		var data = JSON.parse(window.android.getLocation());
-		var latlng = new google.maps.LatLng(data[0], data[1]);
-        
-        var myOptions = {
-              zoom: 15,
-              center: latlng,
-              mapTypeId: google.maps.MapTypeId.ROADMAP
-            };
-        
-        var map = new google.maps.Map(document.getElementById("map-canvas"), myOptions);
-        map.panTo(latlng);
-       
-        var marker = new google.maps.Marker();
-        marker.setPosition(latlng);
-        marker.setMap(map);
-        marker.setAnimation(google.maps.Animation.DROP);
-        
-        var content = "Latitude = " + (data[0]).toFixed(6) + "<br />Longitude = " + (data[1]).toFixed(6) +"<br />Accuracy = " + data[2] + " m";
-        var infowindow = new google.maps.InfoWindow({
-            content: content
-        });
-        
-        google.maps.event.addListener(marker, 'click', function() {
-            infowindow.open(map,marker);
-        });    
+
+		// Can access the Internet, thus we can load the Google maps API and map
+		$.getScript('http://maps.google.com/maps/api/js?sensor=true&callback=loadMap');
 	});
 
 	$('#close-and-home').click(function() {
 		$.mobile.changePage("#main", "none");
 	});
-	
+
 	/*
 	 * Set radius button click handler
 	 */
 	$('#set-radius').click(function() {
-		
+
 		var radius = $('#radius-input').val();
 		window.android.setRadius(+radius);
 	});
@@ -126,40 +107,40 @@ $(document).ready(function() {
 	 * Get radius button click handler
 	 */
 	$('#get-radius').click(function() {
-		
+
 		window.android.showRadius();
 	});
-	
+
 	/*
 	 * Create artifact cancel button
 	 */
 	$('#cancel-artifact-button').click(function() {
-		
+
 		$.mobile.changePage("#main", "none");
 	});
-	
+
 	/*
 	 * Create artifact add button
 	 */
 	$('#add-artifact-button').click(function() {
-		
+
 		var name = $('#artifact-name').val();
 		var data = $('#artifact-data').val();
 		window.android.createArtifact(name, data);
-		
+
 		$('#artifact-name').val('');
 		$('#artifact-data').val('');
 	});
-	
+
 	/*
 	 * Debug select menu
 	 */
 	$('#select-debug').change(function() {
-		
+
 		var selected = $('#select-debug option:selected');
-		
+
 		if(selected.val() == "get-location") {
-			
+
 			var data = JSON.parse(window.android.getLocation());
 			$('#log-latitude').text("Latitude: " + data[0].toFixed(6));
 			$('#log-longitude').text("Longitude: " + data[1].toFixed(6));
@@ -168,70 +149,81 @@ $(document).ready(function() {
 			$('#log-time-latest').text("Last: " + data[4]);
 		}
 		else if(selected.val() == "show-map") {
-			
+
 			$.mobile.changePage("#map", "none");
 		}
 		else if(selected.val() == "get-artifacts") {
-			
+
 			$.mobile.changePage("#debug-result", "none");
-			
+
 			window.android.getArtifacts();			
 		}
 	});
 });
 
-function showServiceResult(data) {
+/*
+ * Map page callback
+ */
+function loadMap() {
 
 	$(document).ready(function() {
 		
-		$('#artifactly-list li').remove();
-		
-		$.each(data, function(i, val) {
-		
-			$('#artifactly-list ul').append('<li><a href="#selection-result" data-transition="none">' + val.name + '</a></li>');
+		var data = JSON.parse(window.android.getLocation());
+		var latlng = new google.maps.LatLng(data[0], data[1]);
+
+		var myOptions = {
+				zoom: 15,
+				center: latlng,
+				mapTypeId: google.maps.MapTypeId.ROADMAP
+		};
+
+		var map = new google.maps.Map(document.getElementById("map-canvas"), myOptions);
+		map.panTo(latlng);
+
+		var marker = new google.maps.Marker();
+		marker.setPosition(latlng);
+		marker.setMap(map);
+		marker.setAnimation(google.maps.Animation.DROP);
+
+		var content = "Latitude = " + (data[0]).toFixed(6) + "<br />Longitude = " + (data[1]).toFixed(6) +"<br />Accuracy = " + data[2] + " m";
+		var infowindow = new google.maps.InfoWindow({
+			content: content
 		});
-		
-		$('#artifactly-list ul').listview('refresh');
+
+		google.maps.event.addListener(marker, 'click', function() {
+			infowindow.open(map,marker);
+		});    
 	});
 }
 
 function getArtifactsCallback(artifacts) {
-		
+
 	$(document).ready(function() {
-		
+
 		$('#artifactly-list-debug li').remove();
 		$('#artifactly-list-debug ul').listview('refresh');
 
 		if(artifacts.length < 1) {
-			
+
 			$('#artifactly-message-debug').text("There are no Artifacts");
 		}
 		else {
 
 			$('#artifactly-message-debug').text("");
 			$.each(artifacts, function(i, val) {
-				
+
 				$('#artifactly-list-debug ul').append('<li title="' + val.artId + '"><a href="#selection-result" data-transition="none">' + val.name + '</a></li>');
 			});
-			
+
 			$('#artifactly-list-debug ul').listview('refresh');
 		}
-
-//		$('#artifactly-list-debug li').each(function (idx) {
-//			
-//			$(this).bind('swiperight', function(event,ui) {
-//			
-//				$(this).remove();
-//				window.android.deleteArtifact(+($(this).attr('title')));
-//			});
-//		});
 	});
 }
 
 function getArtifactCallback(artifact) {
 
 	if(artifact.length != 1) {
-		
+
 		// In case of an error, we go back to the main page
 		$.mobile.changePage("#main", "none");
 	}
@@ -248,36 +240,51 @@ function getArtifactCallback(artifact) {
 }
 
 function getArtifactsForCurrentLocation(artifacts) {
-	
+
 	$(document).ready(function() {
-		
+
 		$('#artifactly-list li').remove();
 		$('#artifactly-list ul').listview('refresh');
-		
+
 		if(artifacts.length < 1) {
-			
+
 			$('#artifactly-message').text("There are no Artifacts close by");
 		}
 		else {
-		
+
 			$('#artifactly-message').text("");
 			$.each(artifacts, function(i, val) {
-				
+
 				$('#artifactly-list ul').append('<li title="' + val.artId + '"><a href="#selection-result" data-transition="none">' + val.name + '</a></li>');
 			});
-			
+
 			$('#artifactly-list ul').listview('refresh');
 		}
-		
+
 		$('#artifactly-list li').each(function (idx) {
-			
+
 			$(this).bind('swiperight', function(event,ui) {
-			
+
 				// Showing dialog. Data is removed if the user clicks on the dialog's yes button
 				$.mobile.changePage("#dialog", "none");
 				localStorage['deleteArtifactId'] = $(this).attr('title');
 			});
 		});
+	});
+}
+
+function showServiceResult(data) {
+
+	$(document).ready(function() {
+
+		$('#artifactly-list li').remove();
+
+		$.each(data, function(i, val) {
+
+			$('#artifactly-list ul').append('<li><a href="#selection-result" data-transition="none">' + val.name + '</a></li>');
+		});
+
+		$('#artifactly-list ul').listview('refresh');
 	});
 }
 

@@ -20,8 +20,11 @@ import org.artifactly.client.service.ArtifactlyService;
 import org.artifactly.client.service.LocalService;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
@@ -67,7 +70,9 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	private LocalService localService = null;
 	private boolean isBound = false;
 
-
+	IntentFilter intentFilter = new IntentFilter(LOCATION_UPDATE_INTENT);
+	BroadcastReceiver broadcastReceiver = null;
+	
 	/*
 	 * (non-Javadoc)
 	 * @see android.app.Activity#onCreate(android.os.Bundle)
@@ -110,6 +115,18 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		});
 
 		webView.loadUrl(ARTIFACTLY_URL);
+		
+		// Instantiate the broadcast receiver
+		broadcastReceiver = new BroadcastReceiver() {
+
+			@Override
+			public void onReceive(Context context, Intent intent) {
+				
+				Log.i(LOG_TAG, "Broadcast --> onReceive()");
+				Toast.makeText(getApplicationContext(), R.string.broadcast_location_update, Toast.LENGTH_SHORT).show();
+				new GetArtifactsForCurrentLocation().execute();
+			}
+		};
 	}
 
 	/*
@@ -147,7 +164,8 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			Log.i(LOG_TAG, "onResume Binding service done");
 		}
 
-		new GetArtifactsForCurrentLocation().execute();
+		// Register broadcast receiver
+		registerReceiver(broadcastReceiver, intentFilter);
 	}
 
 	/*
@@ -172,6 +190,9 @@ public class Artifactly extends Activity implements ApplicationConstants {
 				Log.w(LOG_TAG, "onPause() -> unbindService() caused an IllegalArgumentException");
 			}
 		}
+		
+		// Unregister broadcast receiver
+		unregisterReceiver(broadcastReceiver);
 	}
 
 	/*
@@ -265,7 +286,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		
 		public void setRadius(int radius) {
 
-			Log.i(LOG_TAG, "A setRadius to " + radius);
+			Log.i(LOG_TAG, "JS --> setRadius");
 
 			if(PREFERENCE_RADIUS_DEFAULT < radius) {
 
@@ -281,6 +302,8 @@ public class Artifactly extends Activity implements ApplicationConstants {
 
 		public void deleteArtifact(long id) {
 
+			Log.i(LOG_TAG, "JS --> deleteArtifact");
+			
 			boolean isSuccess = localService.deleteArtifact(id);
 
 			if(isSuccess) {
@@ -297,7 +320,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 
 		public void createArtifact(String name, String data) {
 
-			Log.i(LOG_TAG, "called createArtifact name = " + name + " : data = " + data);
+			Log.i(LOG_TAG, "JS --> createArtifact");
 
 			if(null == name || EMPTY_STRING.equals(name)) {
 
@@ -317,42 +340,16 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			}
 		}
 
-		public void startLocationTracking() {
-
-			boolean isSuccess = localService.startLocationTracking();
-
-			if(isSuccess) {
-
-				Toast.makeText(getApplicationContext(), R.string.start_location_tracking_success, Toast.LENGTH_SHORT).show();
-			}
-			else {
-
-				Toast.makeText(getApplicationContext(), R.string.start_location_tracking_failure, Toast.LENGTH_SHORT).show();
-			}
-		}
-
-		public void stopLocationTracking() {
-
-			boolean isSuccess = localService.stopLocationTracking();
-
-			if(isSuccess) {
-
-				Toast.makeText(getApplicationContext(), R.string.stop_location_tracking_success, Toast.LENGTH_SHORT).show();
-			}
-			else {
-
-				Toast.makeText(getApplicationContext(), R.string.stop_location_tracking_failure, Toast.LENGTH_SHORT).show();
-			}
-		}
-
 		public int getRadius() {
 
+			Log.i(LOG_TAG, "JS --> getRadius");
 			SharedPreferences settings = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
 			return settings.getInt(PREFERENCE_RADIUS, PREFERENCE_RADIUS_DEFAULT);
 		}
 
 		public void showRadius() {
-
+			
+			Log.i(LOG_TAG, "JS --> showRadius");
 			SharedPreferences settings = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
 			int radius = settings.getInt(PREFERENCE_RADIUS, PREFERENCE_RADIUS_DEFAULT);
 			String message = String.format(getResources().getString(R.string.set_location_radius), radius);
@@ -361,26 +358,31 @@ public class Artifactly extends Activity implements ApplicationConstants {
 
 		public String getLocation() {
 
+			Log.i(LOG_TAG, "JS --> getLocation");
 			return localService.getLocation();
 		}
 
 		public void getArtifact(long id) {
 
+			Log.i(LOG_TAG, "JS --> getArtifact");
 			new GetArtifactTask().execute(new Long(id));
 		}
 
 		public void getArtifacts() {
 
+			Log.i(LOG_TAG, "JS --> getArtifacts");
 			new GetArtifactsTask().execute();
 		}
 
 		public void getArtifactsForCurrentLocation() {
 
+			Log.i(LOG_TAG, "JS --> getArtifactsForCurrentLocation");
 			new GetArtifactsForCurrentLocation().execute();
 		}
 
 		public boolean canAccessInternet() {
 
+			Log.i(LOG_TAG, "JS --> canAccessInternet");
 			boolean canAccessInternet = localService.canAccessInternet();
 
 			if(!canAccessInternet) {
