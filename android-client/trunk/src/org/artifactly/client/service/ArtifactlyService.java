@@ -119,6 +119,9 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	// Binder access to service API
 	private IBinder localServiceBinder;
 
+	// Intent for sending location update broadcast
+	private Intent locationUpdateIntent = new Intent(LOCATION_UPDATE_INTENT);
+	
 	public ArtifactlyService() {
 		
 		super();
@@ -675,6 +678,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 			// Update the current location with the new one
 			currentLocation = location;
 			
+			sendBroadcast(locationUpdateIntent);
 			// Since we are getting a more accurate location, we should check if the 
 			// GPS listener is still enabled. If it is enabled we can turn it off
 			if(isGpsListenerEnabled) {

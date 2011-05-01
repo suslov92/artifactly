@@ -21,4 +21,5 @@ public interface ApplicationConstants {
 	public static final String NOTIFICATION_INTENT_KEY = "message";
 	public static final String PREFERENCE_RADIUS = "radius";
 	public static final int PREFERENCE_RADIUS_DEFAULT = 100;
+	public static final String LOCATION_UPDATE_INTENT = "org.artifactly.client.service.LocationUpdateIntent";
 }
