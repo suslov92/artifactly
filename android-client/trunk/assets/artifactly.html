@@ -6,9 +6,10 @@
 	<meta name="viewport" content="height=device-height,width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 	<link rel="stylesheet" href="jquery.mobile-1.0a4.1.20110515.min.css" />
 	<link rel="stylesheet" href="artifactly.css" />
+	<script type="text/javascript" src="http://www.google.com/jsapi?key=YourKey"></script>
 	<script type="text/javascript" src="jquery-1.6.1.min.js"></script>
-	<script type="text/javascript" src="artifactly.js"></script>
 	<script type="text/javascript" src="mock.js"></script>
+	<script type="text/javascript" src="artifactly.js"></script>
 	<script type="text/javascript" src="jquery.mobile-1.0a4.1.20110515.min.js"></script>
 </head> 
 <body> 
@@ -17,7 +18,7 @@
 
 	<div data-role="header" data-position="inline">
 		<a href="#new" data-icon="plus" data-transition="none" data-backbtn="false">New</a>
-		<h1>v0.0.1-a16</h1>
+		<h1>v0.0.1-a19</h1>
 		<a href="#options" data-icon="gear" data-transition="none">Options</a>
 	</div>
 
@@ -53,11 +54,32 @@
 		<div data-role="fieldcontain">
     		<label for="artifact-location">Location:</label>
     		<input type="text" name="artifact-location" id="artifact-location" value=""/>
+    		<a href="#new-location" data-role="button" data-inline="true" data-icon="plus">New</a>
 		</div>
 		<div data-role="controlgroup" data-type="horizontal" style="text-align:center">
 			<input type="button" name="add-artifact-button" id="add-artifact-button" data-icon="check" value="Add" />
 			<input type="button" name="cancel-artifact-button" id="cancel-artifact-button" data-icon="minus" value="Cancel" />
 		</div>
+	</div>
+</div>
+
+<div data-role="page" id="new-location">
+
+	<div data-role="header" data-backbtn="false" data-position="inline">
+		<a href="#main" data-icon="home" data-transition="none">Home</a>
+		<h1>Create Location</h1>
+		<a href="#new" data-icon="back" data-transition="none">Back</a>
+	</div>
+	
+	<div data-role="content">
+		<h3>Fixed Location: West Sacramento, CA</h3>
+		<div data-role="fieldcontain">
+    		<label for="location-name">Location:</label>
+    		<input type="text" name="location-name" id="location-name" value=""/>
+    		<input type="button" name="search-location-button" id="search-location-button" data-icon="search" data-inline="true" value="Search" />
+		</div>
+		<div id="branding" style="float: left;"></div><br />
+		<div id="search-result"></div>
 	</div>
 </div>
 

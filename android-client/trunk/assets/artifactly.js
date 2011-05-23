@@ -11,8 +11,10 @@
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
- * limitations under the License. 
+ * limitations under the License.
  */
+
+var isSearchApiLoaded = false;
 
 $(document).ready(function() {
 
@@ -89,7 +91,7 @@ $(document).ready(function() {
 		// Can access the Internet, thus we can load the Google maps API and map
 		$.getScript('http://maps.google.com/maps/api/js?sensor=true&callback=loadMap');
 	});
-
+	
 	$('#close-and-home').click(function() {
 		$.mobile.changePage("#main", "none");
 	});
@@ -131,6 +133,41 @@ $(document).ready(function() {
 		$('#artifact-name').val('');
 		$('#artifact-data').val('');
 	});
+	
+	/*
+	 * Search location button
+	 */
+	$('#search-location-button').click(function() {
+		
+		var search = $('#location-name').val();
+		
+		if(!search || "" === search) {
+			return;
+		}
+		
+		if(isSearchApiLoaded) {
+			
+			// Create a LocalSearch instance.
+			var localSearch = new google.search.LocalSearch();
+
+			// Set the Local Search center point
+			localSearch.setCenterPoint("West Sacramento, CA");
+
+			// Set searchComplete as the callback function when a search is complete. The
+			// localSearch object will have results in it.
+			var result = new Array();
+			result[0] = localSearch;
+			localSearch.setSearchCompleteCallback(this, searchComplete, result);
+
+			// Specify search query
+			localSearch.execute(search + ' West Sacramento CA');
+
+			// Include the required Google branding.
+			// Note that getBranding is called on google.search.Search
+			google.search.Search.getBranding('branding');			
+		}
+		
+	});
 
 	/*
 	 * Debug select menu
@@ -160,6 +197,44 @@ $(document).ready(function() {
 		}
 	});
 });
+
+/*
+ * Load Google search API
+ */
+function loadSearchApi() {
+	
+	var canAccessInternet = window.android.canAccessInternet();
+	if(canAccessInternet) {
+
+		google.load("search", "1");
+		google.setOnLoadCallback(onLoadSearchAPI);
+	}
+}
+
+/*
+ * Google search api callback
+ */
+function onLoadSearchAPI() {
+
+	isSearchApiLoaded = true;
+}
+
+
+function searchComplete(localSearch) {
+	
+	$(document).ready(function() {
+	
+		if (localSearch.results && localSearch.results.length > 0) {
+			
+			$('#search-result').html("<br />").append("Result: ").append(localSearch.results.length).append("<br />");
+			
+			for (var i = 0; i < localSearch.results.length; i++) {
+				
+				$('#search-result').append(localSearch.results[i].title + " : ").append("LAT = " + localSearch.results[i].lat + " : ").append("LNG = " + localSearch.results[i].lng).append("<br />");
+			}
+		}
+	});
+}
 
 /*
  * Map page callback
@@ -286,6 +361,14 @@ function showServiceResult(data) {
 
 		$('#artifactly-list ul').listview('refresh');
 	});
+}
+
+/*
+ * Load search API if necessary
+ */
+if(!isSearchApiLoaded) {
+
+	loadSearchApi();
 }
 
 
