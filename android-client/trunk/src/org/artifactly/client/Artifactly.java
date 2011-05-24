@@ -39,6 +39,7 @@ import android.widget.Toast;
 
 public class Artifactly extends Activity implements ApplicationConstants {
 
+	private static final String GOOGLE_SEARCH_API_KEY = "YOUR-API-KEY";
 	private static final String ARTIFACTLY_URL = "file:///android_asset/artifactly.html";
 
 	private static final String LOG_TAG = " ** A.A. **";
@@ -389,6 +390,12 @@ public class Artifactly extends Activity implements ApplicationConstants {
 				Toast.makeText(getApplicationContext(), R.string.can_access_internet_error, Toast.LENGTH_LONG).show();
 			}
 			return canAccessInternet;
+		}
+		
+		public String getGoogleSearchApiKey() {
+			
+			Log.i(LOG_TAG, "JS --> getGoogleSearchApiKey");
+			return GOOGLE_SEARCH_API_KEY;
 		}
 	} 
 

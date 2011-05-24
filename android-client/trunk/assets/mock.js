@@ -78,4 +78,9 @@ if(typeof window.android == "undefined") {
 
 		getArtifactCallback(JSON.parse(data));
 	}
+	
+	window.android.getGoogleSearchApiKey = function() {
+		
+		return "YOUR-API-KEY";
+	}
 }

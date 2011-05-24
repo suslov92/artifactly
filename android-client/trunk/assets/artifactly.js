@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-var isSearchApiLoaded = false;
+/*
+ * Initialize Google JSAPI
+ */
+initGoogleJSAPI();
 
 $(document).ready(function() {
 
@@ -23,6 +26,7 @@ $(document).ready(function() {
 	 */
 	$('#main').bind("pageshow", function() {
 
+		// There are rare cases when the JavaScript to Android native bridge is not ready
 		if(typeof window.android != "undefined") {
 		
 			window.android.getArtifactsForCurrentLocation();
@@ -83,13 +87,11 @@ $(document).ready(function() {
 		 * message if we don't have Internet access
 		 */
 		var canAccessInternet = window.android.canAccessInternet();
-		if(!canAccessInternet) {
+		if(canAccessInternet) {
 
-			return;
+			// Can access the Internet, thus we can load the Google maps API and map
+			$.getScript('http://maps.google.com/maps/api/js?sensor=true&callback=loadMap');
 		}
-
-		// Can access the Internet, thus we can load the Google maps API and map
-		$.getScript('http://maps.google.com/maps/api/js?sensor=true&callback=loadMap');
 	});
 	
 	$('#close-and-home').click(function() {
@@ -145,7 +147,7 @@ $(document).ready(function() {
 			return;
 		}
 		
-		if(isSearchApiLoaded) {
+		if(google.search) {
 			
 			// Create a LocalSearch instance.
 			var localSearch = new google.search.LocalSearch();
@@ -202,12 +204,11 @@ $(document).ready(function() {
  * Load Google search API
  */
 function loadSearchApi() {
-	
+
 	var canAccessInternet = window.android.canAccessInternet();
 	if(canAccessInternet) {
 
-		google.load("search", "1");
-		google.setOnLoadCallback(onLoadSearchAPI);
+		google.load("search", "1", {"callback" : onLoadSearchAPI});
 	}
 }
 
@@ -215,10 +216,11 @@ function loadSearchApi() {
  * Google search api callback
  */
 function onLoadSearchAPI() {
-
-	isSearchApiLoaded = true;
+	
+	if(!google.search) {
+		console.log("ERROR: Google Search API did not load");
+	}
 }
-
 
 function searchComplete(localSearch) {
 	
@@ -364,11 +366,20 @@ function showServiceResult(data) {
 }
 
 /*
- * Load search API if necessary
+ * Helper method that initializes the Google JSAPI
  */
-if(!isSearchApiLoaded) {
+function initGoogleJSAPI() {
 
-	loadSearchApi();
+	var canAccessInternet = window.android.canAccessInternet();
+	if(canAccessInternet) {
+		
+		// Can access the Internet, thus we can load the Google maps API and map
+		var apiKey = window.android.getGoogleSearchApiKey();
+		var script = document.createElement("script");
+		script.src = "https://www.google.com/jsapi?key=" + apiKey + "&callback=loadSearchApi";
+		script.type = "text/javascript";
+		document.getElementsByTagName("head")[0].appendChild(script);
+	}
 }
 
 
