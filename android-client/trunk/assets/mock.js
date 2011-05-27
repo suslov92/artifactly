@@ -81,6 +81,6 @@ if(typeof window.android == "undefined") {
 	
 	window.android.getGoogleSearchApiKey = function() {
 		
-		return "YOUR-API-KEY";
+		return "";
 	}
 }

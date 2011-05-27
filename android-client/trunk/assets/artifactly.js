@@ -17,7 +17,7 @@
 /*
  * Initialize Google JSAPI
  */
-initGoogleJSAPI();
+//initGoogleJSAPI();
 
 $(document).ready(function() {
 
@@ -27,8 +27,12 @@ $(document).ready(function() {
 	$('#main').bind("pageshow", function() {
 
 		// There are rare cases when the JavaScript to Android native bridge is not ready
-		if(typeof window.android != "undefined") {
+		if(typeof(window.android) == "undefined") {
 		
+			console.log("ERROR: JavaScript to native bridge is not ready");
+		}
+		else {
+			
 			window.android.getArtifactsForCurrentLocation();
 		}
 	});
@@ -71,7 +75,7 @@ $(document).ready(function() {
 	/*
 	 * Initialize the option's page
 	 */
-	$('#options').bind('pageshow', function(){
+	$('#options').bind('pageshow', function() {
 
 		$('#radius-input').val(window.android.getRadius());
 		$('#radius-input').slider('refresh');	
@@ -87,14 +91,46 @@ $(document).ready(function() {
 		 * message if we don't have Internet access
 		 */
 		var canAccessInternet = window.android.canAccessInternet();
-		if(canAccessInternet) {
-
+		if(canAccessInternet && typeof(google) == "undefined") {
+			
+			// Can access the Internet, thus we can load the Google maps API and map
+			$.getScript('http://maps.google.com/maps/api/js?sensor=true&callback=loadMap');
+		}
+		else if(canAccessInternet && typeof(google.maps) == "undefined") {
+			
 			// Can access the Internet, thus we can load the Google maps API and map
 			$.getScript('http://maps.google.com/maps/api/js?sensor=true&callback=loadMap');
 		}
 	});
 	
+	/*
+	 * Initialize Google's JSAPI when entering the create artifact page
+	 */
+	$('#new-location').bind('pageshow', function() {
+		
+		var canAccessInternet = window.android.canAccessInternet();
+		if(canAccessInternet && typeof(google) == "undefined") {
+			
+			// Can access the Internet, thus we can load the Google maps API and map
+			var apiKey = window.android.getGoogleSearchApiKey();
+			var script = document.createElement("script");
+			script.src = "https://www.google.com/jsapi?key=" + apiKey + "&callback=loadSearchApi";
+			script.type = "text/javascript";
+			document.getElementsByTagName("head")[0].appendChild(script);
+		}
+		else if(canAccessInternet && typeof(google.search) == "undefined") {
+			
+			// Can access the Internet, thus we can load the Google maps API and map
+			var apiKey = window.android.getGoogleSearchApiKey();
+			var script = document.createElement("script");
+			script.src = "https://www.google.com/jsapi?key=" + apiKey + "&callback=loadSearchApi";
+			script.type = "text/javascript";
+			document.getElementsByTagName("head")[0].appendChild(script);
+		}
+	});
+	
 	$('#close-and-home').click(function() {
+		
 		$.mobile.changePage("#main", "none");
 	});
 
@@ -217,7 +253,8 @@ function loadSearchApi() {
  */
 function onLoadSearchAPI() {
 	
-	if(!google.search) {
+	if(typeof(google.search) == "undefined") {
+		
 		console.log("ERROR: Google Search API did not load");
 	}
 }
@@ -365,21 +402,5 @@ function showServiceResult(data) {
 	});
 }
 
-/*
- * Helper method that initializes the Google JSAPI
- */
-function initGoogleJSAPI() {
-
-	var canAccessInternet = window.android.canAccessInternet();
-	if(canAccessInternet) {
-		
-		// Can access the Internet, thus we can load the Google maps API and map
-		var apiKey = window.android.getGoogleSearchApiKey();
-		var script = document.createElement("script");
-		script.src = "https://www.google.com/jsapi?key=" + apiKey + "&callback=loadSearchApi";
-		script.type = "text/javascript";
-		document.getElementsByTagName("head")[0].appendChild(script);
-	}
-}
 
 
