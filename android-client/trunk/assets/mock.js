@@ -31,7 +31,7 @@ if(typeof window.android == "undefined") {
 
 		var data = '[{"data":"prius 20 k","artId":1,"long":"-121.4020047","lat":"38.6300699","name":"car service"},{"data":"","artId":2,"long":"-121.5799187","lat":"38.5400857","name":"home "},{"data":"art","artId":3,"long":"-121.4763178","lat":"38.5745222","name":"art beast "},{"data":"2","artId":4,"long":"-121.55368518","lat":"38.586812609999996","name":"bed"}]';
 	
-		getArtifactsForCurrentLocation(JSON.parse(data));
+		getArtifactsForCurrentLocationCallback(JSON.parse(data));
 	};
 
 	window.android.getRadius = function () {
@@ -81,6 +81,9 @@ if(typeof window.android == "undefined") {
 	
 	window.android.getGoogleSearchApiKey = function() {
 		
-		return "";
+		return "ABQIAAAAhz6w4o8Dnx4MWEXjy_RcIRQQG1rrLmI_di0TdIgmuIk3eKp8uRSV3WoMFobKwtri4Zz7tma5XlmZ4g";
 	}
+	
+	// Since all the current artifact loading is done from within the Activity, we need to simulate that call
+	setTimeout("window.android.getArtifactsForCurrentLocation()", 500);
 }
