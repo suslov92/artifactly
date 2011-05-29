@@ -22,22 +22,6 @@
 $(document).ready(function() {
 
 	/*
-	 * Initialize main page
-	 */
-	$('#main').bind("pageshow", function() {
-
-		// There are rare cases when the JavaScript to Android native bridge is not ready
-		if(typeof(window.android) == "undefined") {
-		
-			console.log("ERROR: JavaScript to native bridge is not ready");
-		}
-		else {
-			
-			window.android.getArtifactsForCurrentLocation();
-		}
-	});
-
-	/*
 	 * Clicking on the a list item, stores the item's id in localStorage
 	 */
 	$('#artifactly-list').delegate('li', 'click', function(event) {  
@@ -353,13 +337,15 @@ function getArtifactCallback(artifact) {
 	}
 }
 
-function getArtifactsForCurrentLocation(artifacts) {
+function getArtifactsForCurrentLocationCallback(artifacts) {
 
 	$(document).ready(function() {
 
 		$('#artifactly-list li').remove();
 		$('#artifactly-list ul').listview('refresh');
 
+		console.log("x.x.x.x.x.x : getArtifactsForCurrentLocationCallback()");
+		
 		if(artifacts.length < 1) {
 
 			$('#artifactly-message').text("There are no Artifacts close by");

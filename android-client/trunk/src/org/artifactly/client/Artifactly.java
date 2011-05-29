@@ -39,7 +39,7 @@ import android.widget.Toast;
 
 public class Artifactly extends Activity implements ApplicationConstants {
 
-	private static final String GOOGLE_SEARCH_API_KEY = "";
+	private static final String GOOGLE_SEARCH_API_KEY = "ABQIAAAAhz6w4o8Dnx4MWEXjy_RcIRQQG1rrLmI_di0TdIgmuIk3eKp8uRSV3WoMFobKwtri4Zz7tma5XlmZ4g";
 	private static final String ARTIFACTLY_URL = "file:///android_asset/artifactly.html";
 
 	private static final String LOG_TAG = " ** A.A. **";
@@ -60,7 +60,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	private static final String SHOW_SERVICE_RESULT = "showServiceResult";
 	private static final String GET_ARTIFACTS_CALLBACK = "getArtifactsCallback";
 	private static final String GET_ARTIFACT_CALLBACK = "getArtifactCallback";
-	private static final String GET_ARTIFACTS_FOR_CURRENT_LOCATION = "getArtifactsForCurrentLocation";
+	private static final String GET_ARTIFACTS_FOR_CURRENT_LOCATION = "getArtifactsForCurrentLocationCallback";
 
 	private WebView webView = null;
 
@@ -145,7 +145,11 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			bindService(new Intent(this, ArtifactlyService.class), serviceConnection, BIND_AUTO_CREATE);
 			isBound = true;
 			Log.i(LOG_TAG, "onStart Binding service done");
+			
 		}
+		
+		// When application starts, we load the artifacts for the current location 
+		new GetArtifactsForCurrentLocation().execute();
 	}
 
 	/*
