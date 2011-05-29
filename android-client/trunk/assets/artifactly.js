@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-/*
- * Initialize Google JSAPI
- */
-//initGoogleJSAPI();
+// Keeping track of search center point
+var searchCenterPoinLatLng;
 
 $(document).ready(function() {
 
@@ -70,21 +68,7 @@ $(document).ready(function() {
 	 */
 	$('#map').bind('pageshow', function() {
 
-		/*
-		 * First we check if we have Internet access. The Activity will show a 
-		 * message if we don't have Internet access
-		 */
-		var canAccessInternet = window.android.canAccessInternet();
-		if(canAccessInternet && typeof(google) == "undefined") {
-			
-			// Can access the Internet, thus we can load the Google maps API and map
-			$.getScript('http://maps.google.com/maps/api/js?sensor=true&callback=loadMap');
-		}
-		else if(canAccessInternet && typeof(google.maps) == "undefined") {
-			
-			// Can access the Internet, thus we can load the Google maps API and map
-			$.getScript('http://maps.google.com/maps/api/js?sensor=true&callback=loadMap');
-		}
+		loadMapApi('loadMap');
 	});
 	
 	/*
@@ -92,10 +76,12 @@ $(document).ready(function() {
 	 */
 	$('#new-location').bind('pageshow', function() {
 		
+		loadMapApi('getSearchCenterPoint');
+		
 		var canAccessInternet = window.android.canAccessInternet();
 		if(canAccessInternet && typeof(google) == "undefined") {
 			
-			// Can access the Internet, thus we can load the Google maps API and map
+			// Can access the Internet, thus we can load the Google JSAPI
 			var apiKey = window.android.getGoogleSearchApiKey();
 			var script = document.createElement("script");
 			script.src = "https://www.google.com/jsapi?key=" + apiKey + "&callback=loadSearchApi";
@@ -104,7 +90,7 @@ $(document).ready(function() {
 		}
 		else if(canAccessInternet && typeof(google.search) == "undefined") {
 			
-			// Can access the Internet, thus we can load the Google maps API and map
+			// Can access the Internet, thus we can load the Google JSAPI
 			var apiKey = window.android.getGoogleSearchApiKey();
 			var script = document.createElement("script");
 			script.src = "https://www.google.com/jsapi?key=" + apiKey + "&callback=loadSearchApi";
@@ -173,22 +159,27 @@ $(document).ready(function() {
 			var localSearch = new google.search.LocalSearch();
 
 			// Set the Local Search center point
-			localSearch.setCenterPoint("West Sacramento, CA");
+			if(searchCenterPoinLatLng) {
 
-			// Set searchComplete as the callback function when a search is complete. The
-			// localSearch object will have results in it.
-			var result = new Array();
-			result[0] = localSearch;
-			localSearch.setSearchCompleteCallback(this, searchComplete, result);
+				localSearch.setCenterPoint(searchCenterPoinLatLng);
 
-			// Specify search query
-			localSearch.execute(search + ' West Sacramento CA');
+				// Set searchComplete as the callback function when a search is complete. The
+				// localSearch object will have results in it.
+				var result = new Array();
+				result[0] = localSearch;
+				localSearch.setSearchCompleteCallback(this, searchComplete, result);
 
-			// Include the required Google branding.
-			// Note that getBranding is called on google.search.Search
-			google.search.Search.getBranding('branding');			
+				// Specify search query
+				localSearch.execute(search + ' West Sacramento CA');
+
+				// Include the required Google branding.
+				// Note that getBranding is called on google.search.Search
+				google.search.Search.getBranding('branding');
+			}
+			else {
+				console.log("ERROR: Search center point is not defined");
+			}
 		}
-		
 	});
 
 	/*
@@ -343,8 +334,6 @@ function getArtifactsForCurrentLocationCallback(artifacts) {
 
 		$('#artifactly-list li').remove();
 		$('#artifactly-list ul').listview('refresh');
-
-		console.log("x.x.x.x.x.x : getArtifactsForCurrentLocationCallback()");
 		
 		if(artifacts.length < 1) {
 
@@ -388,5 +377,54 @@ function showServiceResult(data) {
 	});
 }
 
+function loadMapApi(callback) {
+	
+	/*
+	 * First we check if we have Internet access. The Activity will show a 
+	 * message if we don't have Internet access
+	 */
+	var canAccessInternet = window.android.canAccessInternet();
+	if(canAccessInternet && typeof(google) == "undefined") {
+		
+		// Can access the Internet, thus we can load the Google maps API and map
+		$.getScript('http://maps.google.com/maps/api/js?sensor=true&callback=' + callback);
+	}
+	else if(canAccessInternet && typeof(google.maps) == "undefined") {
+		
+		// Can access the Internet, thus we can load the Google maps API and map
+		$.getScript('http://maps.google.com/maps/api/js?sensor=true&callback=' + callback);
+	}
+	else {
+		
+		/*
+		 * Since the maps api is loaded via "show map" or "new location" we have
+		 * to make sure that if the api is loaded, that we still execute the callback
+		 */
+		eval(callback + "()");
+	}
+}
 
+function getSearchCenterPoint() {
+	
+	$(document).ready(function() {
+
+		var data = JSON.parse(window.android.getLocation());
+		var latlng = new google.maps.LatLng(data[0], data[1]);
+
+		searchCenterPoinLatLng = latlng;
+		geocoder = new google.maps.Geocoder(); 
+
+		geocoder.geocode({'latLng':latlng}, function(results, status) {
+
+			if (status == google.maps.GeocoderStatus.OK) {
+				
+				$('#new-location-center').text(results[0].formatted_address);
+				
+			} else {
+				
+				console.log("ERROR: Geocode was not successful for the following reason: " + status);
+			}
+		});
+	});
+}
 
