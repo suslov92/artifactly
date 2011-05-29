@@ -146,9 +146,6 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			Log.i(LOG_TAG, "onStart Binding service done");
 			
 		}
-		
-		// When application starts, we load the artifacts for the current location 
-		new GetArtifactsForCurrentLocation().execute();
 	}
 
 	/*
@@ -412,6 +409,9 @@ public class Artifactly extends Activity implements ApplicationConstants {
 				localService = (LocalService)iBinder;
 				isBound = true;
 				Log.i(LOG_TAG, "onServiceConnected called");
+				
+				// When application starts, we load the artifacts for the current location 
+				new GetArtifactsForCurrentLocation().execute();
 			}
 
 			public void onServiceDisconnected(ComponentName componentName) {
