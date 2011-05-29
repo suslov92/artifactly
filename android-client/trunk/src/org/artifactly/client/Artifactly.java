@@ -39,7 +39,6 @@ import android.widget.Toast;
 
 public class Artifactly extends Activity implements ApplicationConstants {
 
-	private static final String GOOGLE_SEARCH_API_KEY = "ABQIAAAAhz6w4o8Dnx4MWEXjy_RcIRQQG1rrLmI_di0TdIgmuIk3eKp8uRSV3WoMFobKwtri4Zz7tma5XlmZ4g";
 	private static final String ARTIFACTLY_URL = "file:///android_asset/artifactly.html";
 
 	private static final String LOG_TAG = " ** A.A. **";
@@ -124,7 +123,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			public void onReceive(Context context, Intent intent) {
 				
 				Log.i(LOG_TAG, "Broadcast --> onReceive()");
-				Toast.makeText(getApplicationContext(), R.string.broadcast_location_update, Toast.LENGTH_SHORT).show();
+				//Toast.makeText(getApplicationContext(), R.string.broadcast_location_update, Toast.LENGTH_SHORT).show();
 				new GetArtifactsForCurrentLocation().execute();
 			}
 		};
@@ -399,7 +398,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		public String getGoogleSearchApiKey() {
 			
 			Log.i(LOG_TAG, "JS --> getGoogleSearchApiKey");
-			return GOOGLE_SEARCH_API_KEY;
+			return getResources().getString(R.string.google_search_api_key);
 		}
 	} 
 

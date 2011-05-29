@@ -17,5 +17,4 @@
     <string name="delete_artifact_failure">Failed to delete Artifact</string>
     <string name="get_artifact_failure">Was not able to get the Artifact</string>
     <string name="broadcast_location_update">Received new location update</string>
-    
 </resources>

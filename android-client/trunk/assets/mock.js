@@ -24,7 +24,7 @@
 
 // Only define window.android and its methods if it's undefined
 if(typeof window.android == "undefined") {
-	
+		
 	window.android = {};
 
 	window.android.getArtifactsForCurrentLocation = function () {
@@ -80,10 +80,10 @@ if(typeof window.android == "undefined") {
 	}
 	
 	window.android.getGoogleSearchApiKey = function() {
-		
-		return "ABQIAAAAhz6w4o8Dnx4MWEXjy_RcIRQQG1rrLmI_di0TdIgmuIk3eKp8uRSV3WoMFobKwtri4Zz7tma5XlmZ4g";
+
+		return "YourKey";
 	}
-	
+
 	// Since all the current artifact loading is done from within the Activity, we need to simulate that call
 	setTimeout("window.android.getArtifactsForCurrentLocation()", 500);
 }
