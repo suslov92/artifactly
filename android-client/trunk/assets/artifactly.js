@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-// Keeping track of search center point
+
+/*
+ * Keeping track of the search center point
+ */
 var searchCenterPoinLatLng;
 
 $(document).ready(function() {
@@ -76,6 +79,11 @@ $(document).ready(function() {
 	 */
 	$('#new-location').bind('pageshow', function() {
 		
+		$('#new-location-center-point').html("Loading ...");
+		$('#search-result').html('');
+		$('#entered-search-term').html('');
+		$('#google-search-branding').html('');
+		
 		loadMapApi('getSearchCenterPoint');
 		
 		var canAccessInternet = window.android.canAccessInternet();
@@ -134,12 +142,15 @@ $(document).ready(function() {
 	 */
 	$('#add-artifact-button').click(function() {
 
-		var name = $('#artifact-name').val();
-		var data = $('#artifact-data').val();
-		window.android.createArtifact(name, data);
+		var artName = $('#artifact-name').val();
+		var artData = $('#artifact-data').val();
+		var locName = $('#artifact-location').val();
+		
+		window.android.createArtifact(artName, artData, locName);
 
 		$('#artifact-name').val('');
 		$('#artifact-data').val('');
+		$('#artifact-location').val('');
 	});
 	
 	/*
@@ -147,11 +158,14 @@ $(document).ready(function() {
 	 */
 	$('#search-location-button').click(function() {
 		
-		var search = $('#location-name').val();
+		var search = $('#search-entry').val();
 		
 		if(!search || "" === search) {
 			return;
 		}
+		
+		$('#entered-search-term').html("<b>Search result for:</b>&nbsp;" + search);
+		$('#search-entry').val('');
 		
 		if(google.search) {
 			
@@ -170,11 +184,11 @@ $(document).ready(function() {
 				localSearch.setSearchCompleteCallback(this, searchComplete, result);
 
 				// Specify search query
-				localSearch.execute(search + ' West Sacramento CA');
+				localSearch.execute(search);
 
 				// Include the required Google branding.
 				// Note that getBranding is called on google.search.Search
-				google.search.Search.getBranding('branding');
+				google.search.Search.getBranding('google-search-branding');
 			}
 			else {
 				console.log("ERROR: Search center point is not defined");
@@ -219,14 +233,14 @@ function loadSearchApi() {
 	var canAccessInternet = window.android.canAccessInternet();
 	if(canAccessInternet) {
 
-		google.load("search", "1", {"callback" : onLoadSearchAPI});
+		google.load("search", "1", {"callback" : onLoadSearchApi});
 	}
 }
 
 /*
  * Google search api callback
  */
-function onLoadSearchAPI() {
+function onLoadSearchApi() {
 	
 	if(typeof(google.search) == "undefined") {
 		
@@ -239,7 +253,7 @@ function searchComplete(localSearch) {
 	$(document).ready(function() {
 	
 		if (localSearch.results && localSearch.results.length > 0) {
-			
+
 			$('#search-result').html("<br />").append("Result: ").append(localSearch.results.length).append("<br />");
 			
 			for (var i = 0; i < localSearch.results.length; i++) {
@@ -301,7 +315,7 @@ function getArtifactsCallback(artifacts) {
 			$('#artifactly-message-debug').text("");
 			$.each(artifacts, function(i, val) {
 
-				$('#artifactly-list-debug ul').append('<li title="' + val.artId + '"><a href="#selection-result" data-transition="none">' + val.name + '</a></li>');
+				$('#artifactly-list-debug ul').append('<li title="' + val.artId + '"><a href="#selection-result" data-transition="none">' + val.artName + '</a></li>');
 			});
 
 			$('#artifactly-list-debug ul').listview('refresh');
@@ -309,9 +323,9 @@ function getArtifactsCallback(artifacts) {
 	});
 }
 
-function getArtifactCallback(artifact) {
+function getArtifactCallback(data) {
 
-	if(artifact.length != 1) {
+	if(data.length != 1) {
 
 		// In case of an error, we go back to the main page
 		$.mobile.changePage("#main", "none");
@@ -319,11 +333,11 @@ function getArtifactCallback(artifact) {
 	else {
 
 		$(document).ready(function() {
-			//$('#selection-result-id').val(artifact[0].artId);
-			$('#selection-result-name').val(artifact[0].name);
-			$('#selection-result-data').val(artifact[0].data);
-			$('#selection-result-lat').val((+artifact[0].lat).toFixed(6));
-			$('#selection-result-long').val((+artifact[0].long).toFixed(6));
+			$('#selection-result-art-name').val(data[0].artName);
+			$('#selection-result-art-data').val(data[0].artData);
+			$('#selection-result-loc-name').val(data[0].locName);
+			$('#selection-result-lat').val((+data[0].lat).toFixed(6));
+			$('#selection-result-lng').val((+data[0].lng).toFixed(6));
 		});
 	}
 }
@@ -344,7 +358,7 @@ function getArtifactsForCurrentLocationCallback(artifacts) {
 			$('#artifactly-message').text("");
 			$.each(artifacts, function(i, val) {
 
-				$('#artifactly-list ul').append('<li title="' + val.artId + '"><a href="#selection-result" data-transition="none">' + val.name + '</a></li>');
+				$('#artifactly-list ul').append('<li title="' + val.artId + '"><a href="#selection-result" data-transition="none">' + val.artName + '</a></li>');
 			});
 
 			$('#artifactly-list ul').listview('refresh');
@@ -418,7 +432,7 @@ function getSearchCenterPoint() {
 
 			if (status == google.maps.GeocoderStatus.OK) {
 				
-				$('#new-location-center').text(results[0].formatted_address);
+				$('#new-location-center-point').html(results[0].formatted_address);
 				
 			} else {
 				

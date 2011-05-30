@@ -48,7 +48,7 @@ public class LocalServiceImpl extends Binder implements LocalService {
 	}
 	
 	// API method
-	public boolean createArtifact(String name, String data, String latitude, String longitude) {
+	public boolean createArtifact(String artifactName, String artifactData, String locationName, String latitude, String longitude) {
 		
 		Log.i(LOG_TAG, "LocalService : createArtifact called");
 		
@@ -59,7 +59,7 @@ public class LocalServiceImpl extends Binder implements LocalService {
 		
 		try {
 			
-			dbAdapter.insert(latitude, longitude, name, data);
+			dbAdapter.insert(locationName, latitude, longitude, artifactName, artifactData);
 		}
 		catch(SQLiteException e) {
 			
@@ -146,13 +146,13 @@ public class LocalServiceImpl extends Binder implements LocalService {
 	}
 
 	// API method
-	public boolean createArtifact(String name, String data) {
+	public boolean createArtifact(String artifactName, String artifactData, String locationName) {
 		
 		Location currentLocation = artifactlyService.getLocation();
 		
 		if(null != currentLocation) {
 		
-			return createArtifact(name, data, Double.toString(currentLocation.getLatitude()), Double.toString(currentLocation.getLongitude()));
+			return createArtifact(artifactName, artifactData, locationName, Double.toString(currentLocation.getLatitude()), Double.toString(currentLocation.getLongitude()));
 		}
 		else {
 			
@@ -192,8 +192,9 @@ public class LocalServiceImpl extends Binder implements LocalService {
 
 		// Determine the table column indexes 
 		int artIdColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_ART_FIELDS[DbAdapter.FK_ART_ID]);
-		int nameColumnIndex = cursor.getColumnIndex(DbAdapter.ART_FIELDS[DbAdapter.ART_NAME]);
-		int dataColumnIndex = cursor.getColumnIndex(DbAdapter.ART_FIELDS[DbAdapter.ART_DATA]);
+		int artNameColumnIndex = cursor.getColumnIndex(DbAdapter.ART_FIELDS[DbAdapter.ART_NAME]);
+		int artDataColumnIndex = cursor.getColumnIndex(DbAdapter.ART_FIELDS[DbAdapter.ART_DATA]);
+		int locNameColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_FIELDS[DbAdapter.LOC_NAME]);
 		int longitudeColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LONGITUDE]);
 		int latitudeColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LATITUDE]);
 
@@ -208,8 +209,9 @@ public class LocalServiceImpl extends Binder implements LocalService {
 			try {
 				
 				item.put(DbAdapter.LOC_ART_FIELDS[DbAdapter.FK_ART_ID], cursor.getInt(artIdColumnIndex));
-				item.put(DbAdapter.ART_FIELDS[DbAdapter.ART_NAME], cursor.getString(nameColumnIndex));
-				item.put(DbAdapter.ART_FIELDS[DbAdapter.ART_DATA], cursor.getString(dataColumnIndex));
+				item.put(DbAdapter.ART_FIELDS[DbAdapter.ART_NAME], cursor.getString(artNameColumnIndex));
+				item.put(DbAdapter.ART_FIELDS[DbAdapter.ART_DATA], cursor.getString(artDataColumnIndex));
+				item.put(DbAdapter.LOC_FIELDS[DbAdapter.LOC_NAME], cursor.getString(locNameColumnIndex));
 				item.put(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LATITUDE], cursor.getString(latitudeColumnIndex));
 				item.put(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LONGITUDE], cursor.getString(longitudeColumnIndex));
 			}
@@ -218,7 +220,6 @@ public class LocalServiceImpl extends Binder implements LocalService {
 			}
 
 			items.put(item);
-
 		}
 
 		cursor.close();
@@ -278,8 +279,9 @@ public class LocalServiceImpl extends Binder implements LocalService {
 
 		// Determine the table column indexes 
 		int artIdColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_ART_FIELDS[DbAdapter.FK_ART_ID]);
-		int nameColumnIndex = cursor.getColumnIndex(DbAdapter.ART_FIELDS[DbAdapter.ART_NAME]);
-		int dataColumnIndex = cursor.getColumnIndex(DbAdapter.ART_FIELDS[DbAdapter.ART_DATA]);
+		int artNameColumnIndex = cursor.getColumnIndex(DbAdapter.ART_FIELDS[DbAdapter.ART_NAME]);
+		int artDataColumnIndex = cursor.getColumnIndex(DbAdapter.ART_FIELDS[DbAdapter.ART_DATA]);
+		int locNameColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_FIELDS[DbAdapter.LOC_NAME]);
 		int longitudeColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LONGITUDE]);
 		int latitudeColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LATITUDE]);
 
@@ -308,8 +310,9 @@ public class LocalServiceImpl extends Binder implements LocalService {
 				try {
 					
 					item.put(DbAdapter.LOC_ART_FIELDS[DbAdapter.FK_ART_ID], cursor.getInt(artIdColumnIndex));
-					item.put(DbAdapter.ART_FIELDS[DbAdapter.ART_NAME], cursor.getString(nameColumnIndex));
-					item.put(DbAdapter.ART_FIELDS[DbAdapter.ART_DATA], cursor.getString(dataColumnIndex));
+					item.put(DbAdapter.ART_FIELDS[DbAdapter.ART_NAME], cursor.getString(artNameColumnIndex));
+					item.put(DbAdapter.ART_FIELDS[DbAdapter.ART_DATA], cursor.getString(artDataColumnIndex));
+					item.put(DbAdapter.LOC_FIELDS[DbAdapter.LOC_NAME], cursor.getString(locNameColumnIndex));
 					item.put(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LATITUDE], storedLatitude);
 					item.put(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LONGITUDE], storedLongitude);
 					item.put(ArtifactlyService.DISTANCE, Float.toString(distanceResult[0]));
@@ -383,8 +386,9 @@ public class LocalServiceImpl extends Binder implements LocalService {
 		
 		// Determine the table column indexes 
 		int artIdColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_ART_FIELDS[DbAdapter.FK_ART_ID]);
-		int nameColumnIndex = cursor.getColumnIndex(DbAdapter.ART_FIELDS[DbAdapter.ART_NAME]);
-		int dataColumnIndex = cursor.getColumnIndex(DbAdapter.ART_FIELDS[DbAdapter.ART_DATA]);
+		int artNameColumnIndex = cursor.getColumnIndex(DbAdapter.ART_FIELDS[DbAdapter.ART_NAME]);
+		int artDataColumnIndex = cursor.getColumnIndex(DbAdapter.ART_FIELDS[DbAdapter.ART_DATA]);
+		int locNameColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_FIELDS[DbAdapter.LOC_NAME]);
 		int longitudeColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LONGITUDE]);
 		int latitudeColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LATITUDE]);
 
@@ -394,8 +398,9 @@ public class LocalServiceImpl extends Binder implements LocalService {
 		try {
 			
 			item.put(DbAdapter.LOC_ART_FIELDS[DbAdapter.FK_ART_ID], cursor.getInt(artIdColumnIndex));
-			item.put(DbAdapter.ART_FIELDS[DbAdapter.ART_NAME], cursor.getString(nameColumnIndex));
-			item.put(DbAdapter.ART_FIELDS[DbAdapter.ART_DATA], cursor.getString(dataColumnIndex));
+			item.put(DbAdapter.ART_FIELDS[DbAdapter.ART_NAME], cursor.getString(artNameColumnIndex));
+			item.put(DbAdapter.ART_FIELDS[DbAdapter.ART_DATA], cursor.getString(artDataColumnIndex));
+			item.put(DbAdapter.LOC_FIELDS[DbAdapter.LOC_NAME], cursor.getString(locNameColumnIndex));
 			item.put(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LATITUDE], cursor.getString(latitudeColumnIndex));
 			item.put(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LONGITUDE], cursor.getString(longitudeColumnIndex));
 		}

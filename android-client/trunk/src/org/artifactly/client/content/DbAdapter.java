@@ -38,13 +38,14 @@ public class DbAdapter {
 	private static final String DB_TABLE_LOC_TO_ART = "LocToArt";
 	private static final int DATABASE_VERSION = 3;
 
-	public static final String [] LOC_FIELDS = {"_id", "lat", "long"};
-	public static final String [] ART_FIELDS = {"_id", "name", "data", "creationDate"};
+	public static final String [] LOC_FIELDS = {"_id", "locName", "lat", "lng"};
+	public static final String [] ART_FIELDS = {"_id", "artName", "artData", "artCreationDate"};
 	public static final String [] LOC_ART_FIELDS = {"artId", "locId" };
 
 	public static final int LOC_ID = 0;
-	public static final int LOC_LATITUDE = 1;
-	public static final int LOC_LONGITUDE = 2;
+	public static final int LOC_NAME = 1;
+	public static final int LOC_LATITUDE = 2;
+	public static final int LOC_LONGITUDE = 3;
 
 	public static final int ART_ID = 0;
 	public static final int ART_NAME = 1;
@@ -56,6 +57,7 @@ public class DbAdapter {
 
 	private static final String CREATE_LOCATION_TABLE =
 		"create table " + DB_TABLE_LOCATION + " (" + LOC_FIELDS[LOC_ID] + " INTEGER primary key autoincrement, "
+		+ LOC_FIELDS[LOC_NAME] + " TEXT not null, "
 		+ LOC_FIELDS[LOC_LATITUDE] + " TEXT not null, "
 		+ LOC_FIELDS[LOC_LONGITUDE] + " TEXT not null);";
 
@@ -87,7 +89,7 @@ public class DbAdapter {
 	 * The insert checks first if the entity exists, if the entity exists, nothing is inserted.
 	 * If the entity doesn't exist, a new DB record is created for it.
 	 */
-	public long[] insert(String latitude, String longitude, String name, String data) {
+	public long[] insert(String locationName, String latitude, String longitude, String artifactName, String artifactData) {
 
 		long locationRowID = -1;
 		long artifactRowId = -1;
@@ -95,7 +97,7 @@ public class DbAdapter {
 		ContentValues contentValues = null;
 
 		// Test if location already exists
-		long locationId = getLocation(latitude, longitude);
+		long locationId = getLocation(locationName, latitude, longitude);
 
 		if(0 <= locationId) {
 
@@ -104,15 +106,16 @@ public class DbAdapter {
 		}
 		else {
 
-			// Location doesn't exist so we create a new db record for it
+			// Location doesn't exist so we create a new DB record for it
 			contentValues = new ContentValues();
+			contentValues.put(LOC_FIELDS[LOC_NAME], locationName);
 			contentValues.put(LOC_FIELDS[LOC_LATITUDE], latitude);
 			contentValues.put(LOC_FIELDS[LOC_LONGITUDE], longitude);
 			locationRowID = mSQLiteDatabase.insert(DB_TABLE_LOCATION, null, contentValues);
 		}
 
 		// Test if artifact already exists
-		long artifactId = getArtifact(name, data);
+		long artifactId = getArtifact(artifactName, artifactData);
 
 		if(0 <= artifactId) {
 
@@ -123,8 +126,8 @@ public class DbAdapter {
 
 			// Artifact doesn't exist so we create a new db record for it 
 			contentValues = new ContentValues();
-			contentValues.put(ART_FIELDS[ART_NAME], name);
-			contentValues.put(ART_FIELDS[ART_DATA], data);
+			contentValues.put(ART_FIELDS[ART_NAME], artifactName);
+			contentValues.put(ART_FIELDS[ART_DATA], artifactData);
 			artifactRowId = mSQLiteDatabase.insert(DB_TABLE_ARTIFACT, null, contentValues);
 		}
 
@@ -194,10 +197,11 @@ public class DbAdapter {
 		return queryBuilder.query(mSQLiteDatabase,
 				new String[] {"Artifact._id AS artId",
 							  "Location._id AS locId",
-							  "Artifact.name AS name",
-							  "Artifact.data AS data",
+							  "Artifact.artName AS artName",
+							  "Artifact.artData AS artData",
+							  "Location.locName AS locName",
 							  "Location.lat AS lat",
-							  "Location.long AS long"},
+							  "Location.lng AS lng"},
 							  LOC_ART_FIELDS[FK_ART_ID] + "=?", new String[] {artifactRowId.toString()}, null, null, null);
 	}
 	
@@ -213,10 +217,11 @@ public class DbAdapter {
 		return queryBuilder.query(mSQLiteDatabase,
 				new String[] {"Artifact._id AS artId",
 							  "Location._id AS locId",
-							  "Artifact.name AS name",
-							  "Artifact.data AS data",
+							  "Artifact.artName AS artName",
+							  "Artifact.artData AS artData",
+							  "Location.locName AS locName",
 							  "Location.lat AS lat",
-							  "Location.long AS long"},
+							  "Location.lng AS lng"},
 				null, null, null, null, null);
 	}
 
@@ -262,13 +267,15 @@ public class DbAdapter {
 	}
 
 	/*
-	 * Helper method that searches by latitude and longitude for an existing location
+	 * Helper method that searches by name, latitude, and longitude for an existing location
 	 */
-	private long getLocation(String latitude, String longitude) {
+	private long getLocation(String name, String latitude, String longitude) {
 
 		Cursor cursor = mSQLiteDatabase.query(true,
-				DB_TABLE_LOCATION, LOC_FIELDS, LOC_FIELDS[LOC_LATITUDE] + "=? AND " + LOC_FIELDS[LOC_LONGITUDE] + "=?",
-				new String [] {latitude, longitude},
+				DB_TABLE_LOCATION,
+				LOC_FIELDS,
+				LOC_FIELDS[LOC_NAME] + "=? AND " + LOC_FIELDS[LOC_LATITUDE] + "=? AND " + LOC_FIELDS[LOC_LONGITUDE] + "=?",
+				new String [] {name, latitude, longitude},
 				null,
 				null,
 				null,
