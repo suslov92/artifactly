@@ -29,7 +29,7 @@ if(typeof window.android == "undefined") {
 
 	window.android.getArtifactsForCurrentLocation = function () {
 
-		var data = '[{"data":"prius 20 k","artId":1,"long":"-121.4020047","lat":"38.6300699","name":"car service"},{"data":"","artId":2,"long":"-121.5799187","lat":"38.5400857","name":"home "},{"data":"art","artId":3,"long":"-121.4763178","lat":"38.5745222","name":"art beast "},{"data":"2","artId":4,"long":"-121.55368518","lat":"38.586812609999996","name":"bed"}]';
+		var data = '[{"artData":"prius 20 k","artId":1,"lng":"-121.4020047","lat":"38.6300699","artName":"car service","locName":"Toyota Dealer"},{"artData":"fun","artId":2,"lng":"-121.5799187","lat":"38.5400857","artName":"home","locName":"Home"},{"artData":"art","artId":3,"lng":"-121.4763178","lat":"38.5745222","artName":"art beast","locName":"Art Beast"},{"artData":"2","artId":4,"lng":"-121.55368518","lat":"38.586812609999996","artName":"bed","locName":"Somewhere"}]';
 	
 		getArtifactsForCurrentLocationCallback(JSON.parse(data));
 	};
@@ -67,16 +67,20 @@ if(typeof window.android == "undefined") {
 
 	window.android.getArtifacts = function() {
 
-		var data = '[{"data":"prius 20 k","artId":1,"long":"-121.4020047","lat":"38.6300699","name":"car service"},{"data":"","artId":2,"long":"-121.5799187","lat":"38.5400857","name":"home "},{"data":"art","artId":3,"long":"-121.4763178","lat":"38.5745222","name":"art beast "},{"data":"2","artId":4,"long":"-121.55368518","lat":"38.586812609999996","name":"bed"}]';
-	
+		var data = '[{"artData":"prius 20 k","artId":1,"lng":"-121.4020047","lat":"38.6300699","artName":"car service","locName":"Toyota Dealer"},{"artData":"fun","artId":2,"lng":"-121.5799187","lat":"38.5400857","artName":"home","locName":"Home"},{"artData":"art","artId":3,"lng":"-121.4763178","lat":"38.5745222","artName":"art beast","locName":"Art Beast"},{"artData":"2","artId":4,"lng":"-121.55368518","lat":"38.586812609999996","artName":"bed","locName":"Somewhere"}]';
+		
 		getArtifactsCallback(JSON.parse(data));
 	}
 	
 	window.android.getArtifact = function(id) {
 		
-		var data = '[{"data":"clean","artId":9,"long":"-121.57963725","lat":"38.5399477","name":"room"}]';
-
-		getArtifactCallback(JSON.parse(data));
+		var data =  new Array();
+		data[0] = "[{}]";
+		data[1] = '[{"artData":"prius 20 k","artId":1,"lng":"-121.4020047","lat":"38.6300699","artName":"car service","locName":"Toyota Dealer"}]';
+		data[2] = '[{"artData":"fun","artId":2,"lng":"-121.5799187","lat":"38.5400857","artName":"home","locName":"Home"}]';
+		data[3] = '[{"artData":"art","artId":3,"lng":"-121.4763178","lat":"38.5745222","artName":"art beast","locName":"Art Beast"}]';
+		data[4] = '[{"artData":"2","artId":4,"lng":"-121.55368518","lat":"38.586812609999996","artName":"bed","locName":"Somewhere"}]';
+		getArtifactCallback(JSON.parse(data[id]));
 	}
 	
 	window.android.getGoogleSearchApiKey = function() {

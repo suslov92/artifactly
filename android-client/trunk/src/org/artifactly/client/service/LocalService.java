@@ -21,22 +21,23 @@ public interface LocalService {
 	/**
 	 * Creates an Artifact for the provided location
 	 * 
-	 * @param name Artifact name
-	 * @param data Artifact data
+	 * @param artifactName Artifact name
+	 * @param artifactData Artifact data
+	 * @param locationName Artifact's location name
 	 * @param latitude Artifact latitude
 	 * @param longitude Artifact longitude
 	 * @return false on error, otherwise true
 	 */
-	public boolean createArtifact(String name, String data, String latitude, String longitude);
+	public boolean createArtifact(String artifactName, String artifactData, String locationName, String latitude, String longitude);
 	
 	/**
 	 * Creates an Artifact at the current location
-	 * @param name Artifact name
-	 * @param data Artifact data
+	 * @param artifactName Artifact name
+	 * @param artifactData Artifact data
+	 * @param locationName Location name
 	 * @return false on error, otherwise true
 	 */
-	public boolean createArtifact(String name, String data);
-	
+	public boolean createArtifact(String artifactName, String artifactData, String locationName);
 	
 	/**
 	 * Starts the location updates

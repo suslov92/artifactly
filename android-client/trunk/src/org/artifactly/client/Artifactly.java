@@ -298,6 +298,9 @@ public class Artifactly extends Activity implements ApplicationConstants {
 				SharedPreferences.Editor editor = settings.edit();
 				editor.putInt(PREFERENCE_RADIUS, radius);
 				editor.commit();
+				
+				// Refreshing the artifacts list
+				new GetArtifactsForCurrentLocation().execute();
 			}
 		}
 
@@ -310,7 +313,6 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			if(isSuccess) {
 
 				Toast.makeText(getApplicationContext(), R.string.delete_artifact_success, Toast.LENGTH_SHORT).show();
-
 			}
 			else {
 
@@ -319,21 +321,30 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		}
 
 
-		public void createArtifact(String name, String data) {
+		public void createArtifact(String artifactName, String artifactData, String locationName) {
 
 			Log.i(LOG_TAG, "JS --> createArtifact");
 
-			if(null == name || EMPTY_STRING.equals(name)) {
+			if(null == artifactName || EMPTY_STRING.equals(artifactName)) {
 
 				Toast.makeText(getApplicationContext(), R.string.create_artifact_name_error, Toast.LENGTH_SHORT).show();
 				return;
 			}
+			
+			if(null == locationName || EMPTY_STRING.equals(locationName)) {
 
-			boolean isSuccess = localService.createArtifact(name, data);
+				Toast.makeText(getApplicationContext(), R.string.create_artifact_location_name_error, Toast.LENGTH_SHORT).show();
+				return;
+			}
+
+			boolean isSuccess = localService.createArtifact(artifactName, artifactData, locationName);
 
 			if(isSuccess) {
 
 				Toast.makeText(getApplicationContext(), R.string.create_artifact_success, Toast.LENGTH_SHORT).show();
+				
+				// Refreshing the artifacts list
+				new GetArtifactsForCurrentLocation().execute();
 			}
 			else {
 
