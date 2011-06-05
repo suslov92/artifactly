@@ -16,7 +16,7 @@
 <div data-role="page" id="main">
 
 	<div data-role="header" data-backbtn="false" data-position="inline">
-		<h1>v0.0.1-a29</h1>
+		<h1>v0.0.1-a30</h1>
 		<a href="#new-artifact" data-icon="plus" data-transition="none" class="ui-btn-right">Artifact</a>
 	</div>
 
@@ -55,12 +55,16 @@
     		<label for="artifact-location">Location Name:</label>
     		<input type="text" name="artifact-location" id="artifact-location" value=""/>
 		</div>
-		<span>
-			<b>Using current location!</b>
-		</span>
+		<div data-role="fieldcontain" id="new-artifact-latlng">
+			<label for="artifact-location-lat">LAT:</label>
+    		<input type="text" name="artifact-location-lat" id="artifact-location-lat" value=""/>
+    		<label for="artifact-location-lng">LNG:</label>
+    		<input type="text" name="artifact-location-lng" id="artifact-location-lng" value=""/>
+		</div>
 		<div data-role="controlgroup" data-type="horizontal" style="text-align:center">
 			<input type="button" name="add-artifact-button" id="add-artifact-button" data-icon="check" value="Add" />
 			<input type="button" name="cancel-artifact-button" id="cancel-artifact-button" data-icon="minus" value="Cancel" />
+			<input type="button" name="close-artifact-button" id="close-artifact-button" data-icon="home" value="Close" />
 		</div>
 	</div>
 </div>
@@ -88,6 +92,10 @@
 		<br />
 		<div id="google-search-branding" style="float: left;"></div><br />
 		<div id="search-result"></div>
+		<br />
+		<div id="search-result-list">
+			<ul data-role="listview" data-inset="true"></ul>
+		</div>
 	</div>
 </div>
 
@@ -124,8 +132,6 @@
 			<select name="select-debug" id="select-debug">
 				<option value="default" data-placeholder="true">Choose one ...</option>
 				<option value="get-location">Get Location</option>
-				<option value="get-artifacts">Show Artifacts</option>
-				<option value="show-map">Show Map</option>
 			</select>
 		</div>
 		
@@ -168,23 +174,6 @@
 		<br />
 		<input type="button" name="close-and-home" id="close-and-home" value="Close" />
 	</div>
-</div>
-
-<div data-role="page" id="debug-result">
-
-	<div data-role="header" data-backbtn="false" data-position="fixed">
-		<a href="#main" data-icon="home" data-transition="none">Home</a>
-		<h1>Debug Results</h1>
-	</div>
-	
-	<div data-role="content">
-		<div id="artifactly-message-debug"></div>
-		<div id="artifactly-list-debug">
-			<ul data-role="listview" data-inset="false">
-			</ul>
-		</div>
-	</div>
-
 </div>
 
 <div data-role="dialog" id="dialog">
