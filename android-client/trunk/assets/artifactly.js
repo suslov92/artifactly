@@ -23,11 +23,32 @@ var searchCenterPoinLatLng;
 $(document).ready(function() {
 
 	/*
-	 * Clicking on the a list item, stores the item's id in localStorage
+	 * Clicking on an artifact list item, stores the item's id in localStorage
 	 */
 	$('#artifactly-list').delegate('li', 'click', function(event) {  
 
-		localStorage['artifactId'] = $(this).attr('title');
+		var id = $(this).attr('data-artId');
+		window.android.getArtifact(+id);
+	});
+	
+	/*
+	 * Swiping right on an artifact list item, starts the delete dialog
+	 */
+	$('#artifactly-list').delegate('li', 'swiperight', function(event) {
+		
+		$.mobile.changePage("#dialog", "none");
+		localStorage['deleteArtifactId'] = $(this).attr("data-artId");
+	});
+	
+	/*
+	 * Clicking on a search result list item, populates the new location field(s)
+	 */
+	$('#search-result-list').delegate('li', 'click', function(event) {  
+
+		$('#artifact-location').val($(this).data("title"));
+		$('#artifact-location-lat').val($(this).data("lat"));
+		$('#artifact-location-lng').val($(this).data("lng"));
+		$('#new-artifact-latlng').show();
 	});
 
 	/*
@@ -37,26 +58,16 @@ $(document).ready(function() {
 
 		var id = localStorage['deleteArtifactId'];
 		window.android.deleteArtifact(+id);
-		$('#artifactly-list li').remove('[title="' + id + '"]');
+		$('#artifactly-list li').remove('[data-artId="' + id + '"]');
 	});
 
 	/*
-	 * Clicking on the a list item, stores the item's id in localStorage
+	 * Initialize the main page
 	 */
-	$('#artifactly-list-debug').delegate('li', 'click', function(event) {  
+	$('#main').bind('pageshow', function() {
 
-		localStorage['artifactId'] = $(this).attr('title');
+		$('#new-artifact-latlng').hide();
 	});
-
-	/*
-	 * Show the result after clicking on a list item
-	 */
-	$('#selection-result').bind('pageshow', function() {
-
-		var id = localStorage.getItem('artifactId');
-		window.android.getArtifact(+id);
-	});
-
 	/*
 	 * Initialize the option's page
 	 */
@@ -107,6 +118,9 @@ $(document).ready(function() {
 		}
 	});
 	
+	/*
+	 * Close the selected artifact page and navigate to the home page
+	 */
 	$('#close-and-home').click(function() {
 		
 		$.mobile.changePage("#main", "none");
@@ -134,6 +148,19 @@ $(document).ready(function() {
 	 */
 	$('#cancel-artifact-button').click(function() {
 
+		$('#artifact-name').val('');
+		$('#artifact-data').val('');
+		$('#artifact-location').val('');
+	});
+	
+	/*
+	 * Create artifact close button
+	 */
+	$('#close-artifact-button').click(function() {
+
+		$('#artifact-name').val('');
+		$('#artifact-data').val('');
+		$('#artifact-location').val('');
 		$.mobile.changePage("#main", "none");
 	});
 
@@ -145,8 +172,10 @@ $(document).ready(function() {
 		var artName = $('#artifact-name').val();
 		var artData = $('#artifact-data').val();
 		var locName = $('#artifact-location').val();
+		var locLat = $('#artifact-location-lat').val();
+		var locLng = $('#artifact-location-lng').val();
 		
-		window.android.createArtifact(artName, artData, locName);
+		window.android.createArtifact(artName, artData, locName, locLat, locLng);
 
 		$('#artifact-name').val('');
 		$('#artifact-data').val('');
@@ -197,7 +226,7 @@ $(document).ready(function() {
 	});
 
 	/*
-	 * Debug select menu
+	 * Options' page select menu
 	 */
 	$('#select-debug').change(function() {
 
@@ -211,16 +240,6 @@ $(document).ready(function() {
 			$('#log-accuracy').text("Accuracy: " + data[2]);
 			$('#log-time').text("Time: " + data[3]);
 			$('#log-time-latest').text("Last: " + data[4]);
-		}
-		else if(selected.val() == "show-map") {
-
-			$.mobile.changePage("#map", "none");
-		}
-		else if(selected.val() == "get-artifacts") {
-
-			$.mobile.changePage("#debug-result", "none");
-
-			window.android.getArtifacts();			
 		}
 	});
 });
@@ -252,14 +271,27 @@ function searchComplete(localSearch) {
 	
 	$(document).ready(function() {
 	
+		// Reset the list
+		$('#search-result-list li').remove();
+		$('#search-result-list ul').listview('refresh');
+		
+		// Do we have any search results
 		if (localSearch.results && localSearch.results.length > 0) {
-
-			$('#search-result').html("<br />").append("Result: ").append(localSearch.results.length).append("<br />");
 			
+			// Iterate over the search result
 			for (var i = 0; i < localSearch.results.length; i++) {
 				
-				$('#search-result').append(localSearch.results[i].title + " : ").append("LAT = " + localSearch.results[i].lat + " : ").append("LNG = " + localSearch.results[i].lng).append("<br />");
+				$('<li/>', { html : '<a href="#new-artifact" data-transition="none">' + localSearch.results[i].title + '</a>' })        
+			      .data({
+			    	title : stripHtml(localSearch.results[i].title),
+			    	lat : localSearch.results[i].lat,
+			    	lng : localSearch.results[i].lng    
+			      })        
+			      .appendTo($('#search-result-list ul'));
 			}
+	
+			// Refresh the list so that all the data is shown
+			$('#search-result-list ul').listview('refresh');
 		}
 	});
 }
@@ -299,30 +331,17 @@ function loadMap() {
 	});
 }
 
+/*
+ * Get all artifacts callback
+ */
 function getArtifactsCallback(artifacts) {
 
-	$(document).ready(function() {
-
-		$('#artifactly-list-debug li').remove();
-		$('#artifactly-list-debug ul').listview('refresh');
-
-		if(artifacts.length < 1) {
-
-			$('#artifactly-message-debug').text("There are no Artifacts");
-		}
-		else {
-
-			$('#artifactly-message-debug').text("");
-			$.each(artifacts, function(i, val) {
-
-				$('#artifactly-list-debug ul').append('<li title="' + val.artId + '"><a href="#selection-result" data-transition="none">' + val.artName + '</a></li>');
-			});
-
-			$('#artifactly-list-debug ul').listview('refresh');
-		}
-	});
+	// Not needed yet
 }
 
+/*
+ * Get artifact callback
+ */
 function getArtifactCallback(data) {
 
 	if(data.length != 1) {
@@ -357,22 +376,14 @@ function getArtifactsForCurrentLocationCallback(artifacts) {
 
 			$('#artifactly-message').text("");
 			$.each(artifacts, function(i, val) {
-
-				$('#artifactly-list ul').append('<li title="' + val.artId + '"><a href="#selection-result" data-transition="none">' + val.artName + '</a></li>');
+				
+				$('<li/>', { html : '<a href="#selection-result" data-transition="none">' + val.artName + '</a>' })        
+			      .attr('data-artId', val.artId)
+			      .appendTo($('#artifactly-list ul'));
 			});
 
 			$('#artifactly-list ul').listview('refresh');
 		}
-
-		$('#artifactly-list li').each(function (idx) {
-
-			$(this).bind('swiperight', function(event,ui) {
-
-				// Showing dialog. Data is removed if the user clicks on the dialog's yes button
-				$.mobile.changePage("#dialog", "none");
-				localStorage['deleteArtifactId'] = $(this).attr('title');
-			});
-		});
 	});
 }
 
@@ -440,5 +451,13 @@ function getSearchCenterPoint() {
 			}
 		});
 	});
+}
+
+/*
+ * Helper method that strips HTML from a string
+ */
+function stripHtml(data) {
+	
+	return data.replace(/(<([^>]+)>)/ig,"");
 }
 

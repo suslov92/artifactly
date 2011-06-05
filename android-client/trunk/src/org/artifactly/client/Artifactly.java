@@ -321,7 +321,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		}
 
 
-		public void createArtifact(String artifactName, String artifactData, String locationName) {
+		public void createArtifact(String artifactName, String artifactData, String locationName, String locationLat, String locationLng) {
 
 			Log.i(LOG_TAG, "JS --> createArtifact");
 
@@ -336,9 +336,20 @@ public class Artifactly extends Activity implements ApplicationConstants {
 				Toast.makeText(getApplicationContext(), R.string.create_artifact_location_name_error, Toast.LENGTH_SHORT).show();
 				return;
 			}
-
-			boolean isSuccess = localService.createArtifact(artifactName, artifactData, locationName);
-
+			
+			boolean isSuccess = false;
+			
+			// If latitude and longitude are provided we use them, otherwise we use the current location
+			// TODO: Add check if provided latitude and longitude are valid
+			if(null != locationLat && !EMPTY_STRING.equals(locationLat) && null != locationLng && !EMPTY_STRING.equals(locationLng)) {
+				
+				isSuccess = localService.createArtifact(artifactName, artifactData, locationName, locationLat, locationLng);
+			}
+			else {
+				
+				isSuccess = localService.createArtifact(artifactName, artifactData, locationName);
+			}
+			
 			if(isSuccess) {
 
 				Toast.makeText(getApplicationContext(), R.string.create_artifact_success, Toast.LENGTH_SHORT).show();

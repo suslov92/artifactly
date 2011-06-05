@@ -56,7 +56,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	private static final int NET_LOCATION_MIN_TIME = 240000; // 3 min
 	private static final int NET_LOCATION_MIN_DISTANCE = 50; // 50 m
 	private static final int PAS_LOCATION_MIN_TIME = 30000; // 30 sec
-	private static final int PAS_LOCATION_MIN_DISTANCE = 0; // 0 m
+	private static final int PAS_LOCATION_MIN_DISTANCE = 50; // 50 m
 	protected static final String DISTANCE = "dist";
 	private static final String GPS_PROVIDER = "GPS";
 	private static final String NET_PROVIDER = "NET";
