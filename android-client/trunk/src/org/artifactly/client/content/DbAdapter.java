@@ -39,6 +39,7 @@ public class DbAdapter {
 	private static final int DATABASE_VERSION = 3;
 
 	public static final String [] LOC_FIELDS = {"_id", "locName", "lat", "lng"};
+	public static final String [] LOC_FIELDS_AS = {"locId", "locName", "locLat", "locLng"};
 	public static final String [] ART_FIELDS = {"_id", "artName", "artData", "artCreationDate"};
 	public static final String [] LOC_ART_FIELDS = {"artId", "locId" };
 
@@ -206,8 +207,20 @@ public class DbAdapter {
 	}
 	
 	/*
+	 * Select all locations
+	 * NOTE: Caller must call cursor.close()
+	 */
+	public Cursor getLocations() {
+
+		return mSQLiteDatabase.query(true,
+				DB_TABLE_LOCATION,
+				LOC_FIELDS,
+				null, null, null, null, null, null);
+	}
+	
+	/*
 	 * Select all the location and artifact relationships
-	 * NOTE: Caller must call cursor.close();
+	 * NOTE: Caller must call cursor.close()
 	 */
 	public Cursor select() {
 
