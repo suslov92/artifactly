@@ -19,7 +19,14 @@
  * Keeping track of the search center point
  */
 var searchCenterPoinLatLng;
+
+/*
+ * Boolean flag that is used to determine if we need to rebuild the location selection options.
+ * When the new artifact's page is shown, we get all the currently stored locations. We don't want to 
+ * do that if we just added a new location option via the 'new location' page.
+ */
 var refreshLocations = true;
+
 
 $(document).ready(function() {
 
@@ -77,6 +84,8 @@ $(document).ready(function() {
 	 * Initialize the new artifact page
 	 */
 	$('#new-artifact').bind('pageshow', function() {
+		
+		$('#artifact-location-name-div').hide();
 		
 		if(refreshLocations) {
 		
@@ -190,8 +199,17 @@ $(document).ready(function() {
 		
 		var selectedLocation = $('#artifact-location-selection option:selected').data();
 		
-		window.android.createArtifact(artName, artData, selectedLocation.locName, selectedLocation.locLat, selectedLocation.locLng);
-
+		if(selectedLocation.lockName == "Current Location") {
+		
+			var locationName = $('#artifact-location-name').val();
+			window.android.createArtifact(artName, artData, locationName, selectedLocation.locLat, selectedLocation.locLng);
+			$('#artifact-location-name').val('');
+		}
+		else {
+		
+			window.android.createArtifact(artName, artData, selectedLocation.locName, selectedLocation.locLat, selectedLocation.locLng);
+		}
+		
 		$('#artifact-name').val('');
 		$('#artifact-data').val('');
 	});
@@ -257,6 +275,25 @@ $(document).ready(function() {
 			$('#log-time-latest').text("Last: " + data[4]);
 		}
 	});
+	
+	/*
+	 * Locations' select menu
+	 */
+	$('#artifact-location-selection').change(function() {
+		
+		var selectedLocation = $('#artifact-location-selection option:selected').data();
+		
+		// If the selection is Current Location, then we need to allow the user to enter a location name
+		if(selectedLocation.lockName == "Current Location") {
+			
+			$('#artifact-location-name').val('');
+			$('#artifact-location-name-div').show();
+		}
+		else {
+			
+			$('#artifact-location-name-div').hide();
+		}
+	});
 });
 
 /*
@@ -296,7 +333,6 @@ function searchComplete(localSearch) {
 			// Iterate over the search result
 			for (var i = 0; i < localSearch.results.length; i++) {
 				
-				//$('<li/>', { html : '<a href="#new-artifact" data-transition="none">' + localSearch.results[i].title + '</a>' })
 				$('<li/>', { html : localSearch.results[i].title })        
 			      .data({
 			    	locName : htmlDecode(stripHtml(localSearch.results[i].title)),
@@ -406,15 +442,27 @@ function getArtifactsForCurrentLocationCallback(artifacts) {
 
 function getLocationsCallback(locations) {
 	
-	console.log("DEBUG: getLocationsCallback()");
 	$(document).ready(function() {
-		
+	
+		// Remove all existing location options
 		$('#artifact-location-selection option').remove();
 		
+		// Adding Choose one
 		$('<option/>', { text :  'Choose one ...' })
 		.attr('data-placeholder', 'true')
 		.appendTo($('#artifact-location-selection'));
 		
+		// Adding current locaiton
+		$('<option/>', { text :  'Current Location' })
+		.data({
+			locId : '',
+			lockName : 'Current Location',
+			locLat : '0',
+			locLng : '0'
+		})
+		.appendTo($('#artifact-location-selection'));
+		
+		// Adding all stored locations
 		if(locations.length > 0) {
 			
 			$.each(locations, function(i, val) {
