@@ -341,8 +341,20 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			boolean isSuccess = false;
 			
 			// If latitude and longitude are provided we use them, otherwise we use the current location
-			// TODO: Add check if provided latitude and longitude are valid geo points 
+			// TODO: Add check if provided latitude and longitude are valid geo points
+			
+			// First we check if the user selected current location
 			if(null != locationLat &&
+					   !EMPTY_STRING.equals(locationLat) &&
+					   null != locationLng &&
+					   !EMPTY_STRING.equals(locationLng) &&
+					   locationLat.equals("0") &&
+					   locationLng.equals("0")) {
+				
+				isSuccess = localService.createArtifact(artifactName, artifactData, locationName);
+				
+			}
+			else if(null != locationLat &&
 			   !EMPTY_STRING.equals(locationLat) &&
 			   null != locationLng &&
 			   !EMPTY_STRING.equals(locationLng) &&
@@ -528,7 +540,6 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			else {
 
 				String result = localService.getLocations();
-				Log.i(LOG_TAG, "DEBUG: " + result);
 				callJavaScriptFunction(GET_LOCATIONS_CALLBACK, result);
 			}
 			
