@@ -16,7 +16,7 @@
 <div data-role="page" id="main">
 
 	<div data-role="header" data-backbtn="false" data-position="inline">
-		<h1>v0.0.1-a30</h1>
+		<h1>v0.0.1-a31</h1>
 		<a href="#new-artifact" data-icon="plus" data-transition="none" class="ui-btn-right">Artifact</a>
 	</div>
 
@@ -52,14 +52,10 @@
     		<input type="text" name="artifact-data" id="artifact-data" value=""/>
 		</div>
 		<div data-role="fieldcontain">
-    		<label for="artifact-location">Location Name:</label>
-    		<input type="text" name="artifact-location" id="artifact-location" value=""/>
-		</div>
-		<div data-role="fieldcontain" id="new-artifact-latlng">
-			<label for="artifact-location-lat">LAT:</label>
-    		<input type="text" name="artifact-location-lat" id="artifact-location-lat" value=""/>
-    		<label for="artifact-location-lng">LNG:</label>
-    		<input type="text" name="artifact-location-lng" id="artifact-location-lng" value=""/>
+			<label for="artifact-location-selection" class="select">Locations:</label>
+			<select name="artifact-location-selection" id="artifact-location-selection">
+				<!-- <option value="default" data-placeholder="true">Choose one ...</option> -->
+			</select>
 		</div>
 		<div data-role="controlgroup" data-type="horizontal" style="text-align:center">
 			<input type="button" name="add-artifact-button" id="add-artifact-button" data-icon="check" value="Add" />

@@ -415,4 +415,74 @@ public class LocalServiceImpl extends Binder implements LocalService {
 		
 		return items.toString();
 	}
+
+	// API method
+	public String getLocations() {
+		
+		// JSON array that holds the result
+		JSONArray items = new JSONArray();
+		
+		if(null == dbAdapter) {
+			
+			Log.w(LOG_TAG, "DB Adapter is null");
+			return items.toString();
+		}
+		
+		// Getting all the locations
+		Cursor cursor = dbAdapter.getLocations();
+		if(null == cursor) {
+			
+			Log.w(LOG_TAG, "Cursor is null");
+			return items.toString();
+		}
+		
+		// Checking if the cursor set has any items
+		boolean hasItems = cursor.moveToFirst();
+		
+		if(!hasItems) {
+			
+			Log.i(LOG_TAG, "DB has not items");
+			cursor.close();
+			return items.toString();
+		}
+
+		// Determine the table column indexes
+		int locIdColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_FIELDS[DbAdapter.LOC_ID]);
+		int locNameColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_FIELDS[DbAdapter.LOC_NAME]);
+		int locLatColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LATITUDE]);
+		int locLngColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LONGITUDE]);
+		
+		/*
+		 *  Iterating over all result and calculate the distance between
+		 *  radius, we notify the user that there is an artifact.
+		 */
+		for(;cursor.isAfterLast() == false; cursor.moveToNext()) {
+
+			JSONObject item = new JSONObject();
+
+			try {
+				
+				item.put(DbAdapter.LOC_FIELDS_AS[DbAdapter.LOC_ID], cursor.getInt(locIdColumnIndex));
+				item.put(DbAdapter.LOC_FIELDS_AS[DbAdapter.LOC_NAME], cursor.getString(locNameColumnIndex));
+				item.put(DbAdapter.LOC_FIELDS_AS[DbAdapter.LOC_LATITUDE], cursor.getString(locLatColumnIndex));
+				item.put(DbAdapter.LOC_FIELDS_AS[DbAdapter.LOC_LONGITUDE], cursor.getString(locLngColumnIndex));
+			}
+			catch (JSONException e) {
+				Log.w(LOG_TAG, "Error while populating JSONObject");
+			}
+
+			items.put(item);
+		}
+
+		cursor.close();
+
+		if(items.length() == 0) {
+
+			return null;
+		}
+		else {
+	
+			return items.toString();
+		}
+	}
 }

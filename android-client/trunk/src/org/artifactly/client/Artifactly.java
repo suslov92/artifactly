@@ -60,6 +60,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	private static final String GET_ARTIFACTS_CALLBACK = "getArtifactsCallback";
 	private static final String GET_ARTIFACT_CALLBACK = "getArtifactCallback";
 	private static final String GET_ARTIFACTS_FOR_CURRENT_LOCATION = "getArtifactsForCurrentLocationCallback";
+	private static final String GET_LOCATIONS_CALLBACK = "getLocationsCallback";
 
 	private WebView webView = null;
 
@@ -340,8 +341,13 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			boolean isSuccess = false;
 			
 			// If latitude and longitude are provided we use them, otherwise we use the current location
-			// TODO: Add check if provided latitude and longitude are valid
-			if(null != locationLat && !EMPTY_STRING.equals(locationLat) && null != locationLng && !EMPTY_STRING.equals(locationLng)) {
+			// TODO: Add check if provided latitude and longitude are valid geo points 
+			if(null != locationLat &&
+			   !EMPTY_STRING.equals(locationLat) &&
+			   null != locationLng &&
+			   !EMPTY_STRING.equals(locationLng) &&
+			   isDouble(locationLat) &&
+			   isDouble(locationLng)) {
 				
 				isSuccess = localService.createArtifact(artifactName, artifactData, locationName, locationLat, locationLng);
 			}
@@ -419,6 +425,12 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			Log.i(LOG_TAG, "JS --> getGoogleSearchApiKey");
 			return getResources().getString(R.string.google_search_api_key);
 		}
+		
+		public void getLocations() {
+			
+			Log.i(LOG_TAG, "JS --> getLocations");
+			new GetLocationsTask().execute();
+		}
 	} 
 
 	// Method that returns a service connection
@@ -445,6 +457,23 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		};
 	}
 
+	/*
+	 * Helper method that checks if a string is a valid Double
+	 */
+	private boolean isDouble(String number) {
+		
+		try {
+			
+			Double.parseDouble(number);
+		}
+		catch (NumberFormatException nfe) {
+			
+			return false;
+		}
+		
+		return true;
+	}
+	
 	private class GetArtifactsForCurrentLocation extends AsyncTask<Void, Void, Void> {
 
 		@Override
@@ -480,7 +509,27 @@ public class Artifactly extends Activity implements ApplicationConstants {
 
 				String result = localService.getArtifacts();
 				callJavaScriptFunction(GET_ARTIFACTS_CALLBACK, result);
-				
+			}
+			
+			return null;
+		}	
+	}
+	
+	private class GetLocationsTask extends AsyncTask<Void, Void, Void> {
+			
+		@Override
+		protected Void doInBackground(Void... arg0) {
+
+			if(null == localService) {
+
+				Log.e(LOG_TAG, "LocalService instance is null : getLocations()");
+				callJavaScriptFunction(GET_LOCATIONS_CALLBACK, "[]");
+			}
+			else {
+
+				String result = localService.getLocations();
+				Log.i(LOG_TAG, "DEBUG: " + result);
+				callJavaScriptFunction(GET_LOCATIONS_CALLBACK, result);
 			}
 			
 			return null;

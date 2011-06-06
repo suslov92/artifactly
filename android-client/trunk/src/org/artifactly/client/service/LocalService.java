@@ -95,9 +95,15 @@ public interface LocalService {
 	 * Get an artifact that matches the provided id
 	 * 
 	 * @param id Artifact DB row id
-	 * @return JSON artifact that matches the provied id
+	 * @return JSON artifact that matches the provided id
 	 */
 	public String getAtrifact(Long id);
 	
-	
+	/**
+	 * Get all locations
+	 * 
+	 * @return JSON containing all locations
+	 */
+	public String getLocations();
+
 }
