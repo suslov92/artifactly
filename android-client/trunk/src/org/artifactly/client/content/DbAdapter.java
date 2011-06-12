@@ -235,7 +235,7 @@ public class DbAdapter {
 							  "Location.locName AS locName",
 							  "Location.lat AS lat",
 							  "Location.lng AS lng"},
-				null, null, null, null, null);
+				null, null, null, null, "Location.locName ASC, Artifact.artName ASC");
 	}
 
 

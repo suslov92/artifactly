@@ -63,7 +63,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	private static final String PAS_PROVIDER = "PAS";
 
 	// Location radius
-	private static final int DEFAULT_RADIS = 100; // 100 m
+	private static final int DEFAULT_RADIS = 1000; // 1000 m
 	private int radius = DEFAULT_RADIS;
 	
 	// Location expiration delta is used to determine if the current location
@@ -298,6 +298,33 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		
 		return dbAdapter;
 	}
+	
+	/*
+	 * Helper method
+	 */
+	protected boolean isNearbyCurrentLocation(String lat, String lng) {
+		
+		float[] distanceResult = new float[1];
+
+		try {
+		
+			Location.distanceBetween(currentLocation.getLatitude(),
+					currentLocation.getLongitude(),
+					Double.parseDouble(lat),
+					Double.parseDouble(lng), distanceResult);
+		}
+		catch(NumberFormatException	exception) {
+
+			Log.e(LOG_TAG, "ERROR: Was not able to parse povided lat/lng to a Double");
+		}
+
+		if(distanceResult[0] <= radius) {
+			
+			return true;
+		}
+		
+		return false;
+	}
 
 	/*
 	 * Dispatch method for local service
@@ -505,19 +532,10 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		for(;cursor.isAfterLast() == false; cursor.moveToNext()) {
 
 			// Getting latitude and longitude
-			String storedLatitude = cursor.getString(latitudeColumnIndex).trim();
-			String storedLongitude = cursor.getString(longitudeColumnIndex).trim();
+			String lat = cursor.getString(latitudeColumnIndex).trim();
+			String lng = cursor.getString(longitudeColumnIndex).trim();
 
-			float[] distanceResult = new float[1];
-			Location.distanceBetween(currentLocation.getLatitude(),
-					currentLocation.getLongitude(),
-					Double.parseDouble(storedLatitude),
-					Double.parseDouble(storedLongitude), distanceResult);
-
-			Log.i(LOG_TAG, "distanceDifference = " + distanceResult[0]);
-
-			if(distanceResult[0] <= radius) {
-				
+			if(isNearbyCurrentLocation(lat, lng)) {
 				cursor.close();
 				return true;
 			}

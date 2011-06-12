@@ -16,7 +16,7 @@
 <div data-role="page" id="main">
 
 	<div data-role="header" data-backbtn="false" data-position="inline">
-		<h1>v0.0.1-a32</h1>
+		<h1>v0.0.1-a33</h1>
 		<a href="#new-artifact" data-icon="plus" data-transition="none" class="ui-btn-right">Artifact</a>
 	</div>
 
@@ -121,7 +121,7 @@
 	
 		<div id="radius-inputs">
 			<div data-role="fieldcontain">
- 				<input type="range" name="slider" id="radius-input" value="500" min="100" max="4000" />
+ 				<input type="range" name="slider" id="radius-input" value="1000" min="100" max="20000" />
  				<input type="button" name="set-radius" id="set-radius" value="Set Radius" />
 			</div>
 		</div>
@@ -163,13 +163,11 @@
 		<label for="selection-result-loc-name">Location Name:</label>
 		<input type="text" name="selection-result-loc-name" id="selection-result-loc-name" readonly value=""/>
 	
-		<label for="selection-result-lat">Latitude:</label>
-		<input type="text" name="selection-result-lat" id="selection-result-lat" readonly value=""/>
-		
-		<label for="selection-result-lng">Longitude:</label>
-		<input type="text" name="selection-result-lng" id="selection-result-lng" readonly value=""/>
-		
 		<br />
+		<div id="selection-result-map">
+			<img src="" />
+		</div>
+		
 		<br />
 		<input type="button" name="close-and-home" id="close-and-home" value="Close" />
 	</div>

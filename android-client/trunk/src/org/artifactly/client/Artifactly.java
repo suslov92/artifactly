@@ -314,6 +314,9 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			if(isSuccess) {
 
 				Toast.makeText(getApplicationContext(), R.string.delete_artifact_success, Toast.LENGTH_SHORT).show();
+				
+				// Refreshing the artifacts list
+				new GetArtifactsForCurrentLocation().execute();
 			}
 			else {
 

@@ -1,3 +1,11 @@
 .ui-page {
 	background: #ADDFFF;
 }
+
+#selection-result-map {
+	text-align: center;
+}
+
+li img {
+	padding: 1px;
+}

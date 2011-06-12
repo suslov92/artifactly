@@ -77,7 +77,6 @@ $(document).ready(function() {
 
 		var id = localStorage['deleteArtifactId'];
 		window.android.deleteArtifact(+id);
-		$('#artifactly-list li').remove('[data-artId="' + id + '"]');
 	});
 	
 	/*
@@ -294,7 +293,7 @@ $(document).ready(function() {
 			$('#artifact-location-name-div').hide();
 		}
 	});
-});
+}); // END jQuery main block
 
 /*
  * Load Google search API
@@ -333,7 +332,12 @@ function searchComplete(localSearch) {
 			// Iterate over the search result
 			for (var i = 0; i < localSearch.results.length; i++) {
 				
-				$('<li/>', { html : localSearch.results[i].title })        
+				console.log(localSearch.results[i].addressLines[0]);
+				
+				$('<li/>', { html : '<img src="' + getMapImage(localSearch.results[i].lat, localSearch.results[i].lng, "13", "78", "78") + '"/>'+
+									'<h3>' + localSearch.results[i].title + '</h3>' +
+									'<p>' + localSearch.results[i].addressLines[0] + '</p>' +
+									'<p>' + localSearch.results[i].city + '</p>' })        
 			      .data({
 			    	locName : htmlDecode(stripHtml(localSearch.results[i].title)),
 			    	locLat : localSearch.results[i].lat,
@@ -397,42 +401,50 @@ function getArtifactsCallback(artifacts) {
  */
 function getArtifactCallback(data) {
 
-	if(data.length != 1) {
+	$(document).ready(function() {
+		
+		if(data.length != 1) {
 
-		// In case of an error, we go back to the main page
-		$.mobile.changePage("#main", "none");
-	}
-	else {
+			// In case of an error, we go back to the main page
+			$.mobile.changePage("#main", "none");
+		}
+		else {
 
-		$(document).ready(function() {
 			$('#selection-result-art-name').val(data[0].artName);
 			$('#selection-result-art-data').val(data[0].artData);
 			$('#selection-result-loc-name').val(data[0].locName);
 			$('#selection-result-lat').val((+data[0].lat).toFixed(6));
 			$('#selection-result-lng').val((+data[0].lng).toFixed(6));
-		});
-	}
+			$('#selection-result-map img').attr('src', getMapImage(data[0].lat, data[0].lng, "14", "250", "200"));
+		}
+	});
 }
 
-function getArtifactsForCurrentLocationCallback(artifacts) {
+function getArtifactsForCurrentLocationCallback(locations) {
 
 	$(document).ready(function() {
 
 		$('#artifactly-list li').remove();
 		$('#artifactly-list ul').listview('refresh');
 		
-		if(artifacts.length < 1) {
+		if(!locations || locations.length < 1) {
 
 			$('#artifactly-message').text("There are no Artifacts close by");
 		}
 		else {
 
 			$('#artifactly-message').text("");
-			$.each(artifacts, function(i, val) {
-				
-				$('<li/>', { html : '<a href="#selection-result" data-transition="none">' + val.artName + '</a>' })        
-			      .attr('data-artId', val.artId)
-			      .appendTo($('#artifactly-list ul'));
+			$.each(locations, function(i, location) {
+
+				$('<li/>', { html : location.locName })
+				.attr('data-role', 'list-divider')
+				.appendTo($('#artifactly-list ul'));
+
+				$.each(location.artifacts, function(j, artifact) {
+					$('<li/>', { html : '<a href="#selection-result" data-transition="none">' + artifact.artName + '</a>' })        
+					.attr('data-artId', artifact.artId)
+					.appendTo($('#artifactly-list ul'))
+				});
 			});
 
 			$('#artifactly-list ul').listview('refresh');
@@ -571,4 +583,20 @@ function htmlDecode(value) {
 function htmlEncode(value) {
 	
 	return $('<div/>').text(value).html();
+}
+
+/*
+ * Helper method that creates an URL that returns a Google Maps image
+ */
+function getMapImage(lat, lng, zoom, width, height) {
+	
+	var canAccessInternet = window.android.canAccessInternet();
+	
+	if(canAccessInternet) {
+
+		return "http://maps.google.com/maps/api/staticmap?center=" + lat + "," + lng + "&zoom=" + zoom + "&size=" + width + "x" + height + "&markers=color:red%7Csize:small%7C" + lat + "," + lng + "&sensor=false";
+	}
+	else {
+		return "";
+	}
 }
