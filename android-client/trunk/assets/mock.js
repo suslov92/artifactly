@@ -29,7 +29,7 @@ if(typeof window.android == "undefined") {
 
 	window.android.getArtifactsForCurrentLocation = function () {
 
-		var data = '[{"artData":"prius 20 k","artId":1,"lng":"-121.4020047","lat":"38.6300699","artName":"car service","locName":"Toyota Dealer"},{"artData":"fun","artId":2,"lng":"-121.5799187","lat":"38.5400857","artName":"home","locName":"Home"},{"artData":"art","artId":3,"lng":"-121.4763178","lat":"38.5745222","artName":"art beast","locName":"Art Beast"},{"artData":"2","artId":4,"lng":"-121.55368518","lat":"38.586812609999996","artName":"bed","locName":"Somewhere"}]';
+		var data = '[{"artifacts":[{"artData":"1 lb","artName":"sugar ","artId":4}],"lng":"-121.534371","lat":"38.551307","locName":"Nugget Markets"},{"artifacts":[{"artData":"regular","artName":"coffee ","artId":1},{"artData":"moca","artName":"coffee 2","artId":2}],"lng":"-121.535248","lat":"38.551115","locName":"Starbucks"}]';
 	
 		getArtifactsForCurrentLocationCallback(JSON.parse(data));
 	};
@@ -67,7 +67,7 @@ if(typeof window.android == "undefined") {
 
 	window.android.getArtifacts = function() {
 
-		var data = '[{"artData":"prius 20 k","artId":1,"lng":"-121.4020047","lat":"38.6300699","artName":"car service","locName":"Toyota Dealer"},{"artData":"fun","artId":2,"lng":"-121.5799187","lat":"38.5400857","artName":"home","locName":"Home"},{"artData":"art","artId":3,"lng":"-121.4763178","lat":"38.5745222","artName":"art beast","locName":"Art Beast"},{"artData":"2","artId":4,"lng":"-121.55368518","lat":"38.586812609999996","artName":"bed","locName":"Somewhere"}]';
+		var data = '[{"artifacts":[{"artData":"1 lb","artName":"sugar ","artId":4}],"lng":"-121.534371","lat":"38.551307","locName":"Nugget Markets"},{"artifacts":[{"artData":"regular","artName":"coffee ","artId":1},{"artData":"moca","artName":"coffee 2","artId":2}],"lng":"-121.535248","lat":"38.551115","locName":"Starbucks"}]';
 		
 		getArtifactsCallback(JSON.parse(data));
 	}
@@ -76,10 +76,10 @@ if(typeof window.android == "undefined") {
 		
 		var data =  new Array();
 		data[0] = "[{}]";
-		data[1] = '[{"artData":"prius 20 k","artId":1,"lng":"-121.4020047","lat":"38.6300699","artName":"car service","locName":"Toyota Dealer"}]';
-		data[2] = '[{"artData":"fun","artId":2,"lng":"-121.5799187","lat":"38.5400857","artName":"home","locName":"Home"}]';
-		data[3] = '[{"artData":"art","artId":3,"lng":"-121.4763178","lat":"38.5745222","artName":"art beast","locName":"Art Beast"}]';
-		data[4] = '[{"artData":"2","artId":4,"lng":"-121.55368518","lat":"38.586812609999996","artName":"bed","locName":"Somewhere"}]';
+		data[1] = '[{"artData":"regular","artId":1,"lng":"-121.535248","lat":"38.551115","artName":"coffee","locName":"Starbucks"}]';
+		data[2] = '[{"artData":"moca","artId":2,"lng":"-121.535248","lat":"38.551115","artName":"coffee","locName":"Starbucks"}]';
+		data[3] = '[{}]';
+		data[4] = '[{"artData":"1 lb","artId":4,"lng":"-121.534371","lat":"38.551307","artName":"sugar","locName":"Nugget Markets"}]';
 		getArtifactCallback(JSON.parse(data[id]));
 	}
 	
