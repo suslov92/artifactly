@@ -1,9 +1,56 @@
-.ui-page {
-	background: #ADDFFF;
+/*
+ * Artifactly CSS
+ *
+ */
+ 
+.artifactly-label {
+	font-weight: bold !important;
 }
 
-#selection-result-map {
+.artifact-button-group {
 	text-align: center;
+}
+
+.artifact-main-page-footer {
+
+	position: absolute !important;
+	bottom: 0;
+	left: 0;
+	padding-bottom: 5px;
+	padding-top: 5px;"	
+}
+
+.delete-artifact-name {
+	font-weight: bold;
+	text-align: center;
+}
+
+.delete-artifact-header {
+	text-align: center;
+}
+
+.view-artifact-map {
+	text-align: center;
+}
+
+#google-search-branding {
+	float: left;
+}
+
+#map {
+	width:100%;
+	height:100%;	
+}
+
+#map-content {
+	width:100%;
+	height:100%;
+	padding:0;
+}
+
+#map-canvas {
+	width:100%;
+	height:100%;
 }
 
 li img {

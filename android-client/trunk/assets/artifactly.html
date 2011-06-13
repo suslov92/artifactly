@@ -16,7 +16,7 @@
 <div data-role="page" id="main">
 
 	<div data-role="header" data-backbtn="false" data-position="inline">
-		<h1>v0.0.1-a33</h1>
+		<h1>v1.0.0-b1</h1>
 		<a href="#new-artifact" data-icon="plus" data-transition="none" class="ui-btn-right">Artifact</a>
 	</div>
 
@@ -27,7 +27,7 @@
 		</div>
 	</div>
 	
-	<div data-role="footer" style="position:absolute; bottom:0; left:0; padding-bottom:5px; padding-top:5px;">
+	<div data-role="footer" class="artifact-main-page-footer">
 		<a href="#options" data-icon="gear" data-transition="none">Options</a>
 		<a href="#map" data-icon="star" data-transition="none">Map</a>
 	</div>
@@ -60,9 +60,8 @@
 			<select name="artifact-location-selection" id="artifact-location-selection">
 			</select>
 		</div>
-		<div data-role="controlgroup" data-type="horizontal" style="text-align:center">
+		<div data-role="controlgroup" data-type="horizontal" class="artifact-button-group">
 			<input type="button" name="add-artifact-button" id="add-artifact-button" data-icon="check" value="Add" />
-			<input type="button" name="cancel-artifact-button" id="cancel-artifact-button" data-icon="minus" value="Cancel" />
 			<input type="button" name="close-artifact-button" id="close-artifact-button" data-icon="home" value="Close" />
 		</div>
 	</div>
@@ -89,7 +88,7 @@
 		<br />
 		<div id="entered-search-term"></div>
 		<br />
-		<div id="google-search-branding" style="float: left;"></div><br />
+		<div id="google-search-branding"></div><br />
 		<div id="search-result"></div>
 		<br />
 		<div id="search-result-list">
@@ -98,15 +97,15 @@
 	</div>
 </div>
 
-<div data-role="page" id="map" style="width:100%; height:100%;">
+<div data-role="page" id="map">
 
 	<div data-role="header" data-backbtn="false" data-position="inline">
 		<a href="#main" data-icon="home" data-transition="none">Home</a>
 		<h1>Map</h1>
 	</div>
 
-	<div data-role="content" style="width:100%; height:100%; padding:0;">
-		<div id="map-canvas" style="width:100%; height:100%;">Loading ...</div>
+	<div data-role="content" id="map-content">
+		<div id="map-canvas">Loading ...</div>
 	</div>
 </div>
 
@@ -127,25 +126,18 @@
 		</div>
 		
 		<div data-role="fieldcontain">
-			<label for="select-debug" class="select">Debug:</label>
-			<select name="select-debug" id="select-debug">
+			<label for="option-select-back-ground-color" class="select artifactly-label">Background Color:</label>
+			<select name="option-select-back-ground-color" id="option-select-back-ground-color">
 				<option value="default" data-placeholder="true">Choose one ...</option>
-				<option value="get-location">Get Location</option>
+				<option value="blue">Blue</option>
+				<option value="pink">Pink</option>
+				<option value="green">Green</option>
 			</select>
 		</div>
-		
-		<div data-role="fieldcontain">
-			<div id="log-latitude"></div>
-			<div id="log-longitude"></div>
-			<div id="log-accuracy"></div>
-			<div id="log-time"></div>
-			<div id="log-time-latest"></div>
-		</div>
-		
 	</div>
 </div>
 
-<div data-role="page" id="selection-result">
+<div data-role="page" id="view-artifact">
 
 	<div data-role="header" data-backbtn="false" data-position="inline">
 		<a href="#main" data-icon="home" data-transition="none">Home</a>
@@ -154,22 +146,26 @@
 	
 	<div data-role="content">
 
-		<label for="selection-result-art-name">Artifact Name:</label>
-		<input type="text" name="selection-result-art-name" id="selection-result-art-name" readonly value=""/>
+		<label for="view-artifact-art-name">Artifact Name:</label>
+		<input type="text" name="view-artifact-art-name" id="view-artifact-art-name" value=""/>
 		
-		<label for="selection-result-art-data">Data:</label>
-		<input type="text" name="selection-result-art-data" id="selection-result-art-data" readonly value=""/>
+		<label for="view-artifact-art-data">Data:</label>
+		<input type="text" name="view-artifact-art-data" id="view-artifact-art-data" value=""/>
 		
-		<label for="selection-result-loc-name">Location Name:</label>
-		<input type="text" name="selection-result-loc-name" id="selection-result-loc-name" readonly value=""/>
+		<label for="view-artifact-loc-name">Location Name:</label>
+		<input type="text" name="view-artifact-loc-name" id="view-artifact-loc-name" readonly value=""/>
 	
 		<br />
-		<div id="selection-result-map">
+		<div id="view-artifact-map" class="view-artifact-map">
 			<img src="" />
 		</div>
 		
 		<br />
-		<input type="button" name="close-and-home" id="close-and-home" value="Close" />
+		
+		<div data-role="controlgroup" data-type="horizontal" class="artifact-button-group">
+			<input type="button" name="update-artifact" id="update-artifact" data-icon="" value="Update" />
+ 			<input type="button" name="close-and-home" id="close-and-home" data-icon="" value="Close" />
+		</div>
 	</div>
 </div>
 
@@ -180,8 +176,9 @@
 	</div>
 	
 	<div data-role="content">
-		<h1>Delete Artifact</h1>
-		<p>Are you sure you want to delete the artifact?</p>
+		<h3 class="delete-artifact-header">Delete Artifact:</h3>
+		<div id="delete-artifact-name" class="delete-artifact-name"></div>
+		<br />
 		<a href="#main" id="delete-artifact-yes" data-role="button" data-rel="back">Yes</a>
 		<a href="#main" id="delete-artifact-cancel" data-role="button" data-rel="back">Cancel</a>
 	</div>

@@ -31,7 +31,7 @@ var refreshLocations = true;
 $(document).ready(function() {
 
 	/*
-	 * Clicking on an artifact list item, stores the item's id in localStorage
+	 * Clicking on an artifact list item
 	 */
 	$('#artifactly-list').delegate('li', 'click', function(event) {  
 
@@ -45,7 +45,8 @@ $(document).ready(function() {
 	$('#artifactly-list').delegate('li', 'swiperight', function(event) {
 		
 		$.mobile.changePage("#dialog", "none");
-		localStorage['deleteArtifactId'] = $(this).attr("data-artId");
+		$('#delete-artifact-name').html($(this).data("artName"));
+		$('#delete-artifact-name').data({ deleteArtifactId : $(this).attr("data-artId") });
 	});
 	
 	/*
@@ -75,7 +76,7 @@ $(document).ready(function() {
 	 */
 	$('#delete-artifact-yes').click(function(event) {
 
-		var id = localStorage['deleteArtifactId'];
+		var id = $('#delete-artifact-name').data("deleteArtifactId");
 		window.android.deleteArtifact(+id);
 	});
 	
@@ -151,6 +152,19 @@ $(document).ready(function() {
 		
 		$.mobile.changePage("#main", "none");
 	});
+	
+	/*
+	 * Update the artifact
+	 */
+	$('#update-artifact').click(function() {
+		
+		var artId = $('#view-artifact-art-name').data("artId");
+		var artName = $('#view-artifact-art-name').val();
+		var artData = $('#view-artifact-art-data').val();
+		
+		window.android.updateArtifact(artId, artName, artData);
+		
+	});
 
 	/*
 	 * Set radius button click handler
@@ -167,15 +181,6 @@ $(document).ready(function() {
 	$('#get-radius').click(function() {
 
 		window.android.showRadius();
-	});
-
-	/*
-	 * Create artifact cancel button
-	 */
-	$('#cancel-artifact-button').click(function() {
-
-		$('#artifact-name').val('');
-		$('#artifact-data').val('');
 	});
 	
 	/*
@@ -260,19 +265,28 @@ $(document).ready(function() {
 	/*
 	 * Options' page select menu
 	 */
-	$('#select-debug').change(function() {
+	$('#option-select-back-ground-color').change(function() {
 
-		var selected = $('#select-debug option:selected');
-
-		if(selected.val() == "get-location") {
-
-			var data = JSON.parse(window.android.getLocation());
-			$('#log-latitude').text("Latitude: " + data[0].toFixed(6));
-			$('#log-longitude').text("Longitude: " + data[1].toFixed(6));
-			$('#log-accuracy').text("Accuracy: " + data[2]);
-			$('#log-time').text("Time: " + data[3]);
-			$('#log-time-latest').text("Last: " + data[4]);
+		var selected = $('#option-select-back-ground-color option:selected');
+		var color = '#ADDFFF';
+		
+		if(selected.val() == "blue") {
+			
+			$('.ui-page').css('background', '#ADDFFF');
+			color = "#ADDFFF";
 		}
+		else if(selected.val() == "pink") {
+			
+			$('.ui-page').css('background', '#FFCECE');
+			color = "#FFCECE";
+		}
+		else if(selected.val() == "green") {
+			
+			$('.ui-page').css('background', '#D2FFC4');
+			color = "#D2FFC4";
+		}
+		
+		window.android.setBackgroundColor(color);
 	});
 	
 	/*
@@ -410,12 +424,17 @@ function getArtifactCallback(data) {
 		}
 		else {
 
-			$('#selection-result-art-name').val(data[0].artName);
-			$('#selection-result-art-data').val(data[0].artData);
-			$('#selection-result-loc-name').val(data[0].locName);
-			$('#selection-result-lat').val((+data[0].lat).toFixed(6));
-			$('#selection-result-lng').val((+data[0].lng).toFixed(6));
-			$('#selection-result-map img').attr('src', getMapImage(data[0].lat, data[0].lng, "14", "250", "200"));
+			/*
+			 * Attach the artifact id to the artifact name field so that
+			 * we can use it to update the artifact values
+			 */
+			$('#view-artifact-art-name').data({ artId : data[0].artId });
+			$('#view-artifact-art-name').val(data[0].artName);
+			$('#view-artifact-art-data').val(data[0].artData);
+			$('#view-artifact-loc-name').val(data[0].locName);
+			$('#view-artifact-lat').val((+data[0].lat).toFixed(6));
+			$('#view-artifact-lng').val((+data[0].lng).toFixed(6));
+			$('#view-artifact-map img').attr('src', getMapImage(data[0].lat, data[0].lng, "14", "250", "200"));
 		}
 	});
 }
@@ -441,8 +460,9 @@ function getArtifactsForCurrentLocationCallback(locations) {
 				.appendTo($('#artifactly-list ul'));
 
 				$.each(location.artifacts, function(j, artifact) {
-					$('<li/>', { html : '<a href="#selection-result" data-transition="none">' + artifact.artName + '</a>' })        
+					$('<li/>', { html : '<a href="#view-artifact" data-transition="none">' + artifact.artName + '</a>' })        
 					.attr('data-artId', artifact.artId)
+					.data({ artName : artifact.artName })
 					.appendTo($('#artifactly-list ul'))
 				});
 			});
@@ -495,6 +515,14 @@ function getLocationsCallback(locations) {
 	});
 }
 
+function setBackgroundColor(color) {
+	
+	$(document).ready(function() {
+		
+		$('.ui-page').css('background', color.bgc);
+	});
+}
+
 function showServiceResult(data) {
 
 	$(document).ready(function() {
@@ -503,7 +531,7 @@ function showServiceResult(data) {
 
 		$.each(data, function(i, val) {
 
-			$('#artifactly-list ul').append('<li><a href="#selection-result" data-transition="none">' + val.name + '</a></li>');
+			$('#artifactly-list ul').append('<li><a href="#view-artifact" data-transition="none">' + val.name + '</a></li>');
 		});
 
 		$('#artifactly-list ul').listview('refresh');
@@ -597,6 +625,7 @@ function getMapImage(lat, lng, zoom, width, height) {
 		return "http://maps.google.com/maps/api/staticmap?center=" + lat + "," + lng + "&zoom=" + zoom + "&size=" + width + "x" + height + "&markers=color:red%7Csize:small%7C" + lat + "," + lng + "&sensor=false";
 	}
 	else {
+		
 		return "";
 	}
 }
