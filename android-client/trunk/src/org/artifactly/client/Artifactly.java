@@ -34,6 +34,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.webkit.ConsoleMessage;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
@@ -157,6 +158,20 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		};
 	}
 
+	/*
+	 * Handle back button clicks in webview
+	 * @see android.app.Activity#onKeyDown(int, android.view.KeyEvent)
+	 */
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		
+	    if ((keyCode == KeyEvent.KEYCODE_BACK) && webView.canGoBack()) {
+	    	webView.goBack();
+	        return true;
+	    }
+	    return super.onKeyDown(keyCode, event);
+	}
+	
 	/*
 	 * (non-Javadoc)
 	 * @see android.app.Activity#onStart()
