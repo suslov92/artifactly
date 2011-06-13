@@ -18,6 +18,8 @@ package org.artifactly.client;
 
 import org.artifactly.client.service.ArtifactlyService;
 import org.artifactly.client.service.LocalService;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
@@ -35,6 +37,7 @@ import android.util.Log;
 import android.webkit.ConsoleMessage;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.Toast;
 
 public class Artifactly extends Activity implements ApplicationConstants {
@@ -59,8 +62,9 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	private static final String SHOW_SERVICE_RESULT = "showServiceResult";
 	private static final String GET_ARTIFACTS_CALLBACK = "getArtifactsCallback";
 	private static final String GET_ARTIFACT_CALLBACK = "getArtifactCallback";
-	private static final String GET_ARTIFACTS_FOR_CURRENT_LOCATION = "getArtifactsForCurrentLocationCallback";
+	private static final String GET_ARTIFACTS_FOR_CURRENT_LOCATION_CALLBACK = "getArtifactsForCurrentLocationCallback";
 	private static final String GET_LOCATIONS_CALLBACK = "getLocationsCallback";
+	private static final String SET_BACKGROUND_COLOR = "setBackgroundColor";
 
 	private WebView webView = null;
 
@@ -85,7 +89,51 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		Log.i(LOG_TAG, "onCreate()");
 
 		setContentView(R.layout.main);
+		
+		// Setting up the WebView
+		webView = (WebView) findViewById(R.id.webview);
+		webView.getSettings().setJavaScriptEnabled(true);
+		// Enable the following if we need JavaScript localStorage 
+		//webView.getSettings().setDomStorageEnabled(true);
 
+		// Disable the vertical scroll bar
+		webView.setVerticalScrollBarEnabled(false);
+
+		webView.addJavascriptInterface(new JavaScriptInterface(), JAVASCRIPT_BRIDGE_PREFIX);
+
+		webView.setWebChromeClient(new WebChromeClient() {
+			
+			public boolean onConsoleMessage(ConsoleMessage cm) {
+			
+				Log.d("** A.A - JS **", cm.message() + " -- From line " + cm.lineNumber() + " of " + cm.sourceId() );
+				return true;
+			}
+		});
+		
+		webView.setWebViewClient(new WebViewClient() {
+			
+			@Override
+			public void onPageFinished (WebView view, String url) {
+				
+				// Set the background color as defined in the preferences
+				String backgroundColor = getBackgroundColor();
+				JSONObject json = new JSONObject();
+				
+				try {
+					
+					json.put("bgc",  backgroundColor);
+				}
+				catch (JSONException e) {
+					
+					Log.e(LOG_TAG, "ERROR: json.put()", e);
+				}
+				
+				callJavaScriptFunction(SET_BACKGROUND_COLOR, json.toString());
+			}
+        });
+
+		webView.loadUrl(ARTIFACTLY_URL);
+		
 		/*
 		 * Calling startService so that the service keeps running. e.g. After application installation
 		 * The start of the service at boot is handled via a BroadcastReceiver and the BOOT_COMPLETED action
@@ -96,27 +144,6 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		bindService(new Intent(this, ArtifactlyService.class), serviceConnection, BIND_AUTO_CREATE);
 		isBound = true;
 
-		// Setting up the WebView
-		webView = (WebView) findViewById(R.id.webview);
-		webView.getSettings().setJavaScriptEnabled(true);
-		webView.getSettings().setDomStorageEnabled(true);
-
-		// Disable the vertical scroll bar
-		webView.setVerticalScrollBarEnabled(false);
-
-		webView.addJavascriptInterface(new JavaScriptInterface(), JAVASCRIPT_BRIDGE_PREFIX);
-
-		webView.setWebChromeClient(new WebChromeClient() {
-			public boolean onConsoleMessage(ConsoleMessage cm) {
-				Log.d("** A.A - JS **", cm.message() + " -- From line "
-						+ cm.lineNumber() + " of "
-						+ cm.sourceId() );
-				return true;
-			}
-		});
-
-		webView.loadUrl(ARTIFACTLY_URL);
-		
 		// Instantiate the broadcast receiver
 		broadcastReceiver = new BroadcastReceiver() {
 
@@ -141,11 +168,11 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		Log.i(LOG_TAG, "onStart()");
 
 		if(!isBound) {
+			
 			// Connect to the local service API
 			bindService(new Intent(this, ArtifactlyService.class), serviceConnection, BIND_AUTO_CREATE);
 			isBound = true;
 			Log.i(LOG_TAG, "onStart Binding service done");
-			
 		}
 	}
 
@@ -264,6 +291,14 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	}
 
 	/*
+	 * Helper method to get the background color from the preferences
+	 */
+	private String getBackgroundColor() {
+		SharedPreferences settings = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+		return settings.getString(PREFERENCE_BACKGROUND_COLOR, PREFERENCE_BACKGROUND_COLOR_DEFAULT);
+	}
+	
+	/*
 	 * Helper method to call JavaScript methods
 	 */
 	private void callJavaScriptFunction(final String functionName, final String json) {
@@ -286,6 +321,15 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	// Define methods that are called from JavaScript
 	public class JavaScriptInterface {
 		
+		public void setBackgroundColor(String color) {
+			
+			Log.i(LOG_TAG, "JS --> setBackground");
+			SharedPreferences settings = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+			SharedPreferences.Editor editor = settings.edit();
+			editor.putString(PREFERENCE_BACKGROUND_COLOR, color);
+			editor.commit();
+		}
+		
 		public void setRadius(int radius) {
 
 			Log.i(LOG_TAG, "JS --> setRadius");
@@ -303,6 +347,13 @@ public class Artifactly extends Activity implements ApplicationConstants {
 				// Refreshing the artifacts list
 				new GetArtifactsForCurrentLocation().execute();
 			}
+		}
+
+		public int getRadius() {
+
+			Log.i(LOG_TAG, "JS --> getRadius");
+			SharedPreferences settings = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+			return settings.getInt(PREFERENCE_RADIUS, PREFERENCE_RADIUS_DEFAULT);
 		}
 
 		public void deleteArtifact(long id) {
@@ -384,13 +435,6 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			}
 		}
 
-		public int getRadius() {
-
-			Log.i(LOG_TAG, "JS --> getRadius");
-			SharedPreferences settings = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-			return settings.getInt(PREFERENCE_RADIUS, PREFERENCE_RADIUS_DEFAULT);
-		}
-
 		public void showRadius() {
 			
 			Log.i(LOG_TAG, "JS --> showRadius");
@@ -446,6 +490,13 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			Log.i(LOG_TAG, "JS --> getLocations");
 			new GetLocationsTask().execute();
 		}
+		
+		public void updateArtifact(String artId, String artName, String artData) {
+			
+			Log.i(LOG_TAG, "JS --> updateArtifact");
+			new UpdateArtifactTask().execute(artId, artName, artData);
+			
+		}
 	} 
 
 	// Method that returns a service connection
@@ -459,7 +510,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 				isBound = true;
 				Log.i(LOG_TAG, "onServiceConnected called");
 				
-				// When application starts, we load the artifacts for the current location 
+				// When application starts, we load the artifacts for the current location
 				new GetArtifactsForCurrentLocation().execute();
 			}
 
@@ -497,12 +548,12 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			if(null == localService) {
 				
 				Log.e(LOG_TAG, "LocalService instance is null : getArtifactsForCurrentLocation()");
-				callJavaScriptFunction(GET_ARTIFACTS_FOR_CURRENT_LOCATION, "[]");
+				callJavaScriptFunction(GET_ARTIFACTS_FOR_CURRENT_LOCATION_CALLBACK, "[]");
 			}
 			else {
 
 				String result = localService.getArtifactsForCurrentLocation();
-				callJavaScriptFunction(GET_ARTIFACTS_FOR_CURRENT_LOCATION, result);
+				callJavaScriptFunction(GET_ARTIFACTS_FOR_CURRENT_LOCATION_CALLBACK, result);
 			}
 
 			return null;
@@ -550,16 +601,16 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		}	
 	}
 
-	private class GetArtifactTask extends AsyncTask<Long, Void, Void> {
+	private class GetArtifactTask extends AsyncTask<Long, Void, Boolean> {
 
 		@Override
-		protected Void doInBackground(Long... ids) {
+		protected Boolean doInBackground(Long... ids) {
 
 			if(null == localService) {
 				
-				Toast.makeText(getApplicationContext(), R.string.get_artifact_failure, Toast.LENGTH_LONG).show();
 				Log.e(LOG_TAG, "LocalService instance is null : getAtrifact()");
 				callJavaScriptFunction(GET_ARTIFACT_CALLBACK, "[]");
+				return Boolean.FALSE;
 			}
 			else {
 				
@@ -567,7 +618,54 @@ public class Artifactly extends Activity implements ApplicationConstants {
 				callJavaScriptFunction(GET_ARTIFACT_CALLBACK, result);
 			}
 
-			return null;
+			return Boolean.TRUE;
+		}
+		
+		@Override
+		protected void onPostExecute(Boolean result) {
+		
+			/*
+			 * Show Toast in here because onPostExecute executes in UI thread
+			 */
+			if(!result.booleanValue()) {
+				
+				Toast.makeText(getApplicationContext(), R.string.get_artifact_failure, Toast.LENGTH_LONG).show();
+			}
+		}
+	}
+	
+	private class UpdateArtifactTask extends AsyncTask<String, Void, Boolean> {
+		
+		@Override
+		protected Boolean doInBackground(String... args) {
+
+			if(null == localService) {
+				
+				Log.e(LOG_TAG, "LocalService instance is null : getAtrifact()");
+				return Boolean.FALSE;
+			}
+			else {
+				
+				return Boolean.valueOf(localService.updateArtifact(args[0], args[1], args[2]));
+				
+			}
+		}
+		
+		@Override
+		protected void onPostExecute(Boolean result) {
+		
+			/*
+			 * Show Toast in here because onPostExecute executes in UI thread
+			 */
+			if(result.booleanValue()) {
+				
+				new GetArtifactsForCurrentLocation().execute();
+				Toast.makeText(getApplicationContext(), R.string.update_artifact_success, Toast.LENGTH_SHORT).show();
+			}
+			else {
+				
+				Toast.makeText(getApplicationContext(), R.string.update_artifact_failure, Toast.LENGTH_SHORT).show();
+			}
 		}
 	}
 }

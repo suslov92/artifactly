@@ -219,6 +219,19 @@ public class DbAdapter {
 	}
 	
 	/*
+	 * Update an Artifact
+	 */
+	public boolean updateArtifact(String artifactId, String artifactName, String artifactData) {
+		
+		ContentValues contentValues = new ContentValues();
+		contentValues.put(ART_FIELDS[ART_NAME], artifactName);
+		contentValues.put(ART_FIELDS[ART_DATA], artifactData);
+		int numberRowsAffected = mSQLiteDatabase.update(DB_TABLE_ARTIFACT, contentValues, "_id=?", new String[] {artifactId});
+		
+		return (numberRowsAffected == 1 ? true : false);
+	}
+	
+	/*
 	 * Select all the location and artifact relationships
 	 * NOTE: Caller must call cursor.close()
 	 */

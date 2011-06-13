@@ -23,6 +23,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteException;
 import android.location.Location;
@@ -437,5 +438,17 @@ public class LocalServiceImpl extends Binder implements LocalService {
 	
 			return locations.toString();
 		}
+	}
+
+	public boolean updateArtifact(String artifactId, String artifactName, String artifactData) {
+		
+		if(null == dbAdapter) {
+			
+			Log.w(LOG_TAG, "DB Adapter is null");
+			return false;
+		}
+		
+		return dbAdapter.updateArtifact(artifactId, artifactName, artifactData);
+		
 	}
 }

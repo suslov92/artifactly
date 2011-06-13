@@ -32,12 +32,23 @@ public interface LocalService {
 	
 	/**
 	 * Creates an Artifact at the current location
+	 * 
 	 * @param artifactName Artifact name
 	 * @param artifactData Artifact data
 	 * @param locationName Location name
 	 * @return false on error, otherwise true
 	 */
 	public boolean createArtifact(String artifactName, String artifactData, String locationName);
+	
+	/**
+	 * Update an Artifact
+	 * 
+	 * @param artifactId
+	 * @param artifactName
+	 * @param artifactData
+	 * @return false on error, otherwise true
+	 */
+	public boolean updateArtifact(String artifactId, String artifactName, String artifactData);
 	
 	/**
 	 * Starts the location updates

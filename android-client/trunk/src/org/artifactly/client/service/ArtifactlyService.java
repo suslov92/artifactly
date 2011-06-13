@@ -108,7 +108,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	
 	// Last send notification time
 	private long lastSendNotificationTime = 0;
-	private int lastSendNotificationTimeDelta = 20000; // 20 sec
+	private int lastSendNotificationTimeDelta = 60000; // 60 sec
 	
 	// DB adapter
 	private DbAdapter dbAdapter;
@@ -233,17 +233,20 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	 */
 	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
 
-		int newRadius = sharedPreferences.getInt(key, DEFAULT_RADIS);
+		if(PREFERENCE_RADIUS.equals(key)) {
+			
+			int newRadius = sharedPreferences.getInt(key, DEFAULT_RADIS);
 
-		// TODO: Determine what the appropriate minimum radius is.
-		if(0 < newRadius) {
+			// TODO: Determine what the appropriate minimum radius is.
+			if(0 < newRadius) {
 
-			Log.i(LOG_TAG, "Radius was set to " + newRadius);
-			radius = newRadius;
-		}
-		else {
+				Log.i(LOG_TAG, "Radius was set to " + newRadius);
+				radius = newRadius;
+			}
+			else {
 
-			Log.w(LOG_TAG, "Radius update was ignored because new radius < 1");
+				Log.w(LOG_TAG, "Radius update was ignored because new radius < 1");
+			}
 		}
 	}
 
@@ -466,20 +469,19 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	}
 
 	/*
-	 * This method sends a message using Android's notification notification manager.
+	 * This method sends a message using Android's notification manager.
 	 * It set up an intent so that the UI can be launched from within the notification message.
 	 */
 	private void sendNotification() {
-
-		Log.i(LOG_TAG, ">>>> Sending Notification >>>>");
+		
 		Intent notificationIntent = new Intent(this, Artifactly.class);
 		notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-		//notificationIntent.putExtra(NOTIFICATION_INTENT_KEY, "Some data ...");
-		// Setting FLAG_UPDATE_CURRENT, so that the extra content is updated for each notification
 		PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 		Notification notification = new Notification(R.drawable.icon, NOTIFICATION_TICKER_TEXT, System.currentTimeMillis());
-		notification.flags = Notification.DEFAULT_LIGHTS | Notification.FLAG_AUTO_CANCEL | Notification.DEFAULT_SOUND;
-		notification.setLatestEventInfo(this, NOTIFICATION_CONTENT_TITLE, NOTIFICATION_MESSAGE, contentIntent);
+		notification.flags |= Notification.FLAG_AUTO_CANCEL;
+		notification.defaults |= Notification.DEFAULT_SOUND;
+		notification.defaults |= Notification.DEFAULT_LIGHTS;
+		notification.setLatestEventInfo(getApplicationContext(), NOTIFICATION_CONTENT_TITLE, NOTIFICATION_MESSAGE, contentIntent);
 		notificationManager.notify(NOTIFICATION_ID, notification);
 	}
 	
@@ -715,8 +717,8 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 				}
 			}
 		
-			// Make sure that we don't send to many notifications
-			boolean canSendNotificaiton = (lastSendNotificationTime + lastSendNotificationTimeDelta <= System.currentTimeMillis()) ? true : false;
+			// Make sure that we don't send too many notifications
+			boolean canSendNotificaiton = ((lastSendNotificationTime + lastSendNotificationTimeDelta) <= System.currentTimeMillis()) ? true : false;
 			
 			/*
 			 * Check if there are any artifacts close to the current location. If there are,
@@ -725,7 +727,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 			 */
 			if(canSendNotificaiton && hasArtifactsForCurrentLocation()) {
 				lastSendNotificationTime = System.currentTimeMillis();
-				cancelNotificaiton();
+				//cancelNotificaiton();
 				sendNotification();
 			}
 			else {
