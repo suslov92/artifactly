@@ -221,14 +221,18 @@ public class DbAdapter {
 	/*
 	 * Update an Artifact
 	 */
-	public boolean updateArtifact(String artifactId, String artifactName, String artifactData) {
+	public boolean updateArtifact(String artifactId, String artifactName, String artifactData, String locationId, String locationName) {
 		
-		ContentValues contentValues = new ContentValues();
-		contentValues.put(ART_FIELDS[ART_NAME], artifactName);
-		contentValues.put(ART_FIELDS[ART_DATA], artifactData);
-		int numberRowsAffected = mSQLiteDatabase.update(DB_TABLE_ARTIFACT, contentValues, "_id=?", new String[] {artifactId});
+		ContentValues artContentValues = new ContentValues();
+		artContentValues.put(ART_FIELDS[ART_NAME], artifactName);
+		artContentValues.put(ART_FIELDS[ART_DATA], artifactData);
+		int numberArtRowsAffected = mSQLiteDatabase.update(DB_TABLE_ARTIFACT, artContentValues, "_id=?", new String[] {artifactId});
 		
-		return (numberRowsAffected == 1 ? true : false);
+		ContentValues locContentValues = new ContentValues();
+		locContentValues.put(LOC_FIELDS[LOC_NAME], locationName);
+		int numberLocRowsAffected = mSQLiteDatabase.update(DB_TABLE_LOCATION, locContentValues, "_id=?", new String[] {locationId});
+		
+		return ((numberArtRowsAffected == 1 && numberLocRowsAffected ==  1) ? true : false);
 	}
 	
 	/*

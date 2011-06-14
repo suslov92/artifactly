@@ -44,7 +44,8 @@ import android.util.Log;
 public class ArtifactlyService extends Service implements OnSharedPreferenceChangeListener, ApplicationConstants {
 
 	// Logging
-	private static final String LOG_TAG = "** A.S. **";
+	private static final String DEBUG_LOG_TAG = "** DEBUG A.S. **";
+	private static final String PROD_LOG_TAG = "** A.S. **";
 
 	// Preferences
 	private static final String PREFS_NAME = "ArtifactlyPrefsFile";
@@ -126,7 +127,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		
 		super();
 		
-		Log.i(LOG_TAG, "ArtifactlyService Constructor");
+		Log.i(DEBUG_LOG_TAG, "ArtifactlyService Constructor");
 	}
 	
 	/*
@@ -135,7 +136,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	 */
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		Log.i(LOG_TAG, "onStartCommand() : intent = " + (null == intent ? "IS NULL" : "IS NOT NULL"));
+		Log.i(DEBUG_LOG_TAG, "onStartCommand() : intent = " + (null == intent ? "IS NULL" : "IS NOT NULL"));
 
 		// Initialize the service
 		try {
@@ -144,7 +145,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		}
 		catch(Exception e) {
 
-			Log.w(LOG_TAG, "Exception occured");
+			Log.w(PROD_LOG_TAG, "Exception occured", e);
 			runInit = true;
 		}
 
@@ -157,7 +158,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	 */
 	@Override
 	public void onLowMemory() {
-		Log.i(LOG_TAG, "onLowMemory()");
+		Log.i(DEBUG_LOG_TAG, "onLowMemory()");
 		super.onLowMemory();
 	}
 	
@@ -168,7 +169,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	@Override
 	public IBinder onBind(Intent intent) {
 		
-		Log.i(LOG_TAG, "onBind()");
+		Log.i(DEBUG_LOG_TAG, "onBind()");
 		localServiceBinder = new LocalServiceImpl(this);
 		return localServiceBinder;
 	}
@@ -179,7 +180,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	 */
 	@Override
 	public boolean onUnbind(Intent intent) {
-		Log.i(LOG_TAG, "onUnbind()");
+		Log.i(DEBUG_LOG_TAG, "onUnbind()");
 		return super.onUnbind(intent);
 	}
 	
@@ -189,7 +190,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	 */
 	@Override
 	public void onRebind(Intent intent) {
-		Log.i(LOG_TAG, "onRebind()");
+		Log.i(DEBUG_LOG_TAG, "onRebind()");
 		super.onRebind(intent);
 	}
 	
@@ -201,7 +202,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	public void onCreate() {
 		super.onCreate();
 
-		Log.i(LOG_TAG, "onCreate()");
+		Log.i(DEBUG_LOG_TAG, "onCreate()");
 
 		// Initialize the service
 		try {
@@ -210,7 +211,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		}
 		catch(Exception e) {
 
-			Log.w(LOG_TAG, "Exception occured");
+			Log.w(PROD_LOG_TAG, "Exception occured", e);
 			runInit = true;
 		}
 	}
@@ -223,7 +224,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	public void onDestroy() {
 		super.onDestroy();
 		
-		Log.i(LOG_TAG, "onDestroy()");
+		Log.i(DEBUG_LOG_TAG, "onDestroy()");
 		settings.unregisterOnSharedPreferenceChangeListener(this);
 	}
 
@@ -240,12 +241,13 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 			// TODO: Determine what the appropriate minimum radius is.
 			if(0 < newRadius) {
 
-				Log.i(LOG_TAG, "Radius was set to " + newRadius);
+				Log.i(DEBUG_LOG_TAG, "Radius was set to " + newRadius);
 				radius = newRadius;
 			}
 			else {
 
-				Log.w(LOG_TAG, "Radius update was ignored because new radius < 1");
+				// FIXME: notify user
+				Log.w(DEBUG_LOG_TAG, "Radius update was ignored because new radius < 1");
 			}
 		}
 	}
@@ -255,7 +257,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	 */
 	private void init() {
 		
-		Log.i(LOG_TAG, "init()");
+		Log.i(DEBUG_LOG_TAG, "init()");
 		// Determine if we actually need to initialize
 		synchronized(this) {
 			
@@ -266,7 +268,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 			runInit = false;
 		}
 		
-		Log.i(LOG_TAG, "init() start");
+		Log.i(DEBUG_LOG_TAG, "init() start");
 		
 		// Getting the constants from resources
 		NOTIFICATION_TICKER_TEXT = getResources().getString(R.string.notification_ticker_text);
@@ -277,7 +279,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		settings = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
 		settings.registerOnSharedPreferenceChangeListener(this);
 		radius = settings.getInt(PREFERENCE_RADIUS, PREFERENCE_RADIUS_DEFAULT);
-		Log.i(LOG_TAG, "Preferences radius = " + radius);
+		Log.i(DEBUG_LOG_TAG, "Preferences radius = " + radius);
 
 		// Setting up the database
 		dbAdapter = new DbAdapter(this);
@@ -291,7 +293,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		// Register location listener and getting last known location
 		registerLocationListener();
 				
-		Log.i(LOG_TAG, "init() end");
+		Log.i(DEBUG_LOG_TAG, "init() end");
 	}
 	
 	/*
@@ -318,7 +320,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		}
 		catch(NumberFormatException	exception) {
 
-			Log.e(LOG_TAG, "ERROR: Was not able to parse povided lat/lng to a Double");
+			Log.e(PROD_LOG_TAG, "ERROR: Was not able to parse povided lat/lng to a Double", exception);
 		}
 
 		if(distanceResult[0] <= radius) {
@@ -382,12 +384,12 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		// If location manager is null, we just return
 		if(null == locationManager) {
 			
-			Log.e(LOG_TAG, "LocationManager instance is null. Tyring to get it via getSystemService() ...");
+			Log.e(DEBUG_LOG_TAG, "LocationManager instance is null. Tyring to get it via getSystemService() ...");
 			locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 			
 			if(null == locationManager) {
 				
-				Log.e(LOG_TAG, "Was not able to get LocationManager instance via getSystemService()");
+				Log.e(DEBUG_LOG_TAG, "Was not able to get LocationManager instance via getSystemService()");
 				return;
 			}
 		}
@@ -401,7 +403,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 				networkLocationListener = getNewLocationListener(NET_PROVIDER);
 				locationManager.requestLocationUpdates(mainLocationProviderName, NET_LOCATION_MIN_TIME, NET_LOCATION_MIN_DISTANCE, networkLocationListener);
 				currentLocation = locationManager.getLastKnownLocation(mainLocationProviderName);
-				Log.i(LOG_TAG, "registerLocationListener() -> NETWORK_PROVIDER");
+				Log.i(DEBUG_LOG_TAG, "registerLocationListener() -> NETWORK_PROVIDER");
 			}
 			else if(locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
 
@@ -409,11 +411,12 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 				gpsLocationListener = getNewLocationListener(GPS_PROVIDER);
 				locationManager.requestLocationUpdates(mainLocationProviderName, GPS_LOCATION_MIN_TIME, GPS_LOCATION_MIN_DISTANCE, gpsLocationListener);
 				currentLocation = locationManager.getLastKnownLocation(mainLocationProviderName);
-				Log.i(LOG_TAG, "registerLocationListener() -> GPS_PROVIDER");
+				Log.i(DEBUG_LOG_TAG, "registerLocationListener() -> GPS_PROVIDER");
 			}
 			else {
 
-				Log.w(LOG_TAG, "All available location providers [network, gps] are not available");
+				// FIXME: notify user
+				Log.w(PROD_LOG_TAG, "All available location providers [network, gps] are not available");
 			}
 			
 			// Also enable Passive provider
@@ -421,21 +424,21 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 				
 				passiveLocationListener = getNewLocationListener(PAS_PROVIDER);
 				locationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, PAS_LOCATION_MIN_TIME, PAS_LOCATION_MIN_DISTANCE, passiveLocationListener);
-				Log.i(LOG_TAG, "registerLocationListener() -> PASSIVE_PROVIDER");
+				Log.i(DEBUG_LOG_TAG, "registerLocationListener() -> PASSIVE_PROVIDER");
 			}
 		}
 		catch(IllegalArgumentException iae) {
 			
-			Log.w(LOG_TAG, "registerLocationListener() IllegalArgumentException");
+			Log.w(PROD_LOG_TAG, "registerLocationListener() IllegalArgumentException", iae);
 		}
 		catch(SecurityException se) {
 			
-			Log.w(LOG_TAG, "registerLocationListener() SecurityException");
+			Log.w(PROD_LOG_TAG, "registerLocationListener() SecurityException", se);
 
 		}
 		catch(RuntimeException re) {
 			
-			Log.w(LOG_TAG, "registerLocationListener() RuntimeException", re);
+			Log.w(PROD_LOG_TAG, "registerLocationListener() RuntimeException", re);
 		}
 	}
 	
@@ -447,7 +450,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		
 		if(null == locationManager) {
 			
-			Log.e(LOG_TAG, "LocationManager instance is null");
+			Log.e(DEBUG_LOG_TAG, "LocationManager instance is null");
 			return;
 		}
 
@@ -460,11 +463,11 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		}
 		catch(IllegalArgumentException iae) {
 			
-			Log.w(LOG_TAG, "IllegalArgumentException thrown while removing location listener updates");
+			Log.w(PROD_LOG_TAG, "IllegalArgumentException thrown while removing location listener updates", iae);
 		}
 		catch(RuntimeException re) {
 			
-			Log.w(LOG_TAG, "unregisterLocationListeners() RuntimeException", re);
+			Log.w(PROD_LOG_TAG, "unregisterLocationListeners() RuntimeException", re);
 		}
 	}
 
@@ -477,10 +480,9 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		Intent notificationIntent = new Intent(this, Artifactly.class);
 		notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
 		PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-		Notification notification = new Notification(R.drawable.icon, NOTIFICATION_TICKER_TEXT, System.currentTimeMillis());
+		Notification notification = new Notification(R.drawable.artifactly_launcher, NOTIFICATION_TICKER_TEXT, System.currentTimeMillis());
 		notification.flags |= Notification.FLAG_AUTO_CANCEL;
 		notification.defaults |= Notification.DEFAULT_SOUND;
-		notification.defaults |= Notification.DEFAULT_LIGHTS;
 		notification.setLatestEventInfo(getApplicationContext(), NOTIFICATION_CONTENT_TITLE, NOTIFICATION_MESSAGE, contentIntent);
 		notificationManager.notify(NOTIFICATION_ID, notification);
 	}
@@ -501,7 +503,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		
 		if(null == dbAdapter) {
 			
-			Log.w(LOG_TAG, "DB Adapter is null");
+			Log.w(PROD_LOG_TAG, "DB Adapter is null");
 			return false;
 		}
 		
@@ -509,7 +511,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		Cursor cursor = dbAdapter.select();
 		if(null == cursor) {
 			
-			Log.w(LOG_TAG, "Cursor is null");
+			Log.w(PROD_LOG_TAG, "Cursor is null");
 			return false;
 		}
 		
@@ -518,7 +520,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		
 		if(!hasItems) {
 			
-			Log.i(LOG_TAG, "DB has not items");
+			Log.i(DEBUG_LOG_TAG, "DB has not items");
 			cursor.close();
 			return false;
 		}
@@ -593,7 +595,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		   newLocation.getAccuracy() > radius &&
 		   newLocation.getAccuracy() > LOCATION_MAX_ACCURACY_DELTA) {
 			
-			Log.i(LOG_TAG, "New location is less accurate radius("+ radius +") or the max accuracy Delta(" + LOCATION_MAX_ACCURACY_DELTA + ")");
+			Log.i(DEBUG_LOG_TAG, "New location is less accurate radius("+ radius +") or the max accuracy Delta(" + LOCATION_MAX_ACCURACY_DELTA + ")");
 			return false;
 		}
 		
@@ -612,7 +614,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		
 		if(isMoreAccurate && isMoreCurrent) {
 			
-			Log.i(LOG_TAG, "IS_MORE_ACCURATE : New location is more accurate and more current");
+			Log.i(DEBUG_LOG_TAG, "IS_MORE_ACCURATE : New location is more accurate and more current");
 			return true;
 		}
 		
@@ -620,14 +622,14 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		
 		if(isMoreAccurate && isSlightlyLessCurrent) {
 			
-			Log.i(LOG_TAG, "IS_MORE_ACCURATE : New location is more accurate and slightly less current");
+			Log.i(DEBUG_LOG_TAG, "IS_MORE_ACCURATE : New location is more accurate and slightly less current");
 			return true;
 		}
 		
 		boolean isSlightlyLessAccurate = (newLocation.hasAccuracy() && newLocation.getAccuracy() <= LOCATION_MAX_ACCURACY_DELTA);
 		if(isSlightlyLessAccurate && isMoreCurrent) {
 			
-			Log.i(LOG_TAG, "IS_MORE_ACCURATE : New location is slightly less accurate but more current");
+			Log.i(DEBUG_LOG_TAG, "IS_MORE_ACCURATE : New location is slightly less accurate but more current");
 			return true;
 		}
 		
@@ -645,9 +647,9 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 			public String name = listenerName;
 			public void onLocationChanged(final Location location) {
 				
-				Log.i(LOG_TAG, "## Start onLocationChanged() Listener Provider = " + name);
+				Log.i(DEBUG_LOG_TAG, "## Start onLocationChanged() Listener Provider = " + name);
 				locationChanged(location);
-				Log.i(LOG_TAG, "## End onLocationChanged()");
+				Log.i(DEBUG_LOG_TAG, "## End onLocationChanged()");
 			}
 
 			public void onProviderDisabled(String provider) {
@@ -675,17 +677,25 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	 */
 	private void locationChanged(Location location) {
 
+		// Don't handle consecutive location changes. e.g. PASSIVE provider
+		if(Float.compare(currentLocation.distanceTo(location), 0.0f) == 0) {
+			
+			Log.i(DEBUG_LOG_TAG, "Ignoring location change since it hasn't changed or it's a duplicate");
+			return;
+		}
+		
+		// DEBUG
 		if(null != currentLocation && null != location) {
 			
-			Log.i(LOG_TAG, "===============================================");
-			Log.i(LOG_TAG, "Location Provider: " + location.getProvider());
-			Log.i(LOG_TAG, "Distance:          " + currentLocation.distanceTo(location));
-			Log.i(LOG_TAG, "CL accuracy:       " + currentLocation.getAccuracy());
-			Log.i(LOG_TAG, "NL accuracy:       " + location.getAccuracy());
-			Log.i(LOG_TAG, "CL time:           " + new Date(currentLocation.getTime()));
-			Log.i(LOG_TAG, "NL time:           " + new Date(location.getTime()));
-			Log.i(LOG_TAG, "isGpsListenerEnabled flag: " + isGpsListenerEnabled);
-			Log.i(LOG_TAG, "===============================================");
+			Log.i(DEBUG_LOG_TAG, "===============================================");
+			Log.i(DEBUG_LOG_TAG, "Location Provider: " + location.getProvider());
+			Log.i(DEBUG_LOG_TAG, "Distance:          " + currentLocation.distanceTo(location));
+			Log.i(DEBUG_LOG_TAG, "CL accuracy:       " + currentLocation.getAccuracy());
+			Log.i(DEBUG_LOG_TAG, "NL accuracy:       " + location.getAccuracy());
+			Log.i(DEBUG_LOG_TAG, "CL time:           " + new Date(currentLocation.getTime()));
+			Log.i(DEBUG_LOG_TAG, "NL time:           " + new Date(location.getTime()));
+			Log.i(DEBUG_LOG_TAG, "isGpsListenerEnabled flag: " + isGpsListenerEnabled);
+			Log.i(DEBUG_LOG_TAG, "===============================================");
 		}
 		
 		lastLocationUpdateTime = System.currentTimeMillis();
@@ -693,7 +703,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		// First we check if the new location is more accurate
 		if(isMoreAccurate(location)) {
 			
-			Log.i(LOG_TAG, "New location is better, thus setting currentLocation to newLocation");
+			Log.i(DEBUG_LOG_TAG, "New location is better, thus setting currentLocation to newLocation");
 			
 			// Update the current location with the new one
 			currentLocation = location;
@@ -708,12 +718,12 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 					locationManager.removeUpdates(gpsLocationListener);
 					gpsLocationListener = null;
 					isGpsListenerEnabled = false;
-					Log.i(LOG_TAG, "Removing GPS listener updates");
+					Log.i(DEBUG_LOG_TAG, "Removing GPS listener updates");
 				}
 				catch(IllegalArgumentException iae) {
 					
 					isGpsListenerEnabled = false;
-					Log.i(LOG_TAG, "Was not able to remove GPS listener updates");
+					Log.i(DEBUG_LOG_TAG, "Was not able to remove GPS listener updates");
 				}
 			}
 		
@@ -739,12 +749,12 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		else {
 			
 			// Check if the currentLocation has been updated recently
-			Log.i(LOG_TAG, "The currentLocation time = " + new Date(currentLocation.getTime()));
+			Log.i(DEBUG_LOG_TAG, "The currentLocation time = " + new Date(currentLocation.getTime()));
 			
 			long expirationTime = System.currentTimeMillis() - currentLocation.getTime() - LOCATION_TIME_EXPIRATION_DELTA;
 			if(expirationTime > 0) {
 				
-				Log.i(LOG_TAG, "The current location's fix time is too old.");
+				Log.i(DEBUG_LOG_TAG, "The current location's fix time is too old.");
 				
 				// The current location's fix time is too old. Check if GPS provider is 
 				// available and try to get a better fix from it
@@ -756,17 +766,17 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 						gpsLocationListener = getNewLocationListener(GPS_PROVIDER);
 						locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, GPS_LOCATION_MIN_TIME, GPS_LOCATION_MIN_DISTANCE, gpsLocationListener);
 						
-						Log.i(LOG_TAG, "!!!! Enabling GPS listener updates !!!!");
+						Log.i(DEBUG_LOG_TAG, "!!!! Enabling GPS listener updates !!!!");
 					}
 					catch(Exception e) {
 						
 						isGpsListenerEnabled = false;
-						Log.i(LOG_TAG, "Was not able to start GPS listener");
+						Log.i(DEBUG_LOG_TAG, "Was not able to start GPS listener");
 					}
 				}
 				else {
 					
-					Log.i(LOG_TAG, "Didn't start GPS updates because GPS Listener Flag is set to = " + isGpsListenerEnabled);
+					Log.i(DEBUG_LOG_TAG, "Didn't start GPS updates because GPS Listener Flag is set to = " + isGpsListenerEnabled);
 				}
 			}
 		}	
@@ -778,7 +788,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	 */
 	private void locationProviderDisabled(String provider) {
 
-		Log.i(LOG_TAG, "LocationListener.onProviderDisabled() provider = " + provider);
+		Log.i(DEBUG_LOG_TAG, "LocationListener.onProviderDisabled() provider = " + provider);
 
 	}
 
@@ -788,7 +798,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	 */
 	private void locationProviderEnabled(String provider) {
 
-		Log.i(LOG_TAG, "LocationListener.onProviderEnabled() provider = " + provider);	
+		Log.i(DEBUG_LOG_TAG, "LocationListener.onProviderEnabled() provider = " + provider);	
 	}
 
 	/*
@@ -797,8 +807,8 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	 */
 	private void locationStatusChanged(String provider, int status, Bundle extras) {
 
-		Log.i(LOG_TAG, "LocationListener.onStatusChanged()");
-		Log.i(LOG_TAG, "provider = " + provider);
-		Log.i(LOG_TAG, "status = " + status);
+		Log.i(DEBUG_LOG_TAG, "LocationListener.onStatusChanged()");
+		Log.i(DEBUG_LOG_TAG, "provider = " + provider);
+		Log.i(DEBUG_LOG_TAG, "status = " + status);
 	}
 }

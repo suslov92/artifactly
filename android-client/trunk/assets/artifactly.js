@@ -81,6 +81,22 @@ $(document).ready(function() {
 	});
 	
 	/*
+	 * Clicking on the manage locations button
+	 */
+	$('#manage-locations-button').click(function(event) {
+		
+		$.mobile.changePage("#manage-locations", "none");
+	});
+	
+	/*
+	 * Initialize the manage locations page
+	 */
+	$('#manage-locations').bind('pageshow', function() {
+		
+		window.android.getLocations("list");
+	});
+	
+	/*
 	 * Initialize the new artifact page
 	 */
 	$('#new-artifact').bind('pageshow', function() {
@@ -89,7 +105,7 @@ $(document).ready(function() {
 		
 		if(refreshLocations) {
 		
-			window.android.getLocations();
+			window.android.getLocations("options");
 		}
 		
 		refreshLocations = true;
@@ -108,6 +124,9 @@ $(document).ready(function() {
 	 * Loading the map and marker on the map page
 	 */
 	$('#map').bind('pageshow', function() {
+		
+		// Showing the loading animation
+		$.mobile.pageLoading();
 
 		loadMapApi('loadMap');
 	});
@@ -121,6 +140,9 @@ $(document).ready(function() {
 		$('#search-result').html('');
 		$('#entered-search-term').html('');
 		$('#google-search-branding').html('');
+		
+		$('#search-result-list li').remove();
+		$('#search-result-list ul').listview('refresh');
 		
 		loadMapApi('getSearchCenterPoint');
 		
@@ -159,11 +181,12 @@ $(document).ready(function() {
 	$('#update-artifact').click(function() {
 		
 		var artId = $('#view-artifact-art-name').data("artId");
+		var locId = $('#view-artifact-art-name').data("locId");
 		var artName = $('#view-artifact-art-name').val();
 		var artData = $('#view-artifact-art-data').val();
+		var locName = $('#view-artifact-loc-name').val();
 		
-		window.android.updateArtifact(artId, artName, artData);
-		
+		window.android.updateArtifact(artId, artName, artData, locId, locName);
 	});
 
 	/*
@@ -203,7 +226,7 @@ $(document).ready(function() {
 		
 		var selectedLocation = $('#artifact-location-selection option:selected').data();
 		
-		if(selectedLocation.lockName == "Current Location") {
+		if(selectedLocation.locName == "Current Location") {
 		
 			var locationName = $('#artifact-location-name').val();
 			window.android.createArtifact(artName, artData, locationName, selectedLocation.locLat, selectedLocation.locLng);
@@ -297,13 +320,21 @@ $(document).ready(function() {
 		var selectedLocation = $('#artifact-location-selection option:selected').data();
 		
 		// If the selection is Current Location, then we need to allow the user to enter a location name
-		if(selectedLocation.lockName == "Current Location") {
+		if(selectedLocation.locName == "Current Location") {
 			
 			$('#artifact-location-name').val('');
 			$('#artifact-location-name-div').show();
+			
+			var location = JSON.parse(window.android.getLocation());
+			$('#artifact-current-location-map img').attr('src', getMapImage(location[0], location[1], "15", "250", "200"));
+
+		}
+		else if(selectedLocation.locName == "New Location") {
+
+			$.mobile.changePage("#new-location", "none");
 		}
 		else {
-			
+
 			$('#artifact-location-name-div').hide();
 		}
 	});
@@ -345,9 +376,7 @@ function searchComplete(localSearch) {
 			
 			// Iterate over the search result
 			for (var i = 0; i < localSearch.results.length; i++) {
-				
-				console.log(localSearch.results[i].addressLines[0]);
-				
+								
 				$('<li/>', { html : '<img src="' + getMapImage(localSearch.results[i].lat, localSearch.results[i].lng, "13", "78", "78") + '"/>'+
 									'<h3>' + localSearch.results[i].title + '</h3>' +
 									'<p>' + localSearch.results[i].addressLines[0] + '</p>' +
@@ -397,7 +426,10 @@ function loadMap() {
 
 		google.maps.event.addListener(marker, 'click', function() {
 			infowindow.open(map,marker);
-		});    
+		});
+		
+		// Hide the maps loading animation
+		$.mobile.pageLoading(true);
 	});
 }
 
@@ -428,7 +460,7 @@ function getArtifactCallback(data) {
 			 * Attach the artifact id to the artifact name field so that
 			 * we can use it to update the artifact values
 			 */
-			$('#view-artifact-art-name').data({ artId : data[0].artId });
+			$('#view-artifact-art-name').data({ artId : data[0].artId, locId : data[0].locId });
 			$('#view-artifact-art-name').val(data[0].artName);
 			$('#view-artifact-art-data').val(data[0].artData);
 			$('#view-artifact-loc-name').val(data[0].locName);
@@ -472,7 +504,7 @@ function getArtifactsForCurrentLocationCallback(locations) {
 	});
 }
 
-function getLocationsCallback(locations) {
+function getLocationsOptionsCallback(locations) {
 	
 	$(document).ready(function() {
 	
@@ -482,13 +514,29 @@ function getLocationsCallback(locations) {
 		// Adding Choose one
 		$('<option/>', { text :  'Choose one ...' })
 		.attr('data-placeholder', 'true')
+		.data({
+			locId : '',
+			locName : '',
+			locLat : '',
+			locLng : ''
+		})
+		.appendTo($('#artifact-location-selection'));
+		
+		// Adding new location option
+		$('<option/>', { text :  'New Location' })
+		.data({
+			locId : '',
+			locName : 'New Location',
+			locLat : '',
+			locLng : ''
+		})
 		.appendTo($('#artifact-location-selection'));
 		
 		// Adding current locaiton
 		$('<option/>', { text :  'Current Location' })
 		.data({
 			locId : '',
-			lockName : 'Current Location',
+			locName : 'Current Location',
 			locLat : '0',
 			locLng : '0'
 		})
@@ -512,6 +560,43 @@ function getLocationsCallback(locations) {
 		
 		$('#artifact-location-selection').selectmenu('refresh');
 
+	});
+}
+
+function getLocationsListCallback(locations) {
+	
+	
+	// Reset the list
+	$('#manage-locations-list li').remove();
+	$('#manage-locations-list ul').listview('refresh');
+	
+	if(locations.length > 0) {
+		
+		$.each(locations, function(i, location) {
+			
+			$('<li/>', { html : location.locName })
+			.data({
+				locId : location.locId,
+				locName : location.locName,
+				locLat : location.locLat,
+				locLng : location.locLng
+			})
+			.appendTo($('#manage-locations-list ul'));
+		});
+	}
+	
+	$('#manage-locations-list ul').listview('refresh');
+}
+
+
+/*
+ * Method that resets the the view to the main page
+ */
+function resetWebView() {
+
+	$(document).ready(function() {
+		
+		$.mobile.changePage("#main", "none");
 	});
 }
 
