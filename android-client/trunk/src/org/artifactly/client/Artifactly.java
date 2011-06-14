@@ -35,6 +35,9 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.webkit.ConsoleMessage;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
@@ -68,6 +71,9 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	private static final String GET_LOCATIONS_LIST_CALLBACK =  "getLocationsListCallback";
 	private static final String SET_BACKGROUND_COLOR = "setBackgroundColor";
 	private static final String RESET_WEBVIEW = "resetWebView";
+	private static final String SHOW_OPTIONS_PAGE = "showOptionsPage";
+	private static final String SHOW_MAP_PAGE = "showMapPage";
+	private static final String SHOW_APP_INFO_PAGE = "showAppInfoPage";
 
 	private WebView webView = null;
 
@@ -157,6 +163,39 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		};
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see android.app.Activity#onCreateOptionsMenu(android.view.Menu)
+	 */
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+	    MenuInflater inflater = getMenuInflater();
+	    inflater.inflate(R.menu.opitons, menu);
+	    return true;
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see android.app.Activity#onOptionsItemSelected(android.view.MenuItem)
+	 */
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+	    // Handle item selection
+	    switch (item.getItemId()) {
+	    case R.id.options:
+	        callJavaScriptFunction(SHOW_OPTIONS_PAGE, "");
+	        return true;
+	    case R.id.map:
+	    	callJavaScriptFunction(SHOW_MAP_PAGE, "");
+	        return true;
+	    case R.id.info:
+	    	callJavaScriptFunction(SHOW_APP_INFO_PAGE, "");
+	    	return true;
+	    default:
+	        return super.onOptionsItemSelected(item);
+	    }
+	}
+	
 	/*
 	 * Handle back button clicks in webview
 	 * @see android.app.Activity#onKeyDown(int, android.view.KeyEvent)
@@ -373,9 +412,6 @@ public class Artifactly extends Activity implements ApplicationConstants {
 				SharedPreferences.Editor editor = settings.edit();
 				editor.putInt(PREFERENCE_RADIUS, radius);
 				editor.commit();
-				
-				// Refreshing the artifacts list
-				new GetArtifactsForCurrentLocation().execute();
 			}
 		}
 
@@ -386,22 +422,47 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			return settings.getInt(PREFERENCE_RADIUS, PREFERENCE_RADIUS_DEFAULT);
 		}
 
-		public void deleteArtifact(long id) {
+		public void deleteArtifact(String artifactId, String locationId) {
 
 			Log.i(LOG_TAG, "JS --> deleteArtifact");
 			
-			boolean isSuccess = localService.deleteArtifact(id);
+			int status = localService.deleteArtifact(artifactId, locationId);
 
-			if(isSuccess) {
-
-				Toast.makeText(getApplicationContext(), R.string.delete_artifact_success, Toast.LENGTH_SHORT).show();
-				
-				// Refreshing the artifacts list
+			switch(status) {
+			case -1:
+				Toast.makeText(getApplicationContext(), R.string.delete_artifact_failure, Toast.LENGTH_LONG).show();
+				break;
+			case 0:
+				Toast.makeText(getApplicationContext(), R.string.delete_artifact_partial, Toast.LENGTH_LONG).show();
+				break;
+			case 1:
+				Toast.makeText(getApplicationContext(), R.string.delete_artifact_success, Toast.LENGTH_LONG).show();
 				new GetArtifactsForCurrentLocation().execute();
+				break;
+			default:
+				Log.e(LOG_TAG, "ERROR: unexpected deleteArtifact() status");
 			}
-			else {
+		}
+		
+		public void deleteLocation(String locationId) {
+			
+			Log.i(LOG_TAG, "JS --> deleteLocation");
+			
+			int status = localService.deleteLocation(locationId);
 
-				Toast.makeText(getApplicationContext(), R.string.delete_artifact_failure, Toast.LENGTH_SHORT).show();
+			switch(status) {
+				case -1:
+					Toast.makeText(getApplicationContext(), R.string.delete_location_failure, Toast.LENGTH_LONG).show();
+					break;
+				case 0:
+					Toast.makeText(getApplicationContext(), R.string.delete_location_partial, Toast.LENGTH_LONG).show();
+					break;
+				case 1:
+					Toast.makeText(getApplicationContext(), R.string.delete_location_success, Toast.LENGTH_LONG).show();
+					new GetArtifactsForCurrentLocation().execute();
+					break;
+				default:
+					Log.e(LOG_TAG, "ERROR: unexpected deleteLocation() status");
 			}
 		}
 
@@ -422,7 +483,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 				return;
 			}
 			
-			boolean isSuccess = false;
+			int state = -1;
 			
 			// If latitude and longitude are provided we use them, otherwise we use the current location
 			// TODO: Add check if provided latitude and longitude are valid geo points
@@ -435,7 +496,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			   locationLat.equals("0") &&
 			   locationLng.equals("0")) {
 				
-				isSuccess = localService.createArtifact(artifactName, artifactData, locationName);
+				state = localService.createArtifact(artifactName, artifactData, locationName);
 				
 			}
 			else if(null != locationLat &&
@@ -445,23 +506,26 @@ public class Artifactly extends Activity implements ApplicationConstants {
 					isDouble(locationLat) &&
 					isDouble(locationLng)) {
 				
-				isSuccess = localService.createArtifact(artifactName, artifactData, locationName, locationLat, locationLng);
+				state = localService.createArtifact(artifactName, artifactData, locationName, locationLat, locationLng);
 			}
 			else {
 				
-				isSuccess = localService.createArtifact(artifactName, artifactData, locationName);
+				state = localService.createArtifact(artifactName, artifactData, locationName);
 			}
 			
-			if(isSuccess) {
-
-				Toast.makeText(getApplicationContext(), R.string.create_artifact_success, Toast.LENGTH_SHORT).show();
-				
-				// Refreshing the artifacts list
-				new GetArtifactsForCurrentLocation().execute();
-			}
-			else {
-
-				Toast.makeText(getApplicationContext(), R.string.create_artifact_failure, Toast.LENGTH_SHORT).show();
+			switch(state) {
+				case 1:
+					Toast.makeText(getApplicationContext(), R.string.create_artifact_success, Toast.LENGTH_LONG).show();
+					new GetArtifactsForCurrentLocation().execute();
+					break;
+				case 0:
+					Toast.makeText(getApplicationContext(), R.string.create_artifact_error, Toast.LENGTH_LONG).show();
+					break;
+				case -1:
+					Toast.makeText(getApplicationContext(), R.string.create_artifact_failure, Toast.LENGTH_SHORT).show();
+					break;
+				default:
+					Log.e(LOG_TAG, "ERROR: unexpected createArtifact() status");
 			}
 		}
 

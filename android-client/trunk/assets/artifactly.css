@@ -25,6 +25,11 @@
 	text-align: center;
 }
 
+.delete-location-name {
+	font-weight: bold;
+	text-align: center;
+}
+
 .delete-artifact-header {
 	text-align: center;
 }

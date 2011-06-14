@@ -53,25 +53,16 @@ public class LocalServiceImpl extends Binder implements LocalService {
 	}
 	
 	// API method
-	public boolean createArtifact(String artifactName, String artifactData, String locationName, String latitude, String longitude) {
+	public int createArtifact(String artifactName, String artifactData, String locationName, String latitude, String longitude) {
 		
 		Log.i(LOG_TAG, "LocalService : createArtifact called");
 		
 		if(null == dbAdapter) {
 			Log.e(LOG_TAG, "LocalService : createArtifact : dbAdapter is null");
-			return false;
+			return -1;
 		}
 		
-		try {
-			
-			dbAdapter.insert(locationName, latitude, longitude, artifactName, artifactData);
-		}
-		catch(SQLiteException e) {
-			
-			return false;
-		}
-		
-		return true;
+		return dbAdapter.insert(locationName, latitude, longitude, artifactName, artifactData);
 	}
 
 	// API method
@@ -151,7 +142,7 @@ public class LocalServiceImpl extends Binder implements LocalService {
 	}
 
 	// API method
-	public boolean createArtifact(String artifactName, String artifactData, String locationName) {
+	public int createArtifact(String artifactName, String artifactData, String locationName) {
 		
 		Location currentLocation = artifactlyService.getLocation();
 		
@@ -161,7 +152,7 @@ public class LocalServiceImpl extends Binder implements LocalService {
 		}
 		else {
 			
-			return false;
+			return -1;
 		}
 	}
 
@@ -184,22 +175,26 @@ public class LocalServiceImpl extends Binder implements LocalService {
 	}
 
 	// API method
-	public boolean deleteArtifact(long id) {
+	public int deleteArtifact(String artifactId, String locationId) {
 		
 		if(null == dbAdapter) {
-			Log.e(LOG_TAG, "LocalService : deleteArtifact : dbAdapter is null");
-			return false;
-		}
-		
-		try {
 			
-			dbAdapter.delete(id);
-		}
-		catch(SQLiteException e) {
-			return false;
+			Log.e(LOG_TAG, "LocalService : deleteArtifact : dbAdapter is null");
+			return -1;
 		}
 		
-		return true;
+		return dbAdapter.deleteArtifact(artifactId, locationId);
+	}
+	
+	public int deleteLocation(String locationId) {
+		
+		if(null == dbAdapter) {
+
+			Log.e(LOG_TAG, "LocalService : deleteLocation : dbAdapter is null");
+			return -1;
+		}
+
+		return dbAdapter.deleteLocation(locationId);
 	}
 	
 	// API method
