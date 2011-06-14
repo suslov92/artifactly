@@ -243,6 +243,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 
 				Log.i(DEBUG_LOG_TAG, "Radius was set to " + newRadius);
 				radius = newRadius;
+				sendBroadcast(locationUpdateIntent);
 			}
 			else {
 
@@ -520,7 +521,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		
 		if(!hasItems) {
 			
-			Log.i(DEBUG_LOG_TAG, "DB has not items");
+			Log.i(DEBUG_LOG_TAG, "DB has no items");
 			cursor.close();
 			return false;
 		}

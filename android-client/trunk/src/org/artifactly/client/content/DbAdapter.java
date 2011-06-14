@@ -21,6 +21,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDatabase.CursorFactory;
+import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.util.Log;
@@ -90,101 +91,119 @@ public class DbAdapter {
 	 * The insert checks first if the entity exists, if the entity exists, nothing is inserted.
 	 * If the entity doesn't exist, a new DB record is created for it.
 	 */
-	public long[] insert(String locationName, String latitude, String longitude, String artifactName, String artifactData) {
+	public int insert(String locationName, String latitude, String longitude, String artifactName, String artifactData) {
 
 		long locationRowID = -1;
 		long artifactRowId = -1;
 		long locToArtRowId = -1;
 		ContentValues contentValues = null;
 
-		// Test if location already exists
-		long locationId = getLocation(locationName, latitude, longitude);
+		try {
 
-		if(0 <= locationId) {
+			/*
+			 * Get location by name and see if the result matches the provided Lat/Lng coordinates,
+			 * if the coordinates don't match, we return an error
+			 */
+			if(!isValidLocation(locationName, latitude, longitude)) {
+				
+				return 0;
+			}
+			
+			// Test if location already exists
+			long locationId = getLocation(locationName, latitude, longitude);
 
-			// Location exists so we keep track of its rowId
-			locationRowID = locationId;
+			if(0 <= locationId) {
+
+				// Location exists so we keep track of its rowId
+				locationRowID = locationId;
+			}
+			else {
+
+				// Location doesn't exist so we create a new DB record for it
+				contentValues = new ContentValues();
+				contentValues.put(LOC_FIELDS[LOC_NAME], locationName);
+				contentValues.put(LOC_FIELDS[LOC_LATITUDE], latitude);
+				contentValues.put(LOC_FIELDS[LOC_LONGITUDE], longitude);
+				locationRowID = mSQLiteDatabase.insert(DB_TABLE_LOCATION, null, contentValues);
+			}
+
+			// Test if artifact already exists
+			long artifactId = getArtifact(artifactName, artifactData);
+
+			if(0 <= artifactId) {
+
+				// Artifact exists so we keep track of its rowID
+				artifactRowId = artifactId;
+			}
+			else {
+
+				// Artifact doesn't exist so we create a new db record for it 
+				contentValues = new ContentValues();
+				contentValues.put(ART_FIELDS[ART_NAME], artifactName);
+				contentValues.put(ART_FIELDS[ART_DATA], artifactData);
+				artifactRowId = mSQLiteDatabase.insert(DB_TABLE_ARTIFACT, null, contentValues);
+			}
+
+			// Test if location/artifact relationship already exists
+			if(-1 == locationId || -1 == artifactId) {
+
+				// The location and artifact relationship doesn't exist so we create a new db record for it
+				contentValues = new ContentValues();
+				contentValues.put(LOC_ART_FIELDS[FK_ART_ID], artifactRowId);
+				contentValues.put(LOC_ART_FIELDS[FK_LOC_ID], locationRowID);
+				locToArtRowId = mSQLiteDatabase.insert(DB_TABLE_LOC_TO_ART, null, contentValues);
+			}
+
 		}
-		else {
-
-			// Location doesn't exist so we create a new DB record for it
-			contentValues = new ContentValues();
-			contentValues.put(LOC_FIELDS[LOC_NAME], locationName);
-			contentValues.put(LOC_FIELDS[LOC_LATITUDE], latitude);
-			contentValues.put(LOC_FIELDS[LOC_LONGITUDE], longitude);
-			locationRowID = mSQLiteDatabase.insert(DB_TABLE_LOCATION, null, contentValues);
-		}
-
-		// Test if artifact already exists
-		long artifactId = getArtifact(artifactName, artifactData);
-
-		if(0 <= artifactId) {
-
-			// Artifact exists so we keep track of its rowID
-			artifactRowId = artifactId;
-		}
-		else {
-
-			// Artifact doesn't exist so we create a new db record for it 
-			contentValues = new ContentValues();
-			contentValues.put(ART_FIELDS[ART_NAME], artifactName);
-			contentValues.put(ART_FIELDS[ART_DATA], artifactData);
-			artifactRowId = mSQLiteDatabase.insert(DB_TABLE_ARTIFACT, null, contentValues);
-		}
-
-		// Test if location/artifact relationship already exists
-		if(-1 == locationId || -1 == artifactId) {
-
-			// The location and artifact relationship doesn't exist so we create a new db record for it
-			contentValues = new ContentValues();
-			contentValues.put(LOC_ART_FIELDS[FK_ART_ID], artifactRowId);
-			contentValues.put(LOC_ART_FIELDS[FK_LOC_ID], locationRowID);
-			locToArtRowId = mSQLiteDatabase.insert(DB_TABLE_LOC_TO_ART, null, contentValues);
+		catch(SQLiteException e) {
+			
+			return -1;
 		}
 
 		Log.i(LOG_TAG, "Inserted artifact in db");
 		
-		// Returning the relevant rowIds
-		return new long[] {locationRowID, artifactRowId, locToArtRowId};
+		return 1;
+	
 	}
 
 	/*
-	 * Deleting an artifact
+	 * Deleting artifact and its artifact to location mapping
 	 */
-	public void delete(long artifactRowId) {
+	public int deleteArtifact(String artifactId, String locationId) {
 		
-		mSQLiteDatabase.delete(DB_TABLE_ARTIFACT,
-				ART_FIELDS[ART_ID] + "=?", new String[] {Long.toString(artifactRowId)});
-	}
-	
-	
-	/*
-	 * Deleting the location and artifact relationship. We only delete the location and or artifact if they
-	 * are not referenced in any other relationship.
-	 */
-	public void delete(long artifactRowId, long locationRowId) {
+		try {
+			
+			// Delete from location/artifact mapping
+			int numRowsAffected = mSQLiteDatabase.delete(DB_TABLE_LOC_TO_ART, LOC_ART_FIELDS[FK_ART_ID] + "=? AND " + LOC_ART_FIELDS[FK_LOC_ID] + "=?", new String[] {artifactId, locationId});
 
-		// Delete from location/artifact relationship
-		mSQLiteDatabase.delete(DB_TABLE_LOC_TO_ART,
-				LOC_ART_FIELDS[FK_ART_ID] + "=? AND " + LOC_ART_FIELDS[FK_LOC_ID] + "=?",
-				new String[] {Long.toString(artifactRowId), Long.toString(locationRowId)});
+			if(numRowsAffected != 1) {
+				
+				return -1;
+			}
 
+			// Only delete artifact if it's not referenced by a location
+			if(!hasArtifactInLocToArtTable(artifactId)) {
 
-		// Only delete location if it's not referenced by any other artifact
-		if(!hasArtifactInLocToArtTable(artifactRowId)) {
+				numRowsAffected = mSQLiteDatabase.delete(DB_TABLE_ARTIFACT, ART_FIELDS[ART_ID] + "=?", new String[] {artifactId});
+				
+				if(numRowsAffected != 1) {
+					
+					return -1;
+				}
+			}
+			else {
+				
+				return 0;
+			}
 
-			mSQLiteDatabase.delete(DB_TABLE_ARTIFACT,
-					ART_FIELDS[ART_ID] + "=?",
-					new String[] {Long.toString(artifactRowId)});
+		}
+		catch(SQLiteException e) {
+			
+			Log.e(LOG_TAG, "SQLite Exception: ", e);
+			return -1;
 		}
 
-		// Only delete artifact if it's not referenced by a location
-		if(!hasLocationInLocToArtTable(locationRowId)) {
-
-			mSQLiteDatabase.delete(DB_TABLE_LOCATION,
-					LOC_FIELDS[LOC_ID] + "=?",
-					new String[] {Long.toString(locationRowId)});
-		}
+		return 1;
 	}
 	
 	/*
@@ -215,7 +234,7 @@ public class DbAdapter {
 		return mSQLiteDatabase.query(true,
 				DB_TABLE_LOCATION,
 				LOC_FIELDS,
-				null, null, null, null, null, null);
+				null, null, null, null, "Location.locName ASC", null);
 	}
 	
 	/*
@@ -255,13 +274,45 @@ public class DbAdapter {
 				null, null, null, null, "Location.locName ASC, Artifact.artName ASC");
 	}
 
+	/*
+	 * Delete location if it doesn't have any artifact mappings
+	 */
+	public int deleteLocation(String locationId) {
+		
+		try {
+			
+			// Only delete location if it's not referenced by an artifact
+			if(!hasLocationInLocToArtTable(locationId)) {
 
+				int numAffectedRows = mSQLiteDatabase.delete(DB_TABLE_LOCATION, LOC_FIELDS[LOC_ID] + "=?", new String[] {locationId});
+				
+				if(numAffectedRows != 1) {
+					
+					return -1;
+				}
+			}
+			else {
+				
+				return 0;
+			}
+
+		}
+		catch(SQLiteException e) {
+			
+			Log.e(LOG_TAG, "SQLite Exception: ", e);
+			return -1;
+		}
+
+		return 1;
+	}
+	
+	
 	/*
 	 * Helper method that checks if the provided artifactRowId is part of an existing location and artifact relationship
 	 */
-	private boolean hasArtifactInLocToArtTable(long artifactRowId) {
+	private boolean hasArtifactInLocToArtTable(String artifactId) {
 
-		Cursor cursor = mSQLiteDatabase.query(true, DB_TABLE_LOC_TO_ART, LOC_ART_FIELDS, LOC_ART_FIELDS[FK_ART_ID] + "=" + Long.toString(artifactRowId), null, null, null, null, null);
+		Cursor cursor = mSQLiteDatabase.query(true, DB_TABLE_LOC_TO_ART, LOC_ART_FIELDS, LOC_ART_FIELDS[FK_ART_ID] + "=" + artifactId, null, null, null, null, null);
 
 		if((null != cursor) && (0 < cursor.getCount())) {
 
@@ -279,9 +330,9 @@ public class DbAdapter {
 	/*
 	 * Helper method that checks if the provided locationRowId is part of an existing location and artifact relationship
 	 */
-	private boolean hasLocationInLocToArtTable(long locationRowId) {
+	private boolean hasLocationInLocToArtTable(String locationId) {
 
-		Cursor cursor = mSQLiteDatabase.query(true, DB_TABLE_LOC_TO_ART, LOC_ART_FIELDS, LOC_ART_FIELDS[FK_LOC_ID] + "=" + Long.toString(locationRowId), null, null, null, null, null);
+		Cursor cursor = mSQLiteDatabase.query(true, DB_TABLE_LOC_TO_ART, LOC_ART_FIELDS, LOC_ART_FIELDS[FK_LOC_ID] + "=" + locationId, null, null, null, null, null);
 
 		if((null != cursor) && (0 < cursor.getCount())) {
 			
@@ -312,18 +363,85 @@ public class DbAdapter {
 				null);
 
 		if((null != cursor) && (0 < cursor.getCount())) {
+			
 			cursor.moveToFirst();
-			int idColumnIndex = cursor.getColumnIndex("_id");
+			int idColumnIndex = cursor.getColumnIndex(LOC_FIELDS[LOC_ID]);
 			long rowId = cursor.getLong(idColumnIndex);
 			cursor.close();
 			return rowId;
 		}
 		else {
+			
 			if(null != cursor) {
+			
 				cursor.close();
 			}
 			return -1;
 		}
+	}
+	
+	/*
+	 * Helper method that queries locations for the provided name. The result should contain zero or only
+	 * one location. If the location doesn't matches the provided Lat/Lng then we signal a failure
+	 * so that the user can choose another name.
+	 */
+	private boolean isValidLocation(String name, String latitude, String longitude) {
+
+		Cursor cursor = null;
+		
+		try {
+			
+			cursor = mSQLiteDatabase.query(true,
+					DB_TABLE_LOCATION,
+					LOC_FIELDS,
+					LOC_FIELDS[LOC_NAME] + "=?",
+					new String [] {name},
+					null,
+					null,
+					null,
+					null);
+
+			if((null != cursor) && (1 == cursor.getCount())) {
+
+				cursor.moveToFirst();
+
+				int latColumnIndex = cursor.getColumnIndex(LOC_FIELDS[LOC_LATITUDE]);
+				int lngColumnIndex = cursor.getColumnIndex(LOC_FIELDS[LOC_LONGITUDE]);
+				String lat = cursor.getString(latColumnIndex);
+				String lng = cursor .getString(lngColumnIndex);
+
+				Log.i(LOG_TAG, "hasLocationMatch() --> " + lat + " : " + latitude + " :: " + lng + " : " + longitude);
+				
+				if(null != lat && null != lng && lat.equals(latitude) && lng.equals(longitude)) {
+					
+					cursor.close();
+					return true;
+				}
+				else {
+					
+					cursor.close();
+					return false;
+				}
+			}
+			else if((null != cursor) && (0 == cursor.getCount())) {
+				
+				cursor.close();
+				return true;
+			}
+			else {
+				cursor.close();
+				return false;
+			}
+		}
+		catch(SQLiteException e) {
+
+			if(null != cursor) {
+				cursor.close();
+				return false;
+			}
+		}
+		
+		return false;
 	}
 
 	/*
@@ -340,14 +458,17 @@ public class DbAdapter {
 				null);
 
 		if((null != cursor) && (0 < cursor.getCount())) {
+			
 			cursor.moveToFirst();
-			int idColumnIndex = cursor.getColumnIndex("_id");
+			int idColumnIndex = cursor.getColumnIndex(ART_FIELDS[ART_ID]);
 			long rowId = cursor.getLong(idColumnIndex);
 			cursor.close();
 			return rowId;
 		}
 		else {
+			
 			if(null != cursor) {
+				
 				cursor.close();
 			}
 			return -1;

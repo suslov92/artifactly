@@ -35,7 +35,7 @@ $(document).ready(function() {
 	 */
 	$('#artifactly-list').delegate('li', 'click', function(event) {  
 
-		var id = $(this).attr('data-artId');
+		var id = $(this).data("artId");
 		window.android.getArtifact(+id);
 	});
 	
@@ -44,11 +44,22 @@ $(document).ready(function() {
 	 */
 	$('#artifactly-list').delegate('li', 'swiperight', function(event) {
 		
-		$.mobile.changePage("#dialog", "none");
+		$.mobile.changePage("#artifact-dialog", "none");
 		$('#delete-artifact-name').html($(this).data("artName"));
-		$('#delete-artifact-name').data({ deleteArtifactId : $(this).attr("data-artId") });
+		$('#delete-artifact-name').data({ artId : $(this).data("artId"), locId : $(this).data("locId") });
+		console.log("xlxlxlxlxllx locId = " + $(this).data("locId"));
 	});
 	
+	/*
+	 * Swiping right on a location list item, starts the delete dialog
+	 */
+	$('#manage-locations-list').delegate('li', 'swiperight', function(event) {
+
+		$.mobile.changePage("#location-dialog", "none");
+		$('#delete-location-name').html($(this).data("locName"));
+		$('#delete-location-name').data({ locId : $(this).data("locId") });
+	});
+
 	/*
 	 * Clicking on a search result list item, populates the location options menu
 	 */
@@ -76,14 +87,44 @@ $(document).ready(function() {
 	 */
 	$('#delete-artifact-yes').click(function(event) {
 
-		var id = $('#delete-artifact-name').data("deleteArtifactId");
-		window.android.deleteArtifact(+id);
+		var artId = $('#delete-artifact-name').data("artId");
+		var locId = $('#delete-artifact-name').data("locId");
+		window.android.deleteArtifact(artId, locId);
+		$('.ui-dialog').dialog('close');
+	});
+	
+	/*
+	 * Clicking on the location deletion dialog yes button
+	 */
+	$('#delete-location-yes').click(function(event) {
+
+		var locId = $('#delete-location-name').data("locId");
+		window.android.deleteLocation(locId);
+		$('.ui-dialog').dialog('close');
+	});
+	
+	/*
+	 * Clicking on the artifact deletion dialog cancel button
+	 */
+	$('#delete-artifact-cancel').click(function(event) {
+
+		$('.ui-dialog').dialog('close');
+	});
+	
+	/*
+	 * Clicking on the location deletion dialog cancel button
+	 */
+	$('#delete-location-cancel').click(function(event) {
+
+		$('.ui-dialog').dialog('close');
 	});
 	
 	/*
 	 * Clicking on the manage locations button
 	 */
 	$('#manage-locations-button').click(function(event) {
+		
+		console.log("DEBUG: manage-locations-button clicked");
 		
 		$.mobile.changePage("#manage-locations", "none");
 	});
@@ -308,6 +349,11 @@ $(document).ready(function() {
 			$('.ui-page').css('background', '#D2FFC4');
 			color = "#D2FFC4";
 		}
+		else if(selected.val() == "white") {
+			
+			$('.ui-page').css('background', '#FFFFFF');
+			color = "#FFFFFF";
+		}
 		
 		window.android.setBackgroundColor(color);
 	});
@@ -492,9 +538,8 @@ function getArtifactsForCurrentLocationCallback(locations) {
 				.appendTo($('#artifactly-list ul'));
 
 				$.each(location.artifacts, function(j, artifact) {
-					$('<li/>', { html : '<a href="#view-artifact" data-transition="none">' + artifact.artName + '</a>' })        
-					.attr('data-artId', artifact.artId)
-					.data({ artName : artifact.artName })
+					$('<li/>', { html : '<a href="#view-artifact" data-transition="none">' + artifact.artName + '</a>' })
+					.data({ artId : artifact.artId, artName : artifact.artName, locId : location.locId })
 					.appendTo($('#artifactly-list ul'))
 				});
 			});
@@ -570,11 +615,16 @@ function getLocationsListCallback(locations) {
 	$('#manage-locations-list li').remove();
 	$('#manage-locations-list ul').listview('refresh');
 	
-	if(locations.length > 0) {
+	if(!locations || locations.length < 1) {
+
+		$('#manage-locations-list-message').text("There are no locations yet");
+	}
+	else {
 		
+		$('#manage-locations-list-message').text("");
 		$.each(locations, function(i, location) {
 			
-			$('<li/>', { html : location.locName })
+			$('<li/>', { html : '<h3>' + location.locName + '</h3>' })
 			.data({
 				locId : location.locId,
 				locName : location.locName,
@@ -672,6 +722,30 @@ function getSearchCenterPoint() {
 			}
 		});
 	});
+}
+
+/*
+ * Android menu option: Options
+ */
+function showOptionsPage() {
+	
+	$.mobile.changePage("#options", "none");
+}
+
+/*
+ * Android menu option: Map
+ */
+function showMapPage() {
+	
+	$.mobile.changePage("#map", "none");
+}
+
+/*
+ * Android menu option: Info
+ */
+function showAppInfoPage() {
+	
+	$.mobile.changePage("#app-info", "none");
 }
 
 /*

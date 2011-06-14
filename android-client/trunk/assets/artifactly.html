@@ -26,12 +26,6 @@
 			<ul data-role="listview" data-inset="false"></ul>
 		</div>
 	</div>
-	
-	<div data-role="footer" class="artifact-main-page-footer">
-		<a href="#options" data-icon="gear" data-transition="none">Options</a>
-		<a href="#map" data-icon="star" data-transition="none">Map</a>
-		<a href="#app-info" data-icon="info" data-transition="none">Info</a>
-	</div>
 
 </div>
 
@@ -131,12 +125,13 @@
 		</div>
 		
 		<div data-role="fieldcontain">
-			<label for="option-select-back-ground-color" class="select artifactly-label">Background Color:</label>
+			<label for="option-select-back-ground-color" class="select artifactly-label">Set Background Color:</label>
 			<select name="option-select-back-ground-color" id="option-select-back-ground-color">
 				<option value="default" data-placeholder="true">Choose one ...</option>
 				<option value="blue">Blue</option>
 				<option value="pink">Pink</option>
 				<option value="green">Green</option>
+				<option value="white">White</option>
 			</select>
 		</div>
 		
@@ -171,8 +166,8 @@
 		<br />
 		
 		<div data-role="controlgroup" data-type="horizontal" class="artifact-button-group">
-			<input type="button" name="update-artifact" id="update-artifact" data-icon="" value="Update" />
- 			<input type="button" name="close-and-home" id="close-and-home" data-icon="" value="Close" />
+			<input type="button" name="update-artifact" id="update-artifact" value="Update" />
+ 			<input type="button" name="close-and-home" id="close-and-home" value="Close" />
 		</div>
 	</div>
 </div>
@@ -185,6 +180,7 @@
 	</div>
 
 	<div data-role="content">
+		<div id="manage-locations-list-message"></div>
 		<div id="manage-locations-list">
 			<ul data-role="listview" data-inset="false"></ul>
 		</div>
@@ -199,13 +195,13 @@
 	</div>
 	
 	<div data-role="content" id="app-info-content">
-	<p>v1.0.0-b4</p>
+	<p>v1.0.0-b6</p>
 	<p>Thomas Amsler</p>
 	<a href="http://www.artifactly.org">www.artifactly.org</a>
 	</div>
 </div>
 
-<div data-role="dialog" id="dialog">
+<div data-role="dialog" id="artifact-dialog">
 
 	<div data-role="header" data-position="inline">
 		<h1>Dialog</h1>
@@ -215,8 +211,23 @@
 		<h3 class="delete-artifact-header">Delete Artifact:</h3>
 		<div id="delete-artifact-name" class="delete-artifact-name"></div>
 		<br />
-		<a href="#main" id="delete-artifact-yes" data-role="button" data-rel="back">Yes</a>
-		<a href="#main" id="delete-artifact-cancel" data-role="button" data-rel="back">Cancel</a>
+		<input type="button" name="delete-artifact-yes" id="delete-artifact-yes" value="Yes" />
+		<input type="button" name="delete-artifact-cancel" id="delete-artifact-cancel" value="Cancel" />
+	</div>
+</div>
+
+<div data-role="dialog" id="location-dialog">
+
+	<div data-role="header" data-position="inline">
+		<h1>Dialog</h1>
+	</div>
+	
+	<div data-role="content">
+		<h3 class="delete-artifact-header">Delete Location:</h3>
+		<div id="delete-location-name" class="delete-location-name"></div>
+		<br />
+		<input type="button" name="delete-location-yes" id="delete-location-yes" value="Yes" />
+		<input type="button" name="delete-location-cancel" id="delete-location-cancel" value="Cancel" />
 	</div>
 </div>
 
