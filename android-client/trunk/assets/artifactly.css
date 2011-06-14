@@ -53,6 +53,11 @@
 	height:100%;
 }
 
+#app-info-content {
+	text-align: center;
+	font-weight: bold;
+}
+
 li img {
 	padding: 1px;
 }

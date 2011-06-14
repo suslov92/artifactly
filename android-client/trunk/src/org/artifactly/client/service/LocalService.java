@@ -46,9 +46,11 @@ public interface LocalService {
 	 * @param artifactId
 	 * @param artifactName
 	 * @param artifactData
+	 * @param locationId
+	 * @param locationName
 	 * @return false on error, otherwise true
 	 */
-	public boolean updateArtifact(String artifactId, String artifactName, String artifactData);
+	public boolean updateArtifact(String artifactId, String artifactName, String artifactData, String locationId, String locationName);
 	
 	/**
 	 * Starts the location updates

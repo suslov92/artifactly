@@ -64,8 +64,10 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	private static final String GET_ARTIFACTS_CALLBACK = "getArtifactsCallback";
 	private static final String GET_ARTIFACT_CALLBACK = "getArtifactCallback";
 	private static final String GET_ARTIFACTS_FOR_CURRENT_LOCATION_CALLBACK = "getArtifactsForCurrentLocationCallback";
-	private static final String GET_LOCATIONS_CALLBACK = "getLocationsCallback";
+	private static final String GET_LOCATIONS_OPTIONS_CALLBACK = "getLocationsOptionsCallback";
+	private static final String GET_LOCATIONS_LIST_CALLBACK =  "getLocationsListCallback";
 	private static final String SET_BACKGROUND_COLOR = "setBackgroundColor";
+	private static final String RESET_WEBVIEW = "resetWebView";
 
 	private WebView webView = null;
 
@@ -112,26 +114,24 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		});
 		
 		webView.setWebViewClient(new WebViewClient() {
-			
+
 			@Override
 			public void onPageFinished (WebView view, String url) {
-				
-				// Set the background color as defined in the preferences
-				String backgroundColor = getBackgroundColor();
-				JSONObject json = new JSONObject();
-				
+
+				/*
+				 * Since we use jQueryMobile, this is fired on each page change. So
+				 * we can use it to set the background color to what the user has selected
+				 */
 				try {
 					
-					json.put("bgc",  backgroundColor);
+					callJavaScriptFunction(SET_BACKGROUND_COLOR, getBackgroundColor());
 				}
-				catch (JSONException e) {
-					
-					Log.e(LOG_TAG, "ERROR: json.put()", e);
+				catch(Exception e) {
+
+					Log.e(LOG_TAG, "ERROR: callJavaScriptFunction : SET_BACKGROUND_COLOR", e);
 				}
-				
-				callJavaScriptFunction(SET_BACKGROUND_COLOR, json.toString());
 			}
-        });
+		});
 
 		webView.loadUrl(ARTIFACTLY_URL);
 		
@@ -152,7 +152,6 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			public void onReceive(Context context, Intent intent) {
 				
 				Log.i(LOG_TAG, "Broadcast --> onReceive()");
-				//Toast.makeText(getApplicationContext(), R.string.broadcast_location_update, Toast.LENGTH_SHORT).show();
 				new GetArtifactsForCurrentLocation().execute();
 			}
 		};
@@ -249,6 +248,9 @@ public class Artifactly extends Activity implements ApplicationConstants {
 
 		Log.i(LOG_TAG, "onStop()");
 
+		// Reset the WebView to show the main page
+		callJavaScriptFunction(RESET_WEBVIEW, "");
+		
 		if(isBound) {
 
 			isBound = false;
@@ -306,11 +308,24 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	}
 
 	/*
-	 * Helper method to get the background color from the preferences
+	 * Helper method that gets the user defined background color and returns it
+	 * as a JSONObject that can be sent to the WebView
 	 */
 	private String getBackgroundColor() {
+		
 		SharedPreferences settings = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-		return settings.getString(PREFERENCE_BACKGROUND_COLOR, PREFERENCE_BACKGROUND_COLOR_DEFAULT);
+		JSONObject jsonObject = new JSONObject();
+
+		try {
+			
+			jsonObject.put("bgc",  settings.getString(PREFERENCE_BACKGROUND_COLOR, PREFERENCE_BACKGROUND_COLOR_DEFAULT));
+		}
+		catch(JSONException e) {
+
+			Log.e(LOG_TAG, "ERROR: json.put()", e);
+		}
+		
+		return jsonObject.toString();
 	}
 	
 	/*
@@ -394,7 +409,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		public void createArtifact(String artifactName, String artifactData, String locationName, String locationLat, String locationLng) {
 
 			Log.i(LOG_TAG, "JS --> createArtifact");
-
+			
 			if(null == artifactName || EMPTY_STRING.equals(artifactName)) {
 
 				Toast.makeText(getApplicationContext(), R.string.create_artifact_name_error, Toast.LENGTH_SHORT).show();
@@ -414,21 +429,21 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			
 			// First we check if the user selected current location
 			if(null != locationLat &&
-					   !EMPTY_STRING.equals(locationLat) &&
-					   null != locationLng &&
-					   !EMPTY_STRING.equals(locationLng) &&
-					   locationLat.equals("0") &&
-					   locationLng.equals("0")) {
+			   !EMPTY_STRING.equals(locationLat) &&
+			   null != locationLng &&
+			   !EMPTY_STRING.equals(locationLng) &&
+			   locationLat.equals("0") &&
+			   locationLng.equals("0")) {
 				
 				isSuccess = localService.createArtifact(artifactName, artifactData, locationName);
 				
 			}
 			else if(null != locationLat &&
-			   !EMPTY_STRING.equals(locationLat) &&
-			   null != locationLng &&
-			   !EMPTY_STRING.equals(locationLng) &&
-			   isDouble(locationLat) &&
-			   isDouble(locationLng)) {
+					!EMPTY_STRING.equals(locationLat) &&
+					null != locationLng &&
+					!EMPTY_STRING.equals(locationLng) &&
+					isDouble(locationLat) &&
+					isDouble(locationLng)) {
 				
 				isSuccess = localService.createArtifact(artifactName, artifactData, locationName, locationLat, locationLng);
 			}
@@ -500,17 +515,16 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			return getResources().getString(R.string.google_search_api_key);
 		}
 		
-		public void getLocations() {
+		public void getLocations(String callback) {
 			
 			Log.i(LOG_TAG, "JS --> getLocations");
-			new GetLocationsTask().execute();
+			new GetLocationsTask().execute(callback);
 		}
 		
-		public void updateArtifact(String artId, String artName, String artData) {
+		public void updateArtifact(String artId, String artName, String artData, String locId, String locName) {
 			
 			Log.i(LOG_TAG, "JS --> updateArtifact");
-			new UpdateArtifactTask().execute(artId, artName, artData);
-			
+			new UpdateArtifactTask().execute(artId, artName, artData, locId, locName);
 		}
 	} 
 
@@ -596,20 +610,40 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		}	
 	}
 	
-	private class GetLocationsTask extends AsyncTask<Void, Void, Void> {
+	private class GetLocationsTask extends AsyncTask<String, Void, Void> {
 			
 		@Override
-		protected Void doInBackground(Void... arg0) {
+		protected Void doInBackground(String... args) {
 
 			if(null == localService) {
 
 				Log.e(LOG_TAG, "LocalService instance is null : getLocations()");
-				callJavaScriptFunction(GET_LOCATIONS_CALLBACK, "[]");
+				
+
+				if("options".equals(args[0])) {
+					
+					callJavaScriptFunction(GET_LOCATIONS_OPTIONS_CALLBACK, "[]");
+					
+				}
+				else if("list".equals(args[0])) {
+					
+					callJavaScriptFunction(GET_LOCATIONS_LIST_CALLBACK, "[]");
+				}
 			}
 			else {
 
 				String result = localService.getLocations();
-				callJavaScriptFunction(GET_LOCATIONS_CALLBACK, result);
+				
+				if("options".equals(args[0])) {
+					
+					callJavaScriptFunction(GET_LOCATIONS_OPTIONS_CALLBACK, result);
+					
+				}
+				else if("list".equals(args[0])) {
+					
+					callJavaScriptFunction(GET_LOCATIONS_LIST_CALLBACK, result);
+				}
+				
 			}
 			
 			return null;
@@ -659,9 +693,21 @@ public class Artifactly extends Activity implements ApplicationConstants {
 				Log.e(LOG_TAG, "LocalService instance is null : getAtrifact()");
 				return Boolean.FALSE;
 			}
+			else if(null == args[0] ||
+					null == args[1] ||
+					null == args[3] ||
+					null == args[4] ||
+					"".equals(args[0]) ||
+					"".equals(args[1]) ||
+					"".equals(args[3]) ||
+					"".equals(args[4])) {
+			
+				// Above, we check all the fields except args[2], which is the location data. It can be null/empty
+				return Boolean.FALSE;
+			}			
 			else {
 				
-				return Boolean.valueOf(localService.updateArtifact(args[0], args[1], args[2]));
+				return Boolean.valueOf(localService.updateArtifact(args[0], args[1], args[2], args[3], args[4]));
 				
 			}
 		}

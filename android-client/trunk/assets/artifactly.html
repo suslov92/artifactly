@@ -16,7 +16,7 @@
 <div data-role="page" id="main">
 
 	<div data-role="header" data-backbtn="false" data-position="inline">
-		<h1>v1.0.0-b2</h1>
+		<h3>Home</h3>
 		<a href="#new-artifact" data-icon="plus" data-transition="none" class="ui-btn-right">Artifact</a>
 	</div>
 
@@ -30,6 +30,7 @@
 	<div data-role="footer" class="artifact-main-page-footer">
 		<a href="#options" data-icon="gear" data-transition="none">Options</a>
 		<a href="#map" data-icon="star" data-transition="none">Map</a>
+		<a href="#app-info" data-icon="info" data-transition="none">Info</a>
 	</div>
 
 </div>
@@ -51,14 +52,18 @@
     		<label for="artifact-data">Artifact Data:</label>
     		<input type="text" name="artifact-data" id="artifact-data" value=""/>
 		</div>
-		<div data-role="fieldcontain" id="artifact-location-name-div">
-    		<label for="artifact-location-name">Location Name:</label>
-    		<input type="text" name="artifact-location-name" id="artifact-location-name" value=""/>
-		</div>
 		<div data-role="fieldcontain">
 			<label for="artifact-location-selection" class="select">Locations:</label>
 			<select name="artifact-location-selection" id="artifact-location-selection">
 			</select>
+		</div>
+		<div data-role="fieldcontain" id="artifact-location-name-div">
+    		<label for="artifact-location-name">Location Name:</label>
+    		<input type="text" name="artifact-location-name" id="artifact-location-name" value=""/>
+    		<br />
+    		<div id="artifact-current-location-map" class="view-artifact-map">
+				<img src="" />
+			</div>
 		</div>
 		<div data-role="controlgroup" data-type="horizontal" class="artifact-button-group">
 			<input type="button" name="add-artifact-button" id="add-artifact-button" data-icon="check" value="Add" />
@@ -105,13 +110,13 @@
 	</div>
 
 	<div data-role="content" id="map-content">
-		<div id="map-canvas">Loading ...</div>
+		<div id="map-canvas"></div>
 	</div>
 </div>
 
 <div data-role="page" id="options">
 
-	<div data-role="header" data-backbtn="false" data-position="fixed">
+	<div data-role="header" data-backbtn="false" data-position="inline">
 		<a href="#main" data-icon="home" data-transition="none">Home</a>
 		<h1>Options</h1>
 	</div>
@@ -134,6 +139,9 @@
 				<option value="green">Green</option>
 			</select>
 		</div>
+		
+		<input type="button" name="manage-locations-button" id="manage-locations-button" value="Manage Locations" />
+		
 	</div>
 </div>
 
@@ -153,7 +161,7 @@
 		<input type="text" name="view-artifact-art-data" id="view-artifact-art-data" value=""/>
 		
 		<label for="view-artifact-loc-name">Location Name:</label>
-		<input type="text" name="view-artifact-loc-name" id="view-artifact-loc-name" readonly value=""/>
+		<input type="text" name="view-artifact-loc-name" id="view-artifact-loc-name" value=""/>
 	
 		<br />
 		<div id="view-artifact-map" class="view-artifact-map">
@@ -166,6 +174,34 @@
 			<input type="button" name="update-artifact" id="update-artifact" data-icon="" value="Update" />
  			<input type="button" name="close-and-home" id="close-and-home" data-icon="" value="Close" />
 		</div>
+	</div>
+</div>
+
+<div data-role="page" id="manage-locations">
+	
+	<div data-role="header" data-backbtn="false" data-position="inline">
+		<a href="#main" data-icon="home" data-transition="none">Home</a>
+		<h1>Locations</h1>
+	</div>
+
+	<div data-role="content">
+		<div id="manage-locations-list">
+			<ul data-role="listview" data-inset="false"></ul>
+		</div>
+	</div>
+</div>
+
+<div data-role="page" id="app-info">
+
+	<div data-role="header" data-backbtn="false" data-position="inline">
+		<a href="#main" data-icon="home" data-transition="none">Home</a>
+		<h1>Application Info</h1>
+	</div>
+	
+	<div data-role="content" id="app-info-content">
+	<p>v1.0.0-b4</p>
+	<p>Thomas Amsler</p>
+	<a href="http://www.artifactly.org">www.artifactly.org</a>
 	</div>
 </div>
 
