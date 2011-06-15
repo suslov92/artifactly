@@ -23,9 +23,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.content.ContentValues;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteException;
 import android.location.Location;
 import android.os.Binder;
 import android.util.Log;
@@ -33,7 +31,7 @@ import android.util.Log;
 public class LocalServiceImpl extends Binder implements LocalService {
 
 	// Logging
-	private static final String LOG_TAG = "** A.L.S. **";
+	private static final String PROD_LOG_TAG = "** A.L.S. **";
 	
 	// Artifact Filters
 	private static final int ALL_ARTIFACTS_FILTER = 0;
@@ -45,9 +43,11 @@ public class LocalServiceImpl extends Binder implements LocalService {
 	
 	// Constructor
 	public LocalServiceImpl(ArtifactlyService artifactlyService) { 
+
 		this.artifactlyService = artifactlyService;
 		
 		if(null != artifactlyService) {
+		
 			this.dbAdapter = artifactlyService.getDbAdapter();
 		}
 	}
@@ -55,10 +55,8 @@ public class LocalServiceImpl extends Binder implements LocalService {
 	// API method
 	public int createArtifact(String artifactName, String artifactData, String locationName, String latitude, String longitude) {
 		
-		Log.i(LOG_TAG, "LocalService : createArtifact called");
-		
 		if(null == dbAdapter) {
-			Log.e(LOG_TAG, "LocalService : createArtifact : dbAdapter is null");
+
 			return -1;
 		}
 		
@@ -114,11 +112,10 @@ public class LocalServiceImpl extends Binder implements LocalService {
 			}
 			catch (JSONException e) {
 			
-				Log.w(LOG_TAG, "Error while populating JSONArray");
+				Log.e(PROD_LOG_TAG, "Error while populating JSONArray", e);
 			}
 			
 			return data.toString();
-
 		}
 		else {
 			
@@ -134,7 +131,7 @@ public class LocalServiceImpl extends Binder implements LocalService {
 			}
 			catch (JSONException e) {
 				
-				Log.w(LOG_TAG, "Error while population JSONArray");
+				Log.e(PROD_LOG_TAG, "Error while population JSONArray", e);
 			}
 			
 			return data.toString();
@@ -179,7 +176,6 @@ public class LocalServiceImpl extends Binder implements LocalService {
 		
 		if(null == dbAdapter) {
 			
-			Log.e(LOG_TAG, "LocalService : deleteArtifact : dbAdapter is null");
 			return -1;
 		}
 		
@@ -190,7 +186,6 @@ public class LocalServiceImpl extends Binder implements LocalService {
 		
 		if(null == dbAdapter) {
 
-			Log.e(LOG_TAG, "LocalService : deleteLocation : dbAdapter is null");
 			return -1;
 		}
 
@@ -198,14 +193,13 @@ public class LocalServiceImpl extends Binder implements LocalService {
 	}
 	
 	// API method
-	public String getAtrifact(Long id) {
+	public String getAtrifact(String id) {
 	
 		// JSON array that holds the result
 		JSONArray items = new JSONArray();
 		
 		if(null == dbAdapter) {
 			
-			Log.w(LOG_TAG, "DB Adapter is null");
 			return items.toString();
 		}
 		
@@ -213,7 +207,6 @@ public class LocalServiceImpl extends Binder implements LocalService {
 		Cursor cursor = dbAdapter.select(id);
 		if(null == cursor) {
 			
-			Log.w(LOG_TAG, "Cursor is null");
 			return items.toString();
 		}
 		
@@ -222,14 +215,13 @@ public class LocalServiceImpl extends Binder implements LocalService {
 		
 		if(!hasItems) {
 			
-			Log.i(LOG_TAG, "DB has not items");
 			cursor.close();
 			return items.toString();
 		}
 
 		if(cursor.getCount() != 1) {
 			
-			Log.w(LOG_TAG, "Expetecd the cursor to have only one row");
+			Log.e(PROD_LOG_TAG, "Expetecd the cursor to have only one row");
 		}
 		
 		// Determine the table column indexes 
@@ -240,7 +232,6 @@ public class LocalServiceImpl extends Binder implements LocalService {
 		int locNameColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_FIELDS[DbAdapter.LOC_NAME]);
 		int longitudeColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LONGITUDE]);
 		int latitudeColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LATITUDE]);
-
 		
 		JSONObject item = new JSONObject();
 
@@ -256,7 +247,7 @@ public class LocalServiceImpl extends Binder implements LocalService {
 		}
 		catch (JSONException e) {
 			
-			Log.w(LOG_TAG, "Error while populating JSONObject");
+			Log.e(PROD_LOG_TAG, "Error while populating JSONObject", e);
 		}
 
 		items.put(item);
@@ -274,7 +265,6 @@ public class LocalServiceImpl extends Binder implements LocalService {
 		
 		if(null == dbAdapter) {
 			
-			Log.w(LOG_TAG, "DB Adapter is null");
 			return items.toString();
 		}
 		
@@ -282,7 +272,6 @@ public class LocalServiceImpl extends Binder implements LocalService {
 		Cursor cursor = dbAdapter.getLocations();
 		if(null == cursor) {
 			
-			Log.w(LOG_TAG, "Cursor is null");
 			return items.toString();
 		}
 		
@@ -291,7 +280,6 @@ public class LocalServiceImpl extends Binder implements LocalService {
 		
 		if(!hasItems) {
 			
-			Log.i(LOG_TAG, "DB has not items");
 			cursor.close();
 			return items.toString();
 		}
@@ -318,7 +306,8 @@ public class LocalServiceImpl extends Binder implements LocalService {
 				item.put(DbAdapter.LOC_FIELDS_AS[DbAdapter.LOC_LONGITUDE], cursor.getString(locLngColumnIndex));
 			}
 			catch (JSONException e) {
-				Log.w(LOG_TAG, "Error while populating JSONObject");
+				
+				Log.e(PROD_LOG_TAG, "Error while populating JSONObject", e);
 			}
 
 			items.put(item);
@@ -344,7 +333,6 @@ public class LocalServiceImpl extends Binder implements LocalService {
 		
 		if(null == dbAdapter) {
 			
-			Log.w(LOG_TAG, "DB Adapter is null");
 			return locations.toString();
 		}
 		
@@ -352,7 +340,6 @@ public class LocalServiceImpl extends Binder implements LocalService {
 		Cursor cursor = dbAdapter.select();
 		if(null == cursor) {
 			
-			Log.w(LOG_TAG, "Cursor is null");
 			return locations.toString();
 		}
 		
@@ -361,7 +348,6 @@ public class LocalServiceImpl extends Binder implements LocalService {
 		
 		if(!hasItems) {
 			
-			Log.i(LOG_TAG, "DB has not items");
 			cursor.close();
 			return locations.toString();
 		}
@@ -424,7 +410,7 @@ public class LocalServiceImpl extends Binder implements LocalService {
 			}
 			catch (JSONException e) {
 				
-				Log.w(LOG_TAG, "Error while populating JSONObject");
+				Log.e(PROD_LOG_TAG, "Error while populating JSONObject", e);
 			}
 		}
 
@@ -444,11 +430,9 @@ public class LocalServiceImpl extends Binder implements LocalService {
 		
 		if(null == dbAdapter) {
 			
-			Log.w(LOG_TAG, "DB Adapter is null");
 			return false;
 		}
 		
 		return dbAdapter.updateArtifact(artifactId, artifactName, artifactData, locationId, locationName);
-		
 	}
 }

@@ -28,7 +28,7 @@ import android.util.Log;
 
 public class DbAdapter {
 
-	private static final String LOG_TAG = "** A.S.DB **";
+	private static final String PROD_LOG_TAG = "** A.S.DB **";
 
 	private DatabaseHelper mDatabaseHelper;
 	private SQLiteDatabase mSQLiteDatabase;
@@ -95,7 +95,6 @@ public class DbAdapter {
 
 		long locationRowID = -1;
 		long artifactRowId = -1;
-		long locToArtRowId = -1;
 		ContentValues contentValues = null;
 
 		try {
@@ -151,19 +150,17 @@ public class DbAdapter {
 				contentValues = new ContentValues();
 				contentValues.put(LOC_ART_FIELDS[FK_ART_ID], artifactRowId);
 				contentValues.put(LOC_ART_FIELDS[FK_LOC_ID], locationRowID);
-				locToArtRowId = mSQLiteDatabase.insert(DB_TABLE_LOC_TO_ART, null, contentValues);
+				mSQLiteDatabase.insert(DB_TABLE_LOC_TO_ART, null, contentValues);
 			}
 
 		}
 		catch(SQLiteException e) {
 			
+			Log.e(PROD_LOG_TAG, "SQLiteException insert()", e);
 			return -1;
 		}
-
-		Log.i(LOG_TAG, "Inserted artifact in db");
 		
 		return 1;
-	
 	}
 
 	/*
@@ -199,7 +196,7 @@ public class DbAdapter {
 		}
 		catch(SQLiteException e) {
 			
-			Log.e(LOG_TAG, "SQLite Exception: ", e);
+			Log.e(PROD_LOG_TAG, "SQLiteException: deleteArtifact()", e);
 			return -1;
 		}
 
@@ -209,7 +206,7 @@ public class DbAdapter {
 	/*
 	 * Select one artifact 
 	 */
-	public Cursor select(Long artifactRowId) {
+	public Cursor select(String artifactId) {
 		
 		SQLiteQueryBuilder queryBuilder = new SQLiteQueryBuilder();
 		queryBuilder.setTables("LocToArt JOIN Artifact ON (LocToArt.artId=Artifact._id) JOIN Location ON (LocToArt.locId=Location._id)");
@@ -222,7 +219,7 @@ public class DbAdapter {
 							  "Location.locName AS locName",
 							  "Location.lat AS lat",
 							  "Location.lng AS lng"},
-							  LOC_ART_FIELDS[FK_ART_ID] + "=?", new String[] {artifactRowId.toString()}, null, null, null);
+							  LOC_ART_FIELDS[FK_ART_ID] + "=?", new String[] {artifactId}, null, null, null);
 	}
 	
 	/*
@@ -245,11 +242,11 @@ public class DbAdapter {
 		ContentValues artContentValues = new ContentValues();
 		artContentValues.put(ART_FIELDS[ART_NAME], artifactName);
 		artContentValues.put(ART_FIELDS[ART_DATA], artifactData);
-		int numberArtRowsAffected = mSQLiteDatabase.update(DB_TABLE_ARTIFACT, artContentValues, "_id=?", new String[] {artifactId});
+		int numberArtRowsAffected = mSQLiteDatabase.update(DB_TABLE_ARTIFACT, artContentValues, ART_FIELDS[ART_ID] + "=?", new String[] {artifactId});
 		
 		ContentValues locContentValues = new ContentValues();
 		locContentValues.put(LOC_FIELDS[LOC_NAME], locationName);
-		int numberLocRowsAffected = mSQLiteDatabase.update(DB_TABLE_LOCATION, locContentValues, "_id=?", new String[] {locationId});
+		int numberLocRowsAffected = mSQLiteDatabase.update(DB_TABLE_LOCATION, locContentValues, LOC_FIELDS[LOC_ID] + "=?", new String[] {locationId});
 		
 		return ((numberArtRowsAffected == 1 && numberLocRowsAffected ==  1) ? true : false);
 	}
@@ -299,7 +296,7 @@ public class DbAdapter {
 		}
 		catch(SQLiteException e) {
 			
-			Log.e(LOG_TAG, "SQLite Exception: ", e);
+			Log.e(PROD_LOG_TAG, "SQLiteException: deleteLocation()", e);
 			return -1;
 		}
 
@@ -312,7 +309,7 @@ public class DbAdapter {
 	 */
 	private boolean hasArtifactInLocToArtTable(String artifactId) {
 
-		Cursor cursor = mSQLiteDatabase.query(true, DB_TABLE_LOC_TO_ART, LOC_ART_FIELDS, LOC_ART_FIELDS[FK_ART_ID] + "=" + artifactId, null, null, null, null, null);
+		Cursor cursor = mSQLiteDatabase.query(true, DB_TABLE_LOC_TO_ART, LOC_ART_FIELDS, LOC_ART_FIELDS[FK_ART_ID] + "=?", new String [] {artifactId}, null, null, null, null);
 
 		if((null != cursor) && (0 < cursor.getCount())) {
 
@@ -320,9 +317,12 @@ public class DbAdapter {
 			return true;
 		}
 		else {
+			
 			if(null != cursor) {
+			
 				cursor.close();
 			}
+			
 			return false;
 		}
 	}
@@ -332,7 +332,7 @@ public class DbAdapter {
 	 */
 	private boolean hasLocationInLocToArtTable(String locationId) {
 
-		Cursor cursor = mSQLiteDatabase.query(true, DB_TABLE_LOC_TO_ART, LOC_ART_FIELDS, LOC_ART_FIELDS[FK_LOC_ID] + "=" + locationId, null, null, null, null, null);
+		Cursor cursor = mSQLiteDatabase.query(true, DB_TABLE_LOC_TO_ART, LOC_ART_FIELDS, LOC_ART_FIELDS[FK_LOC_ID] + "=?", new String [] {locationId}, null, null, null, null);
 
 		if((null != cursor) && (0 < cursor.getCount())) {
 			
@@ -340,9 +340,12 @@ public class DbAdapter {
 			return true;
 		}
 		else {
+			
 			if(null != cursor) {
+
 				cursor.close();
 			}
+			
 			return false;
 		}
 	}
@@ -376,6 +379,7 @@ public class DbAdapter {
 			
 				cursor.close();
 			}
+			
 			return -1;
 		}
 	}
@@ -410,8 +414,6 @@ public class DbAdapter {
 				String lat = cursor.getString(latColumnIndex);
 				String lng = cursor .getString(lngColumnIndex);
 
-				Log.i(LOG_TAG, "hasLocationMatch() --> " + lat + " : " + latitude + " :: " + lng + " : " + longitude);
-				
 				if(null != lat && null != lng && lat.equals(latitude) && lng.equals(longitude)) {
 					
 					cursor.close();
@@ -429,13 +431,18 @@ public class DbAdapter {
 				return true;
 			}
 			else {
-				cursor.close();
+
+				if(null != cursor) {
+				
+					cursor.close();
+				}
 				return false;
 			}
 		}
 		catch(SQLiteException e) {
 
 			if(null != cursor) {
+				
 				cursor.close();
 				return false;
 			}
@@ -479,6 +486,7 @@ public class DbAdapter {
 	private static class DatabaseHelper extends SQLiteOpenHelper {
 
 		public DatabaseHelper(Context context, String name, CursorFactory factory, int version) {
+			
 			super(context, name, factory, version);
 		}
 
@@ -493,7 +501,6 @@ public class DbAdapter {
 		@Override
 		public void onUpgrade(SQLiteDatabase arg0, int oldVersion, int newVersion) {
 			
-			Log.w(LOG_TAG, "Upgrading database from verison " + oldVersion + " to " + newVersion + ", which will destroy all existing data");
 		}
 	}
 }

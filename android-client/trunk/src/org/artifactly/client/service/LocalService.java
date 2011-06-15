@@ -118,7 +118,7 @@ public interface LocalService {
 	 * @param id Artifact DB row id
 	 * @return JSON artifact that matches the provided id
 	 */
-	public String getAtrifact(Long id);
+	public String getAtrifact(String id);
 	
 	/**
 	 * Get all locations
