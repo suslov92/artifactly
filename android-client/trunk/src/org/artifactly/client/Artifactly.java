@@ -469,18 +469,18 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		}
 
 
-		public void createArtifact(String artifactName, String artifactData, String locationName, String locationLat, String locationLng) {
+		public boolean createArtifact(String artifactName, String artifactData, String locationName, String locationLat, String locationLng) {
 			
 			if(null == artifactName || EMPTY_STRING.equals(artifactName)) {
 
 				Toast.makeText(getApplicationContext(), R.string.create_artifact_name_error, Toast.LENGTH_SHORT).show();
-				return;
+				return false;
 			}
 			
 			if(null == locationName || EMPTY_STRING.equals(locationName)) {
 
 				Toast.makeText(getApplicationContext(), R.string.create_artifact_location_name_error, Toast.LENGTH_SHORT).show();
-				return;
+				return false;
 			}
 			
 			int state = -1;
@@ -517,15 +517,16 @@ public class Artifactly extends Activity implements ApplicationConstants {
 				case 1:
 					Toast.makeText(getApplicationContext(), R.string.create_artifact_success, Toast.LENGTH_LONG).show();
 					new GetArtifactsForCurrentLocation().execute();
-					break;
+					return true;
 				case 0:
 					Toast.makeText(getApplicationContext(), R.string.create_artifact_error, Toast.LENGTH_LONG).show();
-					break;
+					return false;
 				case -1:
-					Toast.makeText(getApplicationContext(), R.string.create_artifact_failure, Toast.LENGTH_SHORT).show();
-					break;
+					Toast.makeText(getApplicationContext(), R.string.create_artifact_failure, Toast.LENGTH_LONG).show();
+					return false;
 				default:
 					Log.e(PROD_LOG_TAG, "ERROR: unexpected createArtifact() status");
+					return false;
 			}
 		}
 
