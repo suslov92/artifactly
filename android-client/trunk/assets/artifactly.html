@@ -4,12 +4,12 @@
 	<meta charset="utf-8" />
 	<title>Artifactly</title>
 	<meta name="viewport" content="height=device-height,width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-	<link rel="stylesheet" href="jquery.mobile-1.0a4.1.20110515.min.css" />
+	<link rel="stylesheet" href="jquery.mobile-1.0b1pre.min.css" />
 	<link rel="stylesheet" href="artifactly.css" />
 	<script type="text/javascript" src="jquery-1.6.1.min.js"></script>
-	<script type="text/javascript" src="mock.js"></script>
+	<!-- <script type="text/javascript" src="mock.js"></script> -->
 	<script type="text/javascript" src="artifactly.js"></script>
-	<script type="text/javascript" src="jquery.mobile-1.0a4.1.20110515.min.js"></script>
+	<script type="text/javascript" src="jquery.mobile-1.0b1pre.min.js"></script>
 </head> 
 <body> 
 
@@ -135,6 +135,14 @@
 			</select>
 		</div>
 		
+		<div data-role="fieldcontain" id="sound-notification-option">
+ 			<fieldset data-role="controlgroup">
+				<legend>Sound Notification:</legend>
+				<input type="checkbox" name="sound-notification-option-checkbox" id="sound-notification-option-checkbox" class="custom" checked />
+				<label for="sound-notification-option-checkbox" id="sound-notification-option-checkbox-text">On</label>
+    		</fieldset>
+		</div>
+		
 		<input type="button" name="manage-locations-button" id="manage-locations-button" value="Manage Locations" />
 		
 	</div>
@@ -195,9 +203,11 @@
 	</div>
 	
 	<div data-role="content" id="app-info-content">
-	<p>v1.0.0-b6</p>
+	<p>v1.0.0-b7</p>
 	<p>Thomas Amsler</p>
 	<a href="http://www.artifactly.org">www.artifactly.org</a>
+	<p>Report a bug:</p>
+	<a href="http://goo.gl/dBI5V">http://goo.gl/dBI5V</a>
 	</div>
 </div>
 

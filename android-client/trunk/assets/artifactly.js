@@ -36,7 +36,7 @@ $(document).ready(function() {
 	$('#artifactly-list').delegate('li', 'click', function(event) {  
 
 		var id = $(this).data("artId");
-		window.android.getArtifact(+id);
+		window.android.getArtifact(id);
 	});
 	
 	/*
@@ -44,10 +44,9 @@ $(document).ready(function() {
 	 */
 	$('#artifactly-list').delegate('li', 'swiperight', function(event) {
 		
-		$.mobile.changePage("#artifact-dialog", "none");
+		$.mobile.changePage($('#artifact-dialog'), "none");
 		$('#delete-artifact-name').html($(this).data("artName"));
 		$('#delete-artifact-name').data({ artId : $(this).data("artId"), locId : $(this).data("locId") });
-		console.log("xlxlxlxlxllx locId = " + $(this).data("locId"));
 	});
 	
 	/*
@@ -55,7 +54,7 @@ $(document).ready(function() {
 	 */
 	$('#manage-locations-list').delegate('li', 'swiperight', function(event) {
 
-		$.mobile.changePage("#location-dialog", "none");
+		$.mobile.changePage($('#location-dialog'), "none");
 		$('#delete-location-name').html($(this).data("locName"));
 		$('#delete-location-name').data({ locId : $(this).data("locId") });
 	});
@@ -79,7 +78,7 @@ $(document).ready(function() {
 		
 		refreshLocations = false;
 		
-		$.mobile.changePage("#new-artifact", "none");
+		$.mobile.changePage($('#new-artifact'), "none");
 	});
 
 	/*
@@ -101,6 +100,7 @@ $(document).ready(function() {
 		var locId = $('#delete-location-name').data("locId");
 		window.android.deleteLocation(locId);
 		$('.ui-dialog').dialog('close');
+		$.mobile.changePage($('#manage-locations'), "none");
 	});
 	
 	/*
@@ -108,7 +108,7 @@ $(document).ready(function() {
 	 */
 	$('#delete-artifact-cancel').click(function(event) {
 
-		$('.ui-dialog').dialog('close');
+		$('#artifact-dialog').dialog('close');
 	});
 	
 	/*
@@ -116,7 +116,9 @@ $(document).ready(function() {
 	 */
 	$('#delete-location-cancel').click(function(event) {
 
-		$('.ui-dialog').dialog('close');
+		$('#location-dialog').dialog('close');
+		$.mobile.changePage($('#manage-locations'), "none");
+		
 	});
 	
 	/*
@@ -124,9 +126,7 @@ $(document).ready(function() {
 	 */
 	$('#manage-locations-button').click(function(event) {
 		
-		console.log("DEBUG: manage-locations-button clicked");
-		
-		$.mobile.changePage("#manage-locations", "none");
+		$.mobile.changePage($('#manage-locations'), "none");
 	});
 	
 	/*
@@ -158,7 +158,21 @@ $(document).ready(function() {
 	$('#options').bind('pageshow', function() {
 
 		$('#radius-input').val(window.android.getRadius());
-		$('#radius-input').slider('refresh');	
+		$('#radius-input').slider('refresh');
+		
+		var checkboxState = window.android.getSoundNotificationPreference();
+		
+		
+		if(checkboxState) {
+			
+			$('#sound-notification-option-checkbox-text .ui-btn-text').text("On");
+			$('#sound-notification-option-checkbox').prop("checked", true).checkboxradio("refresh");
+		}
+		else {
+			
+			$('#sound-notification-option-checkbox-text .ui-btn-text').text("Off");
+			$('#sound-notification-option-checkbox').prop("checked", false).checkboxradio("refresh");
+		}
 	});
 
 	/*
@@ -213,7 +227,7 @@ $(document).ready(function() {
 	 */
 	$('#close-and-home').click(function() {
 		
-		$.mobile.changePage("#main", "none");
+		$.mobile.changePage($('#main'), "none");
 	});
 	
 	/*
@@ -254,7 +268,7 @@ $(document).ready(function() {
 
 		$('#artifact-name').val('');
 		$('#artifact-data').val('');
-		$.mobile.changePage("#main", "none");
+		$.mobile.changePage($('#main'), "none");
 	});
 
 	/*
@@ -359,6 +373,26 @@ $(document).ready(function() {
 	});
 	
 	/*
+	 * Options' page sound notification on/off
+	 */
+	$('#sound-notification-option-checkbox').bind('change', function() {
+		
+		var checked = $('#sound-notification-option-checkbox').prop("checked");
+		
+		if(checked) {
+			
+			$('#sound-notification-option-checkbox-text .ui-btn-text').text("On");
+		}
+		else {
+			
+			$('#sound-notification-option-checkbox-text .ui-btn-text').text("Off");
+		}
+		
+		window.android.setSoundNotificationPreference(checked);
+	});
+
+	
+	/*
 	 * Locations' select menu
 	 */
 	$('#artifact-location-selection').change(function() {
@@ -377,7 +411,7 @@ $(document).ready(function() {
 		}
 		else if(selectedLocation.locName == "New Location") {
 
-			$.mobile.changePage("#new-location", "none");
+			$.mobile.changePage($('#new-location'), "none");
 		}
 		else {
 
@@ -498,7 +532,7 @@ function getArtifactCallback(data) {
 		if(data.length != 1) {
 
 			// In case of an error, we go back to the main page
-			$.mobile.changePage("#main", "none");
+			$.mobile.changePage($('#main'), "none");
 		}
 		else {
 
@@ -646,7 +680,7 @@ function resetWebView() {
 
 	$(document).ready(function() {
 		
-		$.mobile.changePage("#main", "none");
+		$.mobile.changePage($('#main'), "none");
 	});
 }
 
@@ -729,7 +763,7 @@ function getSearchCenterPoint() {
  */
 function showOptionsPage() {
 	
-	$.mobile.changePage("#options", "none");
+	$.mobile.changePage($('#options'), "none");
 }
 
 /*
@@ -737,7 +771,7 @@ function showOptionsPage() {
  */
 function showMapPage() {
 	
-	$.mobile.changePage("#map", "none");
+	$.mobile.changePage($('#map'), "none");
 }
 
 /*
@@ -745,7 +779,7 @@ function showMapPage() {
  */
 function showAppInfoPage() {
 	
-	$.mobile.changePage("#app-info", "none");
+	$.mobile.changePage($('#app-info'), "none");
 }
 
 /*

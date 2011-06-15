@@ -48,7 +48,8 @@ public class Artifactly extends Activity implements ApplicationConstants {
 
 	private static final String ARTIFACTLY_URL = "file:///android_asset/artifactly.html";
 
-	private static final String LOG_TAG = " ** A.A. **";
+	private static final String PROD_LOG_TAG = " ** A.A. **";
+	//private static final String DEBUG_LOG_TAG = " ** A.A. **";
 
 	// Preferences
 	private static final String PREFS_NAME = "ArtifactlyPrefsFile";
@@ -95,8 +96,6 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		Log.i(LOG_TAG, "onCreate()");
-
 		setContentView(R.layout.main);
 		
 		// Setting up the WebView
@@ -114,7 +113,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			
 			public boolean onConsoleMessage(ConsoleMessage cm) {
 			
-				Log.d("** A.A - JS **", cm.message() + " -- From line " + cm.lineNumber() + " of " + cm.sourceId() );
+				Log.d(PROD_LOG_TAG, cm.message() + " -- From line " + cm.lineNumber() + " of " + cm.sourceId() );
 				return true;
 			}
 		});
@@ -134,7 +133,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 				}
 				catch(Exception e) {
 
-					Log.e(LOG_TAG, "ERROR: callJavaScriptFunction : SET_BACKGROUND_COLOR", e);
+					Log.e(PROD_LOG_TAG, "ERROR: callJavaScriptFunction : SET_BACKGROUND_COLOR", e);
 				}
 			}
 		});
@@ -157,7 +156,6 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			@Override
 			public void onReceive(Context context, Intent intent) {
 				
-				Log.i(LOG_TAG, "Broadcast --> onReceive()");
 				new GetArtifactsForCurrentLocation().execute();
 			}
 		};
@@ -169,7 +167,8 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	 */
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-	    MenuInflater inflater = getMenuInflater();
+
+		MenuInflater inflater = getMenuInflater();
 	    inflater.inflate(R.menu.opitons, menu);
 	    return true;
 	}
@@ -180,7 +179,8 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	 */
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-	    // Handle item selection
+	    
+		// Handle item selection
 	    switch (item.getItemId()) {
 	    case R.id.options:
 	        callJavaScriptFunction(SHOW_OPTIONS_PAGE, "");
@@ -204,6 +204,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
 		
 	    if ((keyCode == KeyEvent.KEYCODE_BACK) && webView.canGoBack()) {
+	    
 	    	webView.goBack();
 	        return true;
 	    }
@@ -216,16 +217,14 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	 */
 	@Override
 	public void onStart() {
+		
 		super.onStart();
-
-		Log.i(LOG_TAG, "onStart()");
 
 		if(!isBound) {
 			
 			// Connect to the local service API
 			bindService(new Intent(this, ArtifactlyService.class), serviceConnection, BIND_AUTO_CREATE);
 			isBound = true;
-			Log.i(LOG_TAG, "onStart Binding service done");
 		}
 	}
 
@@ -235,15 +234,14 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	 */
 	@Override
 	public void onResume() {
+
 		super.onResume();
 
-		Log.i(LOG_TAG, "onResume()");
-
 		if(!isBound) {
+
 			// Connect to the local service API
 			bindService(new Intent(this, ArtifactlyService.class), serviceConnection, BIND_AUTO_CREATE);
 			isBound = true;
-			Log.i(LOG_TAG, "onResume Binding service done");
 		}
 
 		// Register broadcast receiver
@@ -256,20 +254,20 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	 */
 	@Override
 	public void onPause() {
-		super.onPause();
 
-		Log.i(LOG_TAG, "onPause()");
+		super.onPause();
 
 		if(isBound) {
 
 			isBound = false;
+
 			try {
 				
 				unbindService(serviceConnection);
 			}
 			catch(IllegalArgumentException e) {
 				
-				Log.w(LOG_TAG, "onPause() -> unbindService() caused an IllegalArgumentException");
+				Log.w(PROD_LOG_TAG, "onPause() -> unbindService() caused an IllegalArgumentException", e);
 			}
 		}
 		
@@ -283,9 +281,8 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	 */
 	@Override
 	public void onStop() {
+		
 		super.onStop();
-
-		Log.i(LOG_TAG, "onStop()");
 
 		// Reset the WebView to show the main page
 		callJavaScriptFunction(RESET_WEBVIEW, "");
@@ -293,13 +290,14 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		if(isBound) {
 
 			isBound = false;
+
 			try {
 				
 				unbindService(serviceConnection);
 			}
 			catch(IllegalArgumentException e) {
 				
-				Log.w(LOG_TAG, "onStop() -> unbindService() caused an IllegalArgumentException");
+				Log.w(PROD_LOG_TAG, "onStop() -> unbindService() caused an IllegalArgumentException", e);
 			}
 		}
 	}
@@ -310,20 +308,20 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	 */
 	@Override
 	public void onDestroy() {
+		
 		super.onDestroy();
-
-		Log.i(LOG_TAG, "onDestroy()");
 
 		if(isBound) {
 
 			isBound = false;
+
 			try {
 			
 				unbindService(serviceConnection);
 			}
 			catch(IllegalArgumentException e) {
 				
-				Log.w(LOG_TAG, "onDestroy() -> unbindService() caused an IllegalArgumentException");
+				Log.w(PROD_LOG_TAG, "onDestroy() -> unbindService() caused an IllegalArgumentException", e);
 			}
 		}
 	}
@@ -334,8 +332,6 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	 */
 	@Override
 	public void onNewIntent(Intent intent) {
-
-		Log.i(LOG_TAG, "onNewIntent()");
 
 		Bundle extras = intent.getExtras();
 
@@ -361,7 +357,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		}
 		catch(JSONException e) {
 
-			Log.e(LOG_TAG, "ERROR: json.put()", e);
+			Log.e(PROD_LOG_TAG, "ERROR: json.put()", e);
 		}
 		
 		return jsonObject.toString();
@@ -392,16 +388,27 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		
 		public void setBackgroundColor(String color) {
 			
-			Log.i(LOG_TAG, "JS --> setBackground");
 			SharedPreferences settings = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
 			SharedPreferences.Editor editor = settings.edit();
 			editor.putString(PREFERENCE_BACKGROUND_COLOR, color);
 			editor.commit();
 		}
 		
-		public void setRadius(int radius) {
+		public void setSoundNotificationPreference(boolean preference) {
 
-			Log.i(LOG_TAG, "JS --> setRadius");
+			SharedPreferences settings = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+			SharedPreferences.Editor editor = settings.edit();
+			editor.putBoolean(PREFERENCE_SOUND_NOTIFICATION, preference);
+			editor.commit();
+		}
+
+		public boolean getSoundNotificationPreference() {
+			
+			SharedPreferences settings = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+			return settings.getBoolean(PREFERENCE_SOUND_NOTIFICATION, PREFERENCE_SOUND_NOTIFICATION_DEFAULT);
+		}
+		
+		public void setRadius(int radius) {
 
 			if(PREFERENCE_RADIUS_DEFAULT < radius) {
 
@@ -417,15 +424,12 @@ public class Artifactly extends Activity implements ApplicationConstants {
 
 		public int getRadius() {
 
-			Log.i(LOG_TAG, "JS --> getRadius");
 			SharedPreferences settings = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
 			return settings.getInt(PREFERENCE_RADIUS, PREFERENCE_RADIUS_DEFAULT);
 		}
 
 		public void deleteArtifact(String artifactId, String locationId) {
 
-			Log.i(LOG_TAG, "JS --> deleteArtifact");
-			
 			int status = localService.deleteArtifact(artifactId, locationId);
 
 			switch(status) {
@@ -440,13 +444,11 @@ public class Artifactly extends Activity implements ApplicationConstants {
 				new GetArtifactsForCurrentLocation().execute();
 				break;
 			default:
-				Log.e(LOG_TAG, "ERROR: unexpected deleteArtifact() status");
+				Log.e(PROD_LOG_TAG, "ERROR: unexpected deleteArtifact() status");
 			}
 		}
 		
 		public void deleteLocation(String locationId) {
-			
-			Log.i(LOG_TAG, "JS --> deleteLocation");
 			
 			int status = localService.deleteLocation(locationId);
 
@@ -462,14 +464,12 @@ public class Artifactly extends Activity implements ApplicationConstants {
 					new GetArtifactsForCurrentLocation().execute();
 					break;
 				default:
-					Log.e(LOG_TAG, "ERROR: unexpected deleteLocation() status");
+					Log.e(PROD_LOG_TAG, "ERROR: unexpected deleteLocation() status");
 			}
 		}
 
 
 		public void createArtifact(String artifactName, String artifactData, String locationName, String locationLat, String locationLng) {
-
-			Log.i(LOG_TAG, "JS --> createArtifact");
 			
 			if(null == artifactName || EMPTY_STRING.equals(artifactName)) {
 
@@ -525,13 +525,12 @@ public class Artifactly extends Activity implements ApplicationConstants {
 					Toast.makeText(getApplicationContext(), R.string.create_artifact_failure, Toast.LENGTH_SHORT).show();
 					break;
 				default:
-					Log.e(LOG_TAG, "ERROR: unexpected createArtifact() status");
+					Log.e(PROD_LOG_TAG, "ERROR: unexpected createArtifact() status");
 			}
 		}
 
 		public void showRadius() {
 			
-			Log.i(LOG_TAG, "JS --> showRadius");
 			SharedPreferences settings = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
 			int radius = settings.getInt(PREFERENCE_RADIUS, PREFERENCE_RADIUS_DEFAULT);
 			String message = String.format(getResources().getString(R.string.set_location_radius), radius);
@@ -540,54 +539,48 @@ public class Artifactly extends Activity implements ApplicationConstants {
 
 		public String getLocation() {
 
-			Log.i(LOG_TAG, "JS --> getLocation");
 			return localService.getLocation();
 		}
 
-		public void getArtifact(long id) {
+		public void getArtifact(String id) {
 
-			Log.i(LOG_TAG, "JS --> getArtifact");
-			new GetArtifactTask().execute(new Long(id));
+			new GetArtifactTask().execute(id);
 		}
 
 		public void getArtifacts() {
 
-			Log.i(LOG_TAG, "JS --> getArtifacts");
 			new GetArtifactsTask().execute();
 		}
 
 		public void getArtifactsForCurrentLocation() {
 
-			Log.i(LOG_TAG, "JS --> getArtifactsForCurrentLocation");
 			new GetArtifactsForCurrentLocation().execute();
 		}
 
 		public boolean canAccessInternet() {
 
-			Log.i(LOG_TAG, "JS --> canAccessInternet");
 			boolean canAccessInternet = localService.canAccessInternet();
 
 			if(!canAccessInternet) {
+
 				Toast.makeText(getApplicationContext(), R.string.can_access_internet_error, Toast.LENGTH_LONG).show();
 			}
+			
 			return canAccessInternet;
 		}
 		
 		public String getGoogleSearchApiKey() {
 			
-			Log.i(LOG_TAG, "JS --> getGoogleSearchApiKey");
 			return getResources().getString(R.string.google_search_api_key);
 		}
 		
 		public void getLocations(String callback) {
 			
-			Log.i(LOG_TAG, "JS --> getLocations");
 			new GetLocationsTask().execute(callback);
 		}
 		
 		public void updateArtifact(String artId, String artName, String artData, String locId, String locName) {
 			
-			Log.i(LOG_TAG, "JS --> updateArtifact");
 			new UpdateArtifactTask().execute(artId, artName, artData, locId, locName);
 		}
 	} 
@@ -601,7 +594,6 @@ public class Artifactly extends Activity implements ApplicationConstants {
 
 				localService = (LocalService)iBinder;
 				isBound = true;
-				Log.i(LOG_TAG, "onServiceConnected called");
 				
 				// When application starts, we load the artifacts for the current location
 				new GetArtifactsForCurrentLocation().execute();
@@ -611,7 +603,6 @@ public class Artifactly extends Activity implements ApplicationConstants {
 
 				localService = null;
 				isBound = false;
-				Log.i(LOG_TAG, "onServiceDisconnected called");
 			}
 		};
 	}
@@ -640,7 +631,6 @@ public class Artifactly extends Activity implements ApplicationConstants {
 
 			if(null == localService) {
 				
-				Log.e(LOG_TAG, "LocalService instance is null : getArtifactsForCurrentLocation()");
 				callJavaScriptFunction(GET_ARTIFACTS_FOR_CURRENT_LOCATION_CALLBACK, "[]");
 			}
 			else {
@@ -661,7 +651,6 @@ public class Artifactly extends Activity implements ApplicationConstants {
 
 			if(null == localService) {
 
-				Log.e(LOG_TAG, "LocalService instance is null : getArtifacts()");
 				callJavaScriptFunction(GET_ARTIFACTS_CALLBACK, "[]");
 			}
 			else {
@@ -681,9 +670,6 @@ public class Artifactly extends Activity implements ApplicationConstants {
 
 			if(null == localService) {
 
-				Log.e(LOG_TAG, "LocalService instance is null : getLocations()");
-				
-
 				if("options".equals(args[0])) {
 					
 					callJavaScriptFunction(GET_LOCATIONS_OPTIONS_CALLBACK, "[]");
@@ -701,27 +687,24 @@ public class Artifactly extends Activity implements ApplicationConstants {
 				if("options".equals(args[0])) {
 					
 					callJavaScriptFunction(GET_LOCATIONS_OPTIONS_CALLBACK, result);
-					
 				}
 				else if("list".equals(args[0])) {
 					
 					callJavaScriptFunction(GET_LOCATIONS_LIST_CALLBACK, result);
 				}
-				
 			}
 			
 			return null;
 		}	
 	}
 
-	private class GetArtifactTask extends AsyncTask<Long, Void, Boolean> {
+	private class GetArtifactTask extends AsyncTask<String, Void, Boolean> {
 
 		@Override
-		protected Boolean doInBackground(Long... ids) {
+		protected Boolean doInBackground(String... ids) {
 
 			if(null == localService) {
 				
-				Log.e(LOG_TAG, "LocalService instance is null : getAtrifact()");
 				callJavaScriptFunction(GET_ARTIFACT_CALLBACK, "[]");
 				return Boolean.FALSE;
 			}
@@ -754,7 +737,6 @@ public class Artifactly extends Activity implements ApplicationConstants {
 
 			if(null == localService) {
 				
-				Log.e(LOG_TAG, "LocalService instance is null : getAtrifact()");
 				return Boolean.FALSE;
 			}
 			else if(null == args[0] ||
@@ -772,7 +754,6 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			else {
 				
 				return Boolean.valueOf(localService.updateArtifact(args[0], args[1], args[2], args[3], args[4]));
-				
 			}
 		}
 		

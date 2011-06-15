@@ -63,6 +63,10 @@
 	font-weight: bold;
 }
 
+#sound-notification-option div {
+	font-weight: bold !important;
+}
+
 li img {
 	padding: 1px;
 }
