@@ -50,20 +50,19 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	private SharedPreferences settings;
 
 	// Location constants
-	private static final int GPS_LOCATION_MIN_TIME = 300000; // 5 min
-	private static final int GPS_LOCATION_MIN_DISTANCE = 50; // 50 m
-	private static final int NET_LOCATION_MIN_TIME = 240000; // 3 min
-	private static final int NET_LOCATION_MIN_DISTANCE = 50; // 50 m
-	private static final int PAS_LOCATION_MIN_TIME = 30000; // 30 sec
-	private static final int PAS_LOCATION_MIN_DISTANCE = 50; // 50 m
+	private static final long GPS_LOCATION_MIN_TIME = 300000;     // 5 min
+	private static final float GPS_LOCATION_MIN_DISTANCE = 50.0f; // 50 m
+	private static final long NET_LOCATION_MIN_TIME = 240000;     // 3 min
+	private static final float NET_LOCATION_MIN_DISTANCE = 50.0f; // 50 m
+	private static final long PAS_LOCATION_MIN_TIME = 30000;      // 30 sec
+	private static final float PAS_LOCATION_MIN_DISTANCE = 50.0f; // 50 m
 	protected static final String DISTANCE = "dist";
 	private static final String GPS_PROVIDER = "GPS";
 	private static final String NET_PROVIDER = "NET";
 	private static final String PAS_PROVIDER = "PAS";
 
 	// Location radius
-	private static final int DEFAULT_RADIS = 1000; // 1000 m
-	private int radius = DEFAULT_RADIS;
+	private int radius = PREFERENCE_RADIUS_DEFAULT;
 	
 	// Sound Notification Preference
 	private boolean soundNotificationPreference = PREFERENCE_SOUND_NOTIFICATION_DEFAULT;
@@ -110,8 +109,9 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	
 	// Last send notification time
 	private long lastSendNotificationTime = 0;
-	private static final int LAST_SEND_NOTIFICATION_TIME_DELTA = 60000; // 1 min
-	private static final int LAST_SOUND_NOTIFICATION_TIME_DELTA = 300000; // 5 min
+	private long lastSendNotificationSoundTime = 0;
+	private static final long LAST_SEND_NOTIFICATION_TIME_DELTA = 60000; // 1 min
+	private static final long LAST_SOUND_NOTIFICATION_TIME_DELTA = 300000; // 5 min
 	
 	// DB adapter
 	private DbAdapter dbAdapter;
@@ -223,7 +223,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 
 		if(PREFERENCE_RADIUS.equals(key)) {
 			
-			int newRadius = sharedPreferences.getInt(key, DEFAULT_RADIS);
+			int newRadius = sharedPreferences.getInt(key, PREFERENCE_RADIUS_DEFAULT);
 
 			// TODO: Determine what the appropriate minimum radius is.
 			if(0 < newRadius) {
@@ -309,7 +309,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 			Log.e(PROD_LOG_TAG, "ERROR: Was not able to parse povided lat/lng to a Double", exception);
 		}
 
-		if(distanceResult[0] <= radius) {
+		if(((int)distanceResult[0]) <= radius) {
 			
 			return true;
 		}
@@ -465,10 +465,12 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		notification.flags |= Notification.FLAG_AUTO_CANCEL;
 		
 		// We only send notifications with default sound no more frequent than every LAST_SOUND_NOTIFICATION_TIME_DELTA minutes
-		if(soundNotificationPreference && ((lastSendNotificationTime + LAST_SOUND_NOTIFICATION_TIME_DELTA) <= System.currentTimeMillis())) {
+		if(soundNotificationPreference && ((lastSendNotificationSoundTime + LAST_SOUND_NOTIFICATION_TIME_DELTA) <= System.currentTimeMillis())) {
 			
+			lastSendNotificationSoundTime = System.currentTimeMillis();
 			notification.defaults |= Notification.DEFAULT_SOUND;
 		}
+		
 		notification.setLatestEventInfo(getApplicationContext(), NOTIFICATION_CONTENT_TITLE, NOTIFICATION_MESSAGE, contentIntent);
 		notificationManager.notify(NOTIFICATION_ID, notification);
 	}
@@ -580,8 +582,8 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		
 		// Check if the new location's accuracy lies within the defined search radius
 		if(newLocation.hasAccuracy() &&
-		   newLocation.getAccuracy() > radius &&
-		   newLocation.getAccuracy() > LOCATION_MAX_ACCURACY_DELTA) {
+		   ((int)newLocation.getAccuracy()) > radius &&
+		   ((int)newLocation.getAccuracy()) > LOCATION_MAX_ACCURACY_DELTA) {
 			
 			return false;
 		}
