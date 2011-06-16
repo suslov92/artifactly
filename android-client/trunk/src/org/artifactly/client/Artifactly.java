@@ -156,7 +156,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			@Override
 			public void onReceive(Context context, Intent intent) {
 				
-				new GetArtifactsForCurrentLocation().execute();
+				new GetArtifactsForCurrentLocationTask().execute();
 			}
 		};
 	}
@@ -440,8 +440,8 @@ public class Artifactly extends Activity implements ApplicationConstants {
 				Toast.makeText(getApplicationContext(), R.string.delete_artifact_partial, Toast.LENGTH_LONG).show();
 				break;
 			case 1:
+				new GetArtifactsForCurrentLocationTask().execute();
 				Toast.makeText(getApplicationContext(), R.string.delete_artifact_success, Toast.LENGTH_LONG).show();
-				new GetArtifactsForCurrentLocation().execute();
 				break;
 			default:
 				Log.e(PROD_LOG_TAG, "ERROR: unexpected deleteArtifact() status");
@@ -460,8 +460,9 @@ public class Artifactly extends Activity implements ApplicationConstants {
 					Toast.makeText(getApplicationContext(), R.string.delete_location_partial, Toast.LENGTH_LONG).show();
 					break;
 				case 1:
+					new GetLocationsTask().execute("list");
+					new GetArtifactsForCurrentLocationTask().execute();
 					Toast.makeText(getApplicationContext(), R.string.delete_location_success, Toast.LENGTH_LONG).show();
-					new GetArtifactsForCurrentLocation().execute();
 					break;
 				default:
 					Log.e(PROD_LOG_TAG, "ERROR: unexpected deleteLocation() status");
@@ -516,7 +517,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			switch(state) {
 				case 1:
 					Toast.makeText(getApplicationContext(), R.string.create_artifact_success, Toast.LENGTH_LONG).show();
-					new GetArtifactsForCurrentLocation().execute();
+					new GetArtifactsForCurrentLocationTask().execute();
 					return true;
 				case 0:
 					Toast.makeText(getApplicationContext(), R.string.create_artifact_error, Toast.LENGTH_LONG).show();
@@ -555,7 +556,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 
 		public void getArtifactsForCurrentLocation() {
 
-			new GetArtifactsForCurrentLocation().execute();
+			new GetArtifactsForCurrentLocationTask().execute();
 		}
 
 		public boolean canAccessInternet() {
@@ -584,6 +585,11 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			
 			new UpdateArtifactTask().execute(artId, artName, artData, locId, locName);
 		}
+		
+		public void updateLocation(String locId, String locName, String locLat, String locLng) {
+			
+			new UpdateLocationTask().execute(locId, locName, locLat, locLng);
+		}
 	} 
 
 	// Method that returns a service connection
@@ -597,7 +603,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 				isBound = true;
 				
 				// When application starts, we load the artifacts for the current location
-				new GetArtifactsForCurrentLocation().execute();
+				new GetArtifactsForCurrentLocationTask().execute();
 			}
 
 			public void onServiceDisconnected(ComponentName componentName) {
@@ -625,7 +631,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		return true;
 	}
 	
-	private class GetArtifactsForCurrentLocation extends AsyncTask<Void, Void, Void> {
+	private class GetArtifactsForCurrentLocationTask extends AsyncTask<Void, Void, Void> {
 
 		@Override
 		protected Void doInBackground(Void... params) {
@@ -766,12 +772,52 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			 */
 			if(result.booleanValue()) {
 				
-				new GetArtifactsForCurrentLocation().execute();
+				new GetArtifactsForCurrentLocationTask().execute();
 				Toast.makeText(getApplicationContext(), R.string.update_artifact_success, Toast.LENGTH_SHORT).show();
 			}
 			else {
 				
 				Toast.makeText(getApplicationContext(), R.string.update_artifact_failure, Toast.LENGTH_SHORT).show();
+			}
+		}
+	}
+	
+	private class UpdateLocationTask extends AsyncTask<String, Void, Boolean> {
+		
+		@Override
+		protected Boolean doInBackground(String ... args) {
+			
+			if(null == localService) {
+				
+				return Boolean.FALSE;
+			}
+			else if(null == args[0] || null == args[1] || null == args[2] || null == args[3] ||
+					"".equals(args[0]) || "".equals(args[1]) || "".equals(args[2]) || "".equals(args[3])) {
+				
+				// Above, we check all the fields. They cannot be null or empty
+				return Boolean.FALSE;
+			}
+			else {
+				
+				return Boolean.valueOf(localService.updateLocation(args[0], args[1], args[2], args[3]));
+			}
+		}
+		
+		@Override
+		protected void onPostExecute(Boolean result) {
+		
+			/*
+			 * Show Toast in here because onPostExecute executes in UI thread
+			 */
+			if(result.booleanValue()) {
+				
+				new GetArtifactsForCurrentLocationTask().execute();
+				new GetLocationsTask().execute("list");
+				Toast.makeText(getApplicationContext(), R.string.update_location_success, Toast.LENGTH_SHORT).show();
+			}
+			else {
+				
+				Toast.makeText(getApplicationContext(), R.string.update_location_failure, Toast.LENGTH_SHORT).show();
 			}
 		}
 	}

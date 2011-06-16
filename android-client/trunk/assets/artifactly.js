@@ -35,8 +35,22 @@ $(document).ready(function() {
 	 */
 	$('#artifactly-list').delegate('li', 'click', function(event) {  
 
-		var id = $(this).data("artId");
-		window.android.getArtifact(id);
+		var artId = $(this).data("artId");
+		window.android.getArtifact(artId);
+	});
+	
+	
+	/*
+	 * Clicking on a location list item
+	 */
+	$('#manage-locations-list').delegate('li', 'click', function(event) {  
+
+		var location = $(this).data();
+		$('#view-location-loc-name').data(location);
+		$('#view-location-loc-name').val(location.locName);
+		$('#view-location-address').html(location.locAddress);
+		$('#view-location-map img').attr('src', getMapImage(location.locLat, location.locLng, "15", "250", "200"));
+		$.mobile.changePage($('#view-location'), "none");
 	});
 	
 	/*
@@ -86,10 +100,10 @@ $(document).ready(function() {
 	 */
 	$('#delete-artifact-yes').click(function(event) {
 
-		var artId = $('#delete-artifact-name').data("artId");
-		var locId = $('#delete-artifact-name').data("locId");
-		window.android.deleteArtifact(artId, locId);
+		var data = $('#delete-artifact-name').data();
+		window.android.deleteArtifact(data.artId, data.locId);
 		$('.ui-dialog').dialog('close');
+		$.mobile.changePage($('#main'), "none");
 	});
 	
 	/*
@@ -126,17 +140,10 @@ $(document).ready(function() {
 	 */
 	$('#manage-locations-button').click(function(event) {
 		
-		$.mobile.changePage($('#manage-locations'), "none");
-	});
-	
-	/*
-	 * Initialize the manage locations page
-	 */
-	$('#manage-locations').bind('pageshow', function() {
-		
+		// NOTE: the getLocations callback will switch to the manage locations page
 		window.android.getLocations("list");
 	});
-	
+		
 	/*
 	 * Initialize the new artifact page
 	 */
@@ -223,25 +230,62 @@ $(document).ready(function() {
 	});
 	
 	/*
-	 * Close the selected artifact page and navigate to the home page
-	 */
-	$('#close-and-home').click(function() {
-		
-		$.mobile.changePage($('#main'), "none");
-	});
-	
-	/*
-	 * Update the artifact
+	 * Update artifact
 	 */
 	$('#update-artifact').click(function() {
 		
-		var artId = $('#view-artifact-art-name').data("artId");
-		var locId = $('#view-artifact-art-name').data("locId");
+		var data = $('#view-artifact-art-name').data();
 		var artName = $('#view-artifact-art-name').val();
 		var artData = $('#view-artifact-art-data').val();
 		var locName = $('#view-artifact-loc-name').val();
 		
-		window.android.updateArtifact(artId, artName, artData, locId, locName);
+		/*
+		 * Only update if the artifact name, or the artifact data, or the location name changed
+		 */
+		if(data.artName != artName || data.artData != artData || data.locName != locName) {
+		
+			window.android.updateArtifact(data.artId, artName, artData, data.locId, locName);
+		}
+	});
+	
+	/*
+	 * Update location
+	 */
+	$('#update-location').click(function() {
+	
+		var location = $('#view-location-loc-name').data();
+		var updatedLocName = $('#view-location-loc-name').val();
+		
+		/*
+		 * Only update if the location name changed
+		 * TODO: Allow the user to change lat/lng via moving the marker on a map
+		 */
+		if(location.locName != updatedLocName) {
+			
+			window.android.updateLocation(location.locId, updatedLocName, location.locLat, location.locLng);
+		}
+	});
+
+	/*
+	 * Delete artifact
+	 */
+	$('#delete-artifact').click(function() {
+		
+		var data = $('#view-artifact-art-name').data();
+		$.mobile.changePage($('#artifact-dialog'), "none");
+		$('#delete-artifact-name').html(data.artName);
+		$('#delete-artifact-name').data(data);
+	});
+	
+	/*
+	 * Delete location
+	 */
+	$('#delete-location').click(function() {
+	
+		var location = $('#view-location-loc-name').data();
+		$.mobile.changePage($('#location-dialog'), "none");
+		$('#delete-location-name').html(location.locName);
+		$('#delete-location-name').data(location);
 	});
 
 	/*
@@ -546,7 +590,7 @@ function getArtifactCallback(data) {
 			 * Attach the artifact id to the artifact name field so that
 			 * we can use it to update the artifact values
 			 */
-			$('#view-artifact-art-name').data({ artId : data[0].artId, locId : data[0].locId });
+			$('#view-artifact-art-name').data(data[0]);
 			$('#view-artifact-art-name').val(data[0].artName);
 			$('#view-artifact-art-data').val(data[0].artData);
 			$('#view-artifact-loc-name').val(data[0].locName);
@@ -599,46 +643,26 @@ function getLocationsOptionsCallback(locations) {
 		// Adding Choose one
 		$('<option/>', { text :  'Choose one ...' })
 		.attr('data-placeholder', 'true')
-		.data({
-			locId : '',
-			locName : '',
-			locLat : '',
-			locLng : ''
-		})
+		.data({ locId : '', locName : '', locLat : '', locLng : '' })
 		.appendTo($('#artifact-location-selection'));
 		
 		// Adding new location option
 		$('<option/>', { text :  'New Location' })
-		.data({
-			locId : '',
-			locName : 'New Location',
-			locLat : '',
-			locLng : ''
-		})
+		.data({ locId : '', locName : 'New Location', locLat : '', locLng : '' })
 		.appendTo($('#artifact-location-selection'));
 		
 		// Adding current locaiton
 		$('<option/>', { text :  'Current Location' })
-		.data({
-			locId : '',
-			locName : 'Current Location',
-			locLat : '0',
-			locLng : '0'
-		})
+		.data({ locId : '', locName : 'Current Location', locLat : '0', locLng : '0' })
 		.appendTo($('#artifact-location-selection'));
 		
 		// Adding all stored locations
 		if(locations.length > 0) {
 			
-			$.each(locations, function(i, val) {
+			$.each(locations, function(i, location) {
 				
-				$('<option/>', { text : val.locName})
-				.data({
-					locId : val.locId,
-					locName : val.locName,
-					locLat : val.locLat,
-					locLng : val.locLng
-				})
+				$('<option/>', { text : location.locName})
+				.data(location)
 				.appendTo($('#artifact-location-selection'));
 			});
 		}
@@ -650,6 +674,7 @@ function getLocationsOptionsCallback(locations) {
 
 function getLocationsListCallback(locations) {
 	
+	$.mobile.changePage($('#manage-locations'), "none");
 	
 	// Reset the list
 	$('#manage-locations-list li').remove();
@@ -661,23 +686,43 @@ function getLocationsListCallback(locations) {
 	}
 	else {
 		
+		var canAccessInternet = window.android.canAccessInternet();
+		
 		$('#manage-locations-list-message').text("");
 		$.each(locations, function(i, location) {
 			
-			$('<li/>', { html : '<h3>' + location.locName + '</h3>' })
-			.data({
-				locId : location.locId,
-				locName : location.locName,
-				locLat : location.locLat,
-				locLng : location.locLng
-			})
+			var element = $('<li/>', { html : '<h3>' + location.locName + '</h3>' })
+			.data(location)
 			.appendTo($('#manage-locations-list ul'));
+			
+			if(canAccessInternet) {
+			
+				/*
+				 * The following method will append the address to the <li/> element
+				 */
+				appendLocationAddress(location.locLat, location.locLng, element);
+			}
 		});
 	}
 	
 	$('#manage-locations-list ul').listview('refresh');
 }
 
+/*
+ * Helper method that appends the formatted address to the provided DOM element
+ */
+function appendLocationAddress(lat, lng , element) {
+	
+	$.ajax({
+		type:'Get',
+		url:'http://maps.googleapis.com/maps/api/geocode/json?address=' + lat + ',' + lng + '&sensor=true',
+		success:function(data) {
+			
+			element.append('<p>' + data.results[0].formatted_address + '</p>');
+			element.data({ locAddress : data.results[0].formatted_address });
+		}
+	});
+}
 
 /*
  * Method that resets the the view to the main page
