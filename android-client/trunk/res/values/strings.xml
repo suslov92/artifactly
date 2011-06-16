@@ -17,15 +17,17 @@
     <string name="set_location_radius">Location radius is %1$d</string>
     <string name="delete_artifact_success">Deleted Artifact</string>
     <string name="delete_artifact_failure">Failed to delete Artifact</string>
-    <string name="delete_artifact_partial">Did not delete Artifact, because it\'s referenced by other locations</string>
+    <string name="delete_artifact_partial">Did not delete Artifact, because it\'s still associated with locations</string>
     <string name="delete_location_success">Deleted Location</string>
     <string name="delete_location_failure">Failed to delete Artifact</string>
-    <string name="delete_location_partial">Did not delete Location, because it\'s referenced by other artifacts</string>
+    <string name="delete_location_partial">Did not delete Location, because it\'s still associated with artifacts</string>
     <string name="get_artifact_failure">Was not able to get the Artifact</string>
     <string name="broadcast_location_update">Received new location update</string>
     <string name="update_artifact_success">Updated Artifact</string>
     <string name="update_artifact_failure">Failed to update Artifact</string>
+    <string name="update_location_success">Updated Location</string>
+    <string name="update_location_failure">Failed to update Location</string>
     <string name="options">Options</string>
     <string name="map">Map</string>
-    <string name="info">Info</string>
+    <string name="info">About</string>
 </resources>

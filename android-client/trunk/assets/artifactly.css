@@ -11,6 +11,10 @@
 	text-align: center;
 }
 
+.location-button-group {
+	text-align: center;
+}
+
 .artifact-main-page-footer {
 
 	position: absolute !important;
@@ -35,6 +39,10 @@
 }
 
 .view-artifact-map {
+	text-align: center;
+}
+
+.view-location-map {
 	text-align: center;
 }
 
@@ -65,6 +73,14 @@
 
 #sound-notification-option div {
 	font-weight: bold !important;
+}
+
+#view-location-address {
+	text-align: center;
+}
+
+#manage-locations-list li p {
+	font-weight: normal !important;
 }
 
 li img {

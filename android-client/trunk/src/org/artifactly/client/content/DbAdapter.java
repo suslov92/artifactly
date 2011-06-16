@@ -252,6 +252,19 @@ public class DbAdapter {
 	}
 	
 	/*
+	 * Update a Location
+	 */
+	public boolean updateLocation(String locationId, String locationName, String locationLat, String locationLng) {
+		
+		// TODO: Allow user to update the Lat/Lng via moving the marker on the map
+		ContentValues locContentValues = new ContentValues();
+		locContentValues.put(LOC_FIELDS[LOC_NAME], locationName);
+		int numberLocRowsAffected = mSQLiteDatabase.update(DB_TABLE_LOCATION, locContentValues, LOC_FIELDS[LOC_ID] + "=?", new String[] {locationId});
+		
+		return ((numberLocRowsAffected ==  1) ? true : false);
+	}
+	
+	/*
 	 * Select all the location and artifact relationships
 	 * NOTE: Caller must call cursor.close()
 	 */
