@@ -1,0 +1,272 @@
+<!DOCTYPE html> 
+<html> 
+<head>
+	<meta charset="utf-8" />
+	<title>Artifactly</title>
+	<meta name="viewport" content="height=device-height,width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+	<link rel="stylesheet" href="jquery.mobile-1.0b1pre.min.css" />
+	<link rel="stylesheet" href="artifactly.css" />
+	<script type="text/javascript" src="jquery-1.6.1.min.js"></script>
+	<script type="text/javascript" src="mock.js"></script>
+	<script type="text/javascript" src="artifactly.js"></script>
+	<script type="text/javascript" src="jquery.mobile-1.0b1pre.min.js"></script>
+</head> 
+<body> 
+
+<div data-role="page" id="main">
+
+	<div data-role="header" data-backbtn="false" data-position="inline">
+		<h3>Home</h3>
+		<a href="#new-artifact" data-icon="plus" data-transition="none" class="ui-btn-right">Artifact</a>
+	</div>
+
+	<div data-role="content">
+		<div id="artifactly-message"></div>
+		<div id="artifactly-list">
+			<ul data-role="listview" data-inset="false"></ul>
+		</div>
+	</div>
+
+</div>
+
+<div data-role="page" id="new-artifact">
+	
+	<div data-role="header" data-backbtn="false" data-position="inline">
+		<a href="#main" data-icon="home" data-transition="none">Home</a>
+		<h1>Create</h1>
+		<a href="#new-location" data-icon="plus" data-transition="none">Location</a>
+	</div>
+
+	<div data-role="content">	
+		<div data-role="fieldcontain">
+    		<label for="artifact-name">Artifact Name:</label>
+    		<input type="text" name="artifact-name" id="artifact-name" value=""/>
+		</div>
+		<div data-role="fieldcontain">
+    		<label for="artifact-data">Artifact Data:</label>
+    		<input type="text" name="artifact-data" id="artifact-data" value=""/>
+		</div>
+		<div data-role="fieldcontain">
+			<label for="artifact-location-selection" class="select">Location Name:</label>
+			<select name="artifact-location-selection" id="artifact-location-selection">
+			</select>
+		</div>
+		<div data-role="fieldcontain" id="artifact-location-name-div">
+    		<label for="artifact-location-name">Location Name:</label>
+    		<input type="text" name="artifact-location-name" id="artifact-location-name" value=""/>
+    		<br />
+    		<div id="artifact-current-location-map" class="view-artifact-map">
+				<img src="images/map-big.png" alt="Static Map Image" />
+			</div>
+		</div>
+		<div data-role="controlgroup" data-type="horizontal" class="artifact-button-group">
+			<input type="button" name="add-artifact-button" id="add-artifact-button" value="Add" />
+			<input type="button" name="close-artifact-button" id="close-artifact-button" value="Close" />
+		</div>
+	</div>
+</div>
+
+<div data-role="page" id="new-location">
+
+	<div data-role="header" data-backbtn="false" data-position="inline">
+		<a href="#main" data-icon="home" data-transition="none">Home</a>
+		<h1>Location</h1>
+		<a href="#new-artifact" data-icon="back" data-transition="none">Back</a>
+	</div>
+	
+	<div data-role="content">
+		
+		<div data-role="fieldcontain">
+    		<input type="text" name="search-entry" id="search-entry" value=""/>
+    		<input type="button" name="search-location-button" id="search-location-button" data-inline="true" value="Search" />
+		</div>
+		<span>
+		<b>Current Location:</b><br />
+		</span>
+		<div id="new-location-center-point"></div>
+		<br />
+		<div id="entered-search-term"></div>
+		<br />
+		<div id="google-search-branding"></div><br />
+		<div id="search-result-message"></div>
+		<br />
+		<div id="search-result-list">
+			<ul data-role="listview" data-inset="true"></ul>
+		</div>
+	</div>
+</div>
+
+<div data-role="page" id="map">
+
+	<div data-role="header" data-backbtn="false" data-position="inline">
+		<a href="#main" data-icon="home" data-transition="none">Home</a>
+		<h1>Map</h1>
+	</div>
+
+	<div data-role="content" id="map-content">
+		<div id="map-canvas"></div>
+	</div>
+</div>
+
+<div data-role="page" id="options">
+
+	<div data-role="header" data-backbtn="false" data-position="inline">
+		<a href="#main" data-icon="home" data-transition="none">Home</a>
+		<h1>Options</h1>
+	</div>
+
+	<div data-role="content">
+		
+		<div data-role="fieldcontain">
+			<input type="range" name="slider" id="radius-input" value="1000" min="100" max="20000" />
+ 			<input type="button" name="set-radius" id="set-radius" value="Set Radius" />
+		</div>
+		
+		<div data-role="fieldcontain">
+ 			<select name="option-select-back-ground-color" id="option-select-back-ground-color">
+				<option disabled>Background Color</option>
+				<option value="blue">Blue</option>
+				<option value="pink">Pink</option>
+				<option value="green">Green</option>
+				<option value="white">White</option>
+			</select>
+		</div>
+		
+		<div data-role="fieldcontain" id="sound-notification-option">
+ 			<fieldset data-role="controlgroup">
+				<input type="checkbox" name="sound-notification-option-checkbox" id="sound-notification-option-checkbox" class="custom" checked />
+				<label for="sound-notification-option-checkbox" id="sound-notification-option-checkbox-text">Sound Notification: On</label>
+    		</fieldset>
+		</div>
+		
+		<input type="button" name="manage-locations-button" id="manage-locations-button" value="Manage Locations" />
+		
+	</div>
+</div>
+
+<div data-role="page" id="view-artifact">
+
+	<div data-role="header" data-backbtn="false" data-position="inline">
+		<a href="#main" data-icon="home" data-transition="none">Home</a>
+		<h1>Artifact</h1>
+	</div>
+	
+	<div data-role="content">
+
+		<label for="view-artifact-art-name">Artifact Name:</label>
+		<input type="text" name="view-artifact-art-name" id="view-artifact-art-name" value=""/>
+		
+		<label for="view-artifact-art-data">Data:</label>
+		<input type="text" name="view-artifact-art-data" id="view-artifact-art-data" value=""/>
+		
+		<label for="view-artifact-loc-name">Location Name:</label>
+		<input type="text" name="view-artifact-loc-name" id="view-artifact-loc-name" value=""/>
+	
+		<br />
+		<div id="view-artifact-map" class="view-artifact-map">
+			<img src="images/map-big.png" alt="Static Map Image" />
+		</div>
+		
+		<br />
+		
+		<div data-role="controlgroup" data-type="horizontal" class="artifact-button-group">
+			<input type="button" name="update-artifact" id="update-artifact" value="Update" />
+ 			<input type="button" name="delete-artifact" id="delete-artifact" value="Delete" />
+		</div>
+	</div>
+</div>
+
+<div data-role="page" id="view-location">
+
+	<div data-role="header" data-backbtn="false" data-position="inline">
+		<a href="#main" data-icon="home" data-transition="none">Home</a>
+		<h1>Location</h1>
+		<a href="#manage-locations" data-icon="back" data-transition="none">Back</a>
+	</div>
+	
+	<div data-role="content">
+
+		<label for="view-location-loc-name">Location Name:</label>
+		<input type="text" name="view-location-loc-name" id="view-location-loc-name" value=""/>
+		
+		<br />
+		<div id="view-location-map" class="view-location-map">
+			<img src="images/map-big.png" alt="Static Map Image" />
+		</div>
+		<br />
+		
+		<div id="view-location-address"></div>
+		<br />
+		
+		<div data-role="controlgroup" data-type="horizontal" class="location-button-group">
+			<input type="button" name="update-location" id="update-location" value="Update" />
+			<input type="button" name="delete-location" id="delete-location" value="Delete" />
+		</div>
+	</div>
+</div>
+
+<div data-role="page" id="manage-locations">
+	
+	<div data-role="header" data-backbtn="false" data-position="inline">
+		<a href="#main" data-icon="home" data-transition="none">Home</a>
+		<h1>Locations</h1>
+	</div>
+
+	<div data-role="content">
+		<div id="manage-locations-list-message"></div>
+		<div id="manage-locations-list">
+			<ul data-role="listview" data-inset="false"></ul>
+		</div>
+	</div>
+</div>
+
+<div data-role="page" id="app-info">
+
+	<div data-role="header" data-backbtn="false" data-position="inline">
+		<a href="#main" data-icon="home" data-transition="none">Home</a>
+		<h1>About</h1>
+	</div>
+	
+	<div data-role="content" id="app-info-content">
+	<p>v1.0.0</p>
+	<p>Thomas Amsler</p>
+	<a href="http://www.artifactly.org">www.artifactly.org</a>
+	<br />
+	<br />
+	<p>Report a bug:</p>
+	<a href="http://code.google.com/p/artifactly/issues/list">code.google.com/p/artifactly</a>
+	</div>
+</div>
+
+<div data-role="dialog" id="artifact-dialog">
+
+	<div data-role="header" data-position="inline">
+		<h1>Dialog</h1>
+	</div>
+	
+	<div data-role="content">
+		<h3 class="delete-artifact-header">Delete Artifact:</h3>
+		<div id="delete-artifact-name" class="delete-artifact-name"></div>
+		<br />
+		<input type="button" name="delete-artifact-yes" id="delete-artifact-yes" value="Yes" />
+		<input type="button" name="delete-artifact-cancel" id="delete-artifact-cancel" value="Cancel" />
+	</div>
+</div>
+
+<div data-role="dialog" id="location-dialog">
+
+	<div data-role="header" data-position="inline">
+		<h1>Dialog</h1>
+	</div>
+	
+	<div data-role="content">
+		<h3 class="delete-artifact-header">Delete Location:</h3>
+		<div id="delete-location-name" class="delete-location-name"></div>
+		<br />
+		<input type="button" name="delete-location-yes" id="delete-location-yes" value="Yes" />
+		<input type="button" name="delete-location-cancel" id="delete-location-cancel" value="Cancel" />
+	</div>
+</div>
+
+</body>
+</html>
