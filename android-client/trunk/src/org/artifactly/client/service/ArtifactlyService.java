@@ -659,7 +659,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	private void locationChanged(Location location) {
 
 		// Don't handle consecutive location changes. e.g. PASSIVE provider
-		if(Float.compare(currentLocation.distanceTo(location), 0.0f) == 0) {
+		if(null != currentLocation && Float.compare(currentLocation.distanceTo(location), 0.0f) == 0) {
 			
 			return;
 		}

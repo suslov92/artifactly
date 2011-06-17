@@ -16,6 +16,8 @@
 
 package org.artifactly.client.content;
 
+import org.artifactly.client.ApplicationConstants;
+
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -26,7 +28,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.util.Log;
 
-public class DbAdapter {
+public class DbAdapter implements ApplicationConstants {
 
 	private static final String PROD_LOG_TAG = "** A.S.DB **";
 
@@ -56,7 +58,7 @@ public class DbAdapter {
 
 	public static final int FK_ART_ID = 0;
 	public static final int FK_LOC_ID = 1;
-
+	
 	private static final String CREATE_LOCATION_TABLE =
 		"create table " + DB_TABLE_LOCATION + " (" + LOC_FIELDS[LOC_ID] + " INTEGER primary key autoincrement, "
 		+ LOC_FIELDS[LOC_NAME] + " TEXT not null, "
@@ -91,60 +93,85 @@ public class DbAdapter {
 	 * The insert checks first if the entity exists, if the entity exists, nothing is inserted.
 	 * If the entity doesn't exist, a new DB record is created for it.
 	 */
-	public int insert(String locationName, String latitude, String longitude, String artifactName, String artifactData) {
+	public byte insert(String locationName, String latitude, String longitude, String artifactName, String artifactData) {
 
 		long locationRowID = -1;
 		long artifactRowId = -1;
+		boolean createNewForeignKeyMapping = false;
+		byte returnStatus = DEFAULT_MASK;
 		ContentValues contentValues = null;
 
 		try {
 
 			/*
-			 * Get location by name and see if the result matches the provided Lat/Lng coordinates,
-			 * if the coordinates don't match, we return an error
+			 * If the user selected the current location, and the provided name matches a different
+			 * location (lat/lng) then we inform the user that he/she needs to choose a different name.
 			 */
 			if(!isValidLocation(locationName, latitude, longitude)) {
 				
-				return 0;
+				returnStatus |= CHOOSE_DIFFERENT_LOC_NAME;
 			}
 			
-			// Test if location already exists
-			long locationId = getLocation(locationName, latitude, longitude);
-
-			if(0 <= locationId) {
-
-				// Location exists so we keep track of its rowId
-				locationRowID = locationId;
+			/*
+			 * Checking if the location already exists for the provided
+			 * latitude, and longitude. This is to handle the case where the user chooses the same
+			 * location under a different name
+			 */
+			locationRowID = getLocation(latitude, longitude);
+			
+			/*
+			 * Check if the above search found a match, if not we keep searching for a match
+			 */
+			if(-1 == locationRowID) {
+			
+				locationRowID = getLocation(locationName, latitude, longitude);
 			}
 			else {
+				
+				returnStatus |= USING_EXISTING_LOCATION_NAME;
+			}
+			
+			/*
+			 * If the above searches didn't result in a match, we create a new location record
+			 */
+			if(-1 == locationRowID) {
 
-				// Location doesn't exist so we create a new DB record for it
 				contentValues = new ContentValues();
 				contentValues.put(LOC_FIELDS[LOC_NAME], locationName);
 				contentValues.put(LOC_FIELDS[LOC_LATITUDE], latitude);
 				contentValues.put(LOC_FIELDS[LOC_LONGITUDE], longitude);
 				locationRowID = mSQLiteDatabase.insert(DB_TABLE_LOCATION, null, contentValues);
+				createNewForeignKeyMapping = true;
+				returnStatus |= CREATING_NEW_LOCATION;
+			}
+			else {
+				
+				returnStatus |= USING_EXISTING_LOCATION;
 			}
 
 			// Test if artifact already exists
-			long artifactId = getArtifact(artifactName, artifactData);
+			artifactRowId = getArtifact(artifactName);
 
-			if(0 <= artifactId) {
-
-				// Artifact exists so we keep track of its rowID
-				artifactRowId = artifactId;
-			}
-			else {
+			/*
+			 * If the above search didn't result in a match, we create a new artifact record
+			 */
+			if(-1 == artifactRowId) {
 
 				// Artifact doesn't exist so we create a new db record for it 
 				contentValues = new ContentValues();
 				contentValues.put(ART_FIELDS[ART_NAME], artifactName);
 				contentValues.put(ART_FIELDS[ART_DATA], artifactData);
 				artifactRowId = mSQLiteDatabase.insert(DB_TABLE_ARTIFACT, null, contentValues);
+				createNewForeignKeyMapping = true;
+				returnStatus |= CREATING_NEW_ARTIFACT;
+			}
+			else {
+				
+				returnStatus |= USING_EXISTING_ARTIFACT;
 			}
 
 			// Test if location/artifact relationship already exists
-			if(-1 == locationId || -1 == artifactId) {
+			if(createNewForeignKeyMapping) {
 
 				// The location and artifact relationship doesn't exist so we create a new db record for it
 				contentValues = new ContentValues();
@@ -157,10 +184,10 @@ public class DbAdapter {
 		catch(SQLiteException e) {
 			
 			Log.e(PROD_LOG_TAG, "SQLiteException insert()", e);
-			return -1;
+			returnStatus |= CREATE_ARTIFACT_LOCATION_ERROR;
 		}
 		
-		return 1;
+		return returnStatus;
 	}
 
 	/*
@@ -364,6 +391,40 @@ public class DbAdapter {
 	}
 
 	/*
+	 * Helper method that search by latitude and longitude for an existing location
+	 */
+	private long getLocation(String latitude, String longitude) {
+		
+		Cursor cursor = mSQLiteDatabase.query(true,
+				DB_TABLE_LOCATION,
+				LOC_FIELDS,
+				LOC_FIELDS[LOC_LATITUDE] + "=? AND " + LOC_FIELDS[LOC_LONGITUDE] + "=?",
+				new String [] {latitude, longitude},
+				null,
+				null,
+				null,
+				null);
+
+		if((null != cursor) && (1 == cursor.getCount())) {
+			
+			cursor.moveToFirst();
+			int idColumnIndex = cursor.getColumnIndex(LOC_FIELDS[LOC_ID]);
+			long rowId = cursor.getLong(idColumnIndex);
+			cursor.close();
+			return rowId;
+		}
+		else {
+			
+			if(null != cursor) {
+			
+				cursor.close();
+			}
+			
+			return -1;
+		}
+	}
+	
+	/*
 	 * Helper method that searches by name, latitude, and longitude for an existing location
 	 */
 	private long getLocation(String name, String latitude, String longitude) {
@@ -378,7 +439,7 @@ public class DbAdapter {
 				null,
 				null);
 
-		if((null != cursor) && (0 < cursor.getCount())) {
+		if((null != cursor) && (1 == cursor.getCount())) {
 			
 			cursor.moveToFirst();
 			int idColumnIndex = cursor.getColumnIndex(LOC_FIELDS[LOC_ID]);
@@ -399,8 +460,8 @@ public class DbAdapter {
 	
 	/*
 	 * Helper method that queries locations for the provided name. The result should contain zero or only
-	 * one location. If the location doesn't matches the provided Lat/Lng then we signal a failure
-	 * so that the user can choose another name.
+	 * one location. If the location doesn't match the provided Lat/Lng then we signal a failure
+	 * so that the user can choose another name. Use case: user selected current location.
 	 */
 	private boolean isValidLocation(String name, String latitude, String longitude) {
 
@@ -465,19 +526,19 @@ public class DbAdapter {
 	}
 
 	/*
-	 * Helper method that searches by name and data for an existing artifact
+	 * Helper method that searches by name for an existing artifact
 	 */
-	private long getArtifact(String name, String data) {
+	private long getArtifact(String name) {
 
 		Cursor cursor = mSQLiteDatabase.query(true,
-				DB_TABLE_ARTIFACT, ART_FIELDS, ART_FIELDS[ART_NAME] + "=? AND " + ART_FIELDS[ART_DATA] + "=?",
-				new String [] {name, data},
+				DB_TABLE_ARTIFACT, ART_FIELDS, ART_FIELDS[ART_NAME] + "=?",
+				new String [] {name},
 				null,
 				null,
 				null,
 				null);
 
-		if((null != cursor) && (0 < cursor.getCount())) {
+		if((null != cursor) && (1 == cursor.getCount())) {
 			
 			cursor.moveToFirst();
 			int idColumnIndex = cursor.getColumnIndex(ART_FIELDS[ART_ID]);

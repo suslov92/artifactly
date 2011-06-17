@@ -39,7 +39,6 @@ $(document).ready(function() {
 		window.android.getArtifact(artId);
 	});
 	
-	
 	/*
 	 * Clicking on a location list item
 	 */
@@ -58,9 +57,9 @@ $(document).ready(function() {
 	 */
 	$('#artifactly-list').delegate('li', 'swiperight', function(event) {
 		
-		$.mobile.changePage($('#artifact-dialog'), "none");
 		$('#delete-artifact-name').html($(this).data("artName"));
 		$('#delete-artifact-name').data({ artId : $(this).data("artId"), locId : $(this).data("locId") });
+		$.mobile.changePage($('#artifact-dialog'), "none");
 	});
 	
 	/*
@@ -68,9 +67,9 @@ $(document).ready(function() {
 	 */
 	$('#manage-locations-list').delegate('li', 'swiperight', function(event) {
 
-		$.mobile.changePage($('#location-dialog'), "none");
 		$('#delete-location-name').html($(this).data("locName"));
 		$('#delete-location-name').data({ locId : $(this).data("locId") });
+		$.mobile.changePage($('#location-dialog'), "none");
 	});
 
 	/*
@@ -164,11 +163,9 @@ $(document).ready(function() {
 	 */
 	$('#options').bind('pageshow', function() {
 
-		$('#radius-input').val(window.android.getRadius());
-		$('#radius-input').slider('refresh');
+		$('#radius-input').val(window.android.getRadius()).slider('refresh');
 		
 		var checkboxState = window.android.getSoundNotificationPreference();
-		
 		
 		if(checkboxState) {
 			
@@ -199,7 +196,7 @@ $(document).ready(function() {
 	$('#new-location').bind('pageshow', function() {
 		
 		$('#new-location-center-point').html("Loading ...");
-		$('#search-result').html('');
+		$('#search-result-message').html('');
 		$('#entered-search-term').html('');
 		$('#google-search-branding').html('');
 		
@@ -272,9 +269,9 @@ $(document).ready(function() {
 	$('#delete-artifact').click(function() {
 		
 		var data = $('#view-artifact-art-name').data();
-		$.mobile.changePage($('#artifact-dialog'), "none");
 		$('#delete-artifact-name').html(data.artName);
 		$('#delete-artifact-name').data(data);
+		$.mobile.changePage($('#artifact-dialog'), "none");
 	});
 	
 	/*
@@ -283,9 +280,9 @@ $(document).ready(function() {
 	$('#delete-location').click(function() {
 	
 		var location = $('#view-location-loc-name').data();
-		$.mobile.changePage($('#location-dialog'), "none");
 		$('#delete-location-name').html(location.locName);
 		$('#delete-location-name').data(location);
+		$.mobile.changePage($('#location-dialog'), "none");
 	});
 
 	/*
@@ -382,6 +379,8 @@ $(document).ready(function() {
 				// Include the required Google branding.
 				// Note that getBranding is called on google.search.Search
 				google.search.Search.getBranding('google-search-branding');
+				
+				$('#search-result-message').html("<p>Searching ...</p>");
 			}
 			else {
 				
@@ -504,6 +503,8 @@ function searchComplete(localSearch) {
 		// Do we have any search results
 		if (localSearch.results && localSearch.results.length > 0) {
 			
+			$('#search-result-message').html('');
+			
 			// Iterate over the search result
 			for (var i = 0; i < localSearch.results.length; i++) {
 								
@@ -521,6 +522,10 @@ function searchComplete(localSearch) {
 	
 			// Refresh the list so that all the data is shown
 			$('#search-result-list ul').listview('refresh');
+		}
+		else {
+			
+			$('#search-result-message').html("<p>No Search results</p>");
 		}
 	});
 }
@@ -598,6 +603,8 @@ function getArtifactCallback(data) {
 			$('#view-artifact-lng').val((+data[0].lng).toFixed(6));
 			$('#view-artifact-map img').attr('src', getMapImage(data[0].lat, data[0].lng, "14", "250", "200"));
 		}
+		
+		$.mobile.changePage($('#view-artifact'), "none");
 	});
 }
 
@@ -622,7 +629,7 @@ function getArtifactsForCurrentLocationCallback(locations) {
 				.appendTo($('#artifactly-list ul'));
 
 				$.each(location.artifacts, function(j, artifact) {
-					$('<li/>', { html : '<a href="#view-artifact" data-transition="none">' + artifact.artName + '</a>' })
+					$('<li/>', { html : '<h3>' + artifact.artName + '</h3>' })
 					.data({ artId : artifact.artId, artName : artifact.artName, locId : location.locId })
 					.appendTo($('#artifactly-list ul'))
 				});
@@ -642,7 +649,7 @@ function getLocationsOptionsCallback(locations) {
 		
 		// Adding Choose one
 		$('<option/>', { text :  'Choose one ...' })
-		.attr('data-placeholder', 'true')
+		.attr('disabled', 'disabled')
 		.data({ locId : '', locName : '', locLat : '', locLng : '' })
 		.appendTo($('#artifact-location-selection'));
 		
@@ -668,12 +675,12 @@ function getLocationsOptionsCallback(locations) {
 		}
 		
 		$('#artifact-location-selection').selectmenu('refresh');
-
 	});
 }
 
 function getLocationsListCallback(locations) {
 	
+	// This call has to occur before the manage-locations-list is manipulated via remove, refresh, etc.
 	$.mobile.changePage($('#manage-locations'), "none");
 	
 	// Reset the list

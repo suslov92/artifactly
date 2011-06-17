@@ -53,7 +53,7 @@ public class LocalServiceImpl extends Binder implements LocalService {
 	}
 	
 	// API method
-	public int createArtifact(String artifactName, String artifactData, String locationName, String latitude, String longitude) {
+	public byte createArtifact(String artifactName, String artifactData, String locationName, String latitude, String longitude) {
 		
 		if(null == dbAdapter) {
 
@@ -139,7 +139,7 @@ public class LocalServiceImpl extends Binder implements LocalService {
 	}
 
 	// API method
-	public int createArtifact(String artifactName, String artifactData, String locationName) {
+	public byte createArtifact(String artifactName, String artifactData, String locationName) {
 		
 		Location currentLocation = artifactlyService.getLocation();
 		
