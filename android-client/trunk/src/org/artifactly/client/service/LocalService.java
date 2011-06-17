@@ -26,9 +26,9 @@ public interface LocalService {
 	 * @param locationName Artifact's location name
 	 * @param latitude Artifact latitude
 	 * @param longitude Artifact longitude
-	 * @return -1 on error, 0 on cannot create artifact because of the provided location name, 1 on success
+	 * @return byte mask indicating different status combinations
 	 */
-	public int createArtifact(String artifactName, String artifactData, String locationName, String latitude, String longitude);
+	public byte createArtifact(String artifactName, String artifactData, String locationName, String latitude, String longitude);
 	
 	/**
 	 * Creates an Artifact at the current location
@@ -36,9 +36,9 @@ public interface LocalService {
 	 * @param artifactName Artifact name
 	 * @param artifactData Artifact data
 	 * @param locationName Location name
-	 * @return -1 on error, 0 on cannot create artifact because of the provided location name, 1 on success
+	 * @return byte mask indicating different status combinations
 	 */
-	public int createArtifact(String artifactName, String artifactData, String locationName);
+	public byte createArtifact(String artifactName, String artifactData, String locationName);
 	
 	/**
 	 * Update an Artifact

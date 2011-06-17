@@ -47,7 +47,7 @@
     		<input type="text" name="artifact-data" id="artifact-data" value=""/>
 		</div>
 		<div data-role="fieldcontain">
-			<label for="artifact-location-selection" class="select">Location:</label>
+			<label for="artifact-location-selection" class="select">Location Name:</label>
 			<select name="artifact-location-selection" id="artifact-location-selection">
 			</select>
 		</div>
@@ -88,7 +88,7 @@
 		<div id="entered-search-term"></div>
 		<br />
 		<div id="google-search-branding"></div><br />
-		<div id="search-result"></div>
+		<div id="search-result-message"></div>
 		<br />
 		<div id="search-result-list">
 			<ul data-role="listview" data-inset="true"></ul>
@@ -116,18 +116,15 @@
 	</div>
 
 	<div data-role="content">
-	
-		<div id="radius-inputs">
-			<div data-role="fieldcontain">
- 				<input type="range" name="slider" id="radius-input" value="1000" min="100" max="20000" />
- 				<input type="button" name="set-radius" id="set-radius" value="Set Radius" />
-			</div>
+		
+		<div data-role="fieldcontain">
+			<input type="range" name="slider" id="radius-input" value="1000" min="100" max="20000" />
+ 			<input type="button" name="set-radius" id="set-radius" value="Set Radius" />
 		</div>
 		
 		<div data-role="fieldcontain">
-			<label for="option-select-back-ground-color" class="select artifactly-label">Set Background Color:</label>
-			<select name="option-select-back-ground-color" id="option-select-back-ground-color">
-				<option value="default" data-placeholder="true">Choose one ...</option>
+ 			<select name="option-select-back-ground-color" id="option-select-back-ground-color">
+				<option disabled>Background Color</option>
 				<option value="blue">Blue</option>
 				<option value="pink">Pink</option>
 				<option value="green">Green</option>

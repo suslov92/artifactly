@@ -410,7 +410,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		
 		public void setRadius(int radius) {
 
-			if(PREFERENCE_RADIUS_DEFAULT < radius) {
+			if(PREFERENCE_RADIUS_MIN <= radius) {
 
 				String message = String.format(getResources().getString(R.string.set_location_radius), radius);
 				Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
@@ -484,7 +484,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 				return false;
 			}
 			
-			int state = -1;
+			byte state = 0;
 			
 			// If latitude and longitude are provided we use them, otherwise we use the current location
 			// TODO: Add check if provided latitude and longitude are valid geo points
@@ -514,20 +514,27 @@ public class Artifactly extends Activity implements ApplicationConstants {
 				state = localService.createArtifact(artifactName, artifactData, locationName);
 			}
 			
-			switch(state) {
-				case 1:
-					Toast.makeText(getApplicationContext(), R.string.create_artifact_success, Toast.LENGTH_LONG).show();
-					new GetArtifactsForCurrentLocationTask().execute();
-					return true;
-				case 0:
-					Toast.makeText(getApplicationContext(), R.string.create_artifact_error, Toast.LENGTH_LONG).show();
-					return false;
-				case -1:
-					Toast.makeText(getApplicationContext(), R.string.create_artifact_failure, Toast.LENGTH_LONG).show();
-					return false;
-				default:
-					Log.e(PROD_LOG_TAG, "ERROR: unexpected createArtifact() status");
-					return false;
+			
+			if((state & CREATE_ARTIFACT_LOCATION_ERROR) == CREATE_ARTIFACT_LOCATION_ERROR) {
+				
+				Toast.makeText(getApplicationContext(), R.string.create_artifact_failure, Toast.LENGTH_LONG).show();
+				return false;
+			}
+			if((state & CHOOSE_DIFFERENT_LOC_NAME) == CHOOSE_DIFFERENT_LOC_NAME) {
+				
+				Toast.makeText(getApplicationContext(), R.string.create_artifact_provide_different_location_name, Toast.LENGTH_LONG).show();
+				return false;
+			}
+			else if((state & ARTIFACT_AND_LOCATION_EXIST) == ARTIFACT_AND_LOCATION_EXIST) {
+				
+				Toast.makeText(getApplicationContext(), R.string.create_artifact_already_exists, Toast.LENGTH_LONG).show();
+				return false;
+			}
+			else {
+				
+				new GetArtifactsForCurrentLocationTask().execute();
+				Toast.makeText(getApplicationContext(), R.string.create_artifact_success, Toast.LENGTH_LONG).show();
+				return true;
 			}
 		}
 
