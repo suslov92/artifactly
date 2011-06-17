@@ -393,9 +393,9 @@ public class LocalServiceImpl extends Binder implements LocalService {
 					currentLocationName = locationName;
 					location = new JSONObject();
 					location.put(DbAdapter.LOC_ART_FIELDS[DbAdapter.FK_LOC_ID], cursor.getInt(locIdColumnIndex));
-					location.put(DbAdapter.LOC_FIELDS[DbAdapter.LOC_NAME], cursor.getString(locNameColumnIndex));
-					location.put(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LATITUDE], cursor.getString(latitudeColumnIndex));
-					location.put(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LONGITUDE], cursor.getString(longitudeColumnIndex));
+					location.put(DbAdapter.LOC_FIELDS_AS[DbAdapter.LOC_NAME], cursor.getString(locNameColumnIndex));
+					location.put(DbAdapter.LOC_FIELDS_AS[DbAdapter.LOC_LATITUDE], cursor.getString(latitudeColumnIndex));
+					location.put(DbAdapter.LOC_FIELDS_AS[DbAdapter.LOC_LONGITUDE], cursor.getString(longitudeColumnIndex));
 					location.put("artifacts", new JSONArray());
 					locations.put(location);
 				}
