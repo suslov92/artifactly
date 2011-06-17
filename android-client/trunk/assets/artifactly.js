@@ -14,29 +14,42 @@
  * limitations under the License.
  */
 
-
-/*
- * Keeping track of the search center point
- */
-var searchCenterPoinLatLng;
-
-/*
- * Boolean flag that is used to determine if we need to rebuild the location selection options.
- * When the new artifact's page is shown, we get all the currently stored locations. We don't want to 
- * do that if we just added a new location option via the 'new location' page.
- */
-var refreshLocations = true;
-
-
 $(document).ready(function() {
+	
+	/*
+	 * Variable used for Google local search API to keep track of search center point
+	 */
+	$('body').data({ searchCenterPoinLatLng : null });
+	
+	/*
+	 * Boolean flag that is used to determine if we need to rebuild the location selection options.
+	 * When the new artifact's page is shown, we get all the currently stored locations. We don't want to 
+	 * do that if we just added a new location option via the 'new location' page.
+	 */
+	$('body').data({ refreshLocations : true });
 
 	/*
 	 * Clicking on an artifact list item
 	 */
-	$('#artifactly-list').delegate('li', 'click', function(event) {  
+	$('#artifactly-list').delegate('.artifactly-list-item', 'click', function(event) {  
 
 		var artId = $(this).data("artId");
 		window.android.getArtifact(artId);
+	});
+	
+	/*
+	 * Click on a location list item
+	 */
+	$('#artifactly-list').delegate('.artifactly-list-divider', 'click', function(event) {  
+
+		var location = $(this).data();
+		$('#view-location-loc-name').data(location);
+		$('#view-location-loc-name').val(location.locName);
+		$('#view-location-address').html(location.locAddress);
+		$('#view-location-map img').attr('src', getMapImage(location.locLat, location.locLng, "15", "250", "200"));
+		addLocationAddressToViewLocationPage(location.locLat, location.locLng);
+		$('#delete-location-name').data({ navigateTo : '#main' });
+		$.mobile.changePage($('#view-location'), "none");
 	});
 	
 	/*
@@ -49,16 +62,18 @@ $(document).ready(function() {
 		$('#view-location-loc-name').val(location.locName);
 		$('#view-location-address').html(location.locAddress);
 		$('#view-location-map img').attr('src', getMapImage(location.locLat, location.locLng, "15", "250", "200"));
+		$('#delete-location-name').data({ navigateTo : '#manage-locations' });
 		$.mobile.changePage($('#view-location'), "none");
 	});
 	
 	/*
 	 * Swiping right on an artifact list item, starts the delete dialog
 	 */
-	$('#artifactly-list').delegate('li', 'swiperight', function(event) {
+	$('#artifactly-list').delegate('.artifactly-list-item', 'swiperight', function(event) {
 		
-		$('#delete-artifact-name').html($(this).data("artName"));
-		$('#delete-artifact-name').data({ artId : $(this).data("artId"), locId : $(this).data("locId") });
+		var artifact = $(this).data();
+		$('#delete-artifact-name').html(artifact.artName);
+		$('#delete-artifact-name').data(artifact);
 		$.mobile.changePage($('#artifact-dialog'), "none");
 	});
 	
@@ -69,6 +84,7 @@ $(document).ready(function() {
 
 		$('#delete-location-name').html($(this).data("locName"));
 		$('#delete-location-name').data({ locId : $(this).data("locId") });
+		$('#delete-location-name').data({ navigateTo : '#manage-locations' });
 		$.mobile.changePage($('#location-dialog'), "none");
 	});
 
@@ -88,9 +104,7 @@ $(document).ready(function() {
 		.appendTo($('#artifact-location-selection'));
 		
 		$('#artifact-location-selection').selectmenu('refresh');
-		
-		refreshLocations = false;
-		
+		$('body').data({ refreshLocations : false });
 		$.mobile.changePage($('#new-artifact'), "none");
 	});
 
@@ -111,9 +125,10 @@ $(document).ready(function() {
 	$('#delete-location-yes').click(function(event) {
 
 		var locId = $('#delete-location-name').data("locId");
+		var navigateTo = $('#delete-location-name').data("navigateTo");
 		window.android.deleteLocation(locId);
 		$('.ui-dialog').dialog('close');
-		$.mobile.changePage($('#manage-locations'), "none");
+		$.mobile.changePage($(navigateTo), "none");
 	});
 	
 	/*
@@ -129,9 +144,9 @@ $(document).ready(function() {
 	 */
 	$('#delete-location-cancel').click(function(event) {
 
+		var navigateTo = $('#delete-location-name').data("navigateTo");
 		$('#location-dialog').dialog('close');
-		$.mobile.changePage($('#manage-locations'), "none");
-		
+		$.mobile.changePage($(navigateTo), "none");
 	});
 	
 	/*
@@ -150,12 +165,12 @@ $(document).ready(function() {
 		
 		$('#artifact-location-name-div').hide();
 		
-		if(refreshLocations) {
+		if($('body').data("refreshLocations")) {
 		
 			window.android.getLocations("options");
 		}
 		
-		refreshLocations = true;
+		$('body').data({ refreshLocations : true });
 	});
 	
 	/*
@@ -169,12 +184,12 @@ $(document).ready(function() {
 		
 		if(checkboxState) {
 			
-			$('#sound-notification-option-checkbox-text .ui-btn-text').text("On");
+			$('#sound-notification-option-checkbox-text .ui-btn-text').text("Sound Notification: On");
 			$('#sound-notification-option-checkbox').prop("checked", true).checkboxradio("refresh");
 		}
 		else {
 			
-			$('#sound-notification-option-checkbox-text .ui-btn-text').text("Off");
+			$('#sound-notification-option-checkbox-text .ui-btn-text').text("Sound Notification: Off");
 			$('#sound-notification-option-checkbox').prop("checked", false).checkboxradio("refresh");
 		}
 	});
@@ -363,9 +378,9 @@ $(document).ready(function() {
 			var localSearch = new google.search.LocalSearch();
 
 			// Set the Local Search center point
-			if(searchCenterPoinLatLng) {
+			if($('body').data("searchCenterPoinLatLng")) {
 
-				localSearch.setCenterPoint(searchCenterPoinLatLng);
+				localSearch.setCenterPoint($('body').data("searchCenterPoinLatLng"));
 
 				// Set searchComplete as the callback function when a search is complete. The
 				// localSearch object will have results in it.
@@ -430,11 +445,11 @@ $(document).ready(function() {
 		
 		if(checked) {
 			
-			$('#sound-notification-option-checkbox-text .ui-btn-text').text("On");
+			$('#sound-notification-option-checkbox-text .ui-btn-text').text("Sound Notification: On");
 		}
 		else {
 			
-			$('#sound-notification-option-checkbox-text .ui-btn-text').text("Off");
+			$('#sound-notification-option-checkbox-text .ui-btn-text').text("Sound Notification: Off");
 		}
 		
 		window.android.setSoundNotificationPreference(checked);
@@ -508,7 +523,7 @@ function searchComplete(localSearch) {
 			// Iterate over the search result
 			for (var i = 0; i < localSearch.results.length; i++) {
 								
-				$('<li/>', { html : '<img src="' + getMapImage(localSearch.results[i].lat, localSearch.results[i].lng, "13", "78", "78") + '"/>'+
+				$('<li/>', { html : '<img src="' + getMapImage(localSearch.results[i].lat, localSearch.results[i].lng, "13", "78", "78") + '"/>' +
 									'<h3>' + localSearch.results[i].title + '</h3>' +
 									'<p>' + localSearch.results[i].addressLines[0] + '</p>' +
 									'<p>' + localSearch.results[i].city + '</p>' })        
@@ -624,13 +639,17 @@ function getArtifactsForCurrentLocationCallback(locations) {
 			$('#artifactly-message').text("");
 			$.each(locations, function(i, location) {
 
-				$('<li/>', { html : location.locName })
+				$('<li/>', { html : '<p><img src="images/map-marker.png" /></p>' +
+									'<h3>' + location.locName + '</h3>' })
 				.attr('data-role', 'list-divider')
+				.data(location)
+				.addClass('artifactly-list-divider')
 				.appendTo($('#artifactly-list ul'));
 
 				$.each(location.artifacts, function(j, artifact) {
 					$('<li/>', { html : '<h3>' + artifact.artName + '</h3>' })
 					.data({ artId : artifact.artId, artName : artifact.artName, locId : location.locId })
+					.addClass('artifactly-list-item')
 					.appendTo($('#artifactly-list ul'))
 				});
 			});
@@ -680,39 +699,42 @@ function getLocationsOptionsCallback(locations) {
 
 function getLocationsListCallback(locations) {
 	
-	// This call has to occur before the manage-locations-list is manipulated via remove, refresh, etc.
-	$.mobile.changePage($('#manage-locations'), "none");
+	$(document).ready(function() {
 	
-	// Reset the list
-	$('#manage-locations-list li').remove();
-	$('#manage-locations-list ul').listview('refresh');
-	
-	if(!locations || locations.length < 1) {
+		// This call has to occur before the manage-locations-list is manipulated via remove, refresh, etc.
+		$.mobile.changePage($('#manage-locations'), "none");
 
-		$('#manage-locations-list-message').text("There are no locations yet");
-	}
-	else {
-		
-		var canAccessInternet = window.android.canAccessInternet();
-		
-		$('#manage-locations-list-message').text("");
-		$.each(locations, function(i, location) {
-			
-			var element = $('<li/>', { html : '<h3>' + location.locName + '</h3>' })
-			.data(location)
-			.appendTo($('#manage-locations-list ul'));
-			
-			if(canAccessInternet) {
-			
-				/*
-				 * The following method will append the address to the <li/> element
-				 */
-				appendLocationAddress(location.locLat, location.locLng, element);
-			}
-		});
-	}
-	
-	$('#manage-locations-list ul').listview('refresh');
+		// Reset the list
+		$('#manage-locations-list li').remove();
+		$('#manage-locations-list ul').listview('refresh');
+
+		if(!locations || locations.length < 1) {
+
+			$('#manage-locations-list-message').text("There are no locations");
+		}
+		else {
+
+			var canAccessInternet = window.android.canAccessInternet();
+
+			$('#manage-locations-list-message').text("");
+			$.each(locations, function(i, location) {
+
+				var element = $('<li/>', { html : '<h3>' + location.locName + '</h3>' })
+				.data(location)
+				.appendTo($('#manage-locations-list ul'));
+
+				if(canAccessInternet) {
+
+					/*
+					 * The following method will append the address to the <li/> element
+					 */
+					appendLocationAddress(location.locLat, location.locLng, element);
+				}
+			});
+		}
+
+		$('#manage-locations-list ul').listview('refresh');
+	});
 }
 
 /*
@@ -720,14 +742,35 @@ function getLocationsListCallback(locations) {
  */
 function appendLocationAddress(lat, lng , element) {
 	
-	$.ajax({
-		type:'Get',
-		url:'http://maps.googleapis.com/maps/api/geocode/json?address=' + lat + ',' + lng + '&sensor=true',
-		success:function(data) {
-			
-			element.append('<p>' + data.results[0].formatted_address + '</p>');
-			element.data({ locAddress : data.results[0].formatted_address });
-		}
+	$(document).ready(function() {
+		
+		$.ajax({
+			type:'Get',
+			url:'http://maps.googleapis.com/maps/api/geocode/json?address=' + lat + ',' + lng + '&sensor=true',
+			success:function(data) {
+
+				element.append('<p>' + data.results[0].formatted_address + '</p>');
+				element.data({ locAddress : data.results[0].formatted_address });
+			}
+		});
+	});
+}
+
+/*
+ * Helper method that set the formatted address to the "view-location-address" div tag in the "view-location" page
+ */
+function addLocationAddressToViewLocationPage(lat, lng) {
+	
+	$(document).ready(function() {
+	
+		$.ajax({
+			type:'Get',
+			url:'http://maps.googleapis.com/maps/api/geocode/json?address=' + lat + ',' + lng + '&sensor=true',
+			success:function(data) {
+				
+				$('#view-location-address').html(data.results[0].formatted_address);
+			}
+		});
 	});
 }
 
@@ -767,29 +810,32 @@ function showServiceResult(data) {
 
 function loadMapApi(callback) {
 	
-	/*
-	 * First we check if we have Internet access. The Activity will show a 
-	 * message if we don't have Internet access
-	 */
-	var canAccessInternet = window.android.canAccessInternet();
-	if(canAccessInternet && typeof(google) == "undefined") {
-		
-		// Can access the Internet, thus we can load the Google maps API and map
-		$.getScript('http://maps.google.com/maps/api/js?sensor=true&callback=' + callback);
-	}
-	else if(canAccessInternet && typeof(google.maps) == "undefined") {
-		
-		// Can access the Internet, thus we can load the Google maps API and map
-		$.getScript('http://maps.google.com/maps/api/js?sensor=true&callback=' + callback);
-	}
-	else {
-		
+	$(document).ready(function() {
+
 		/*
-		 * Since the maps api is loaded via "show map" or "new location" we have
-		 * to make sure that if the api is loaded, that we still execute the callback
+		 * First we check if we have Internet access. The Activity will show a 
+		 * message if we don't have Internet access
 		 */
-		eval(callback + "()");
-	}
+		var canAccessInternet = window.android.canAccessInternet();
+		if(canAccessInternet && typeof(google) == "undefined") {
+
+			// Can access the Internet, thus we can load the Google maps API and map
+			$.getScript('http://maps.google.com/maps/api/js?sensor=true&callback=' + callback);
+		}
+		else if(canAccessInternet && typeof(google.maps) == "undefined") {
+
+			// Can access the Internet, thus we can load the Google maps API and map
+			$.getScript('http://maps.google.com/maps/api/js?sensor=true&callback=' + callback);
+		}
+		else {
+
+			/*
+			 * Since the maps api is loaded via "show map" or "new location" we have
+			 * to make sure that if the api is loaded, that we still execute the callback
+			 */
+			eval(callback + "()");
+		}
+	});
 }
 
 function getSearchCenterPoint() {
@@ -799,7 +845,7 @@ function getSearchCenterPoint() {
 		var data = JSON.parse(window.android.getLocation());
 		var latlng = new google.maps.LatLng(data[0], data[1]);
 
-		searchCenterPoinLatLng = latlng;
+		$('body').data({ searchCenterPoinLatLng : latlng });
 		geocoder = new google.maps.Geocoder(); 
 
 		geocoder.geocode({'latLng':latlng}, function(results, status) {
@@ -820,8 +866,11 @@ function getSearchCenterPoint() {
  * Android menu option: Options
  */
 function showOptionsPage() {
-	
-	$.mobile.changePage($('#options'), "none");
+
+	$(document).ready(function() {
+
+		$.mobile.changePage($('#options'), "none");
+	});
 }
 
 /*
@@ -829,15 +878,21 @@ function showOptionsPage() {
  */
 function showMapPage() {
 	
-	$.mobile.changePage($('#map'), "none");
+	$(document).ready(function() {
+
+		$.mobile.changePage($('#map'), "none");
+	});
 }
 
 /*
  * Android menu option: Info
  */
 function showAppInfoPage() {
-	
-	$.mobile.changePage($('#app-info'), "none");
+
+	$(document).ready(function() {
+
+		$.mobile.changePage($('#app-info'), "none");
+	});
 }
 
 /*
