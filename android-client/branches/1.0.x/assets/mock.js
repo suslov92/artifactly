@@ -99,7 +99,7 @@ if(typeof window.android == "undefined") {
 	
 	window.android.getGoogleSearchApiKey = function() {
 
-		return "ABQIAAAAhz6w4o8Dnx4MWEXjy_RcIRQQG1rrLmI_di0TdIgmuIk3eKp8uRSV3WoMFobKwtri4Zz7tma5XlmZ4g";
+		return "YourKey";
 	}
 
 	window.android.setBackgroundColor = function(color) {
