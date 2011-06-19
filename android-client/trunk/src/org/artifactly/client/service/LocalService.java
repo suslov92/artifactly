@@ -100,14 +100,6 @@ public interface LocalService {
 	public String getArtifactsForCurrentLocation();
 	
 	/**
-	 * Check if Internet access is available 
-	 * 
-	 * @return false if no Internet access is available, otherwise true
-	 */
-	public boolean canAccessInternet();
-	
-	
-	/**
 	 * Delete an artifact
 	 * 
 	 * @param artifactId

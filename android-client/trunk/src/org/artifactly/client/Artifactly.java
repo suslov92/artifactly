@@ -29,6 +29,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -49,7 +51,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	private static final String ARTIFACTLY_URL = "file:///android_asset/artifactly.html";
 
 	private static final String PROD_LOG_TAG = " ** A.A. **";
-	//private static final String DEBUG_LOG_TAG = " ** A.A. **";
+	//private static final String DEBUG_LOG_TAG = " ** DEBUG A.A. **";
 
 	// Preferences
 	private static final String PREFS_NAME = "ArtifactlyPrefsFile";
@@ -85,8 +87,12 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	private LocalService localService = null;
 	private boolean isBound = false;
 
-	IntentFilter intentFilter = new IntentFilter(LOCATION_UPDATE_INTENT);
-	BroadcastReceiver broadcastReceiver = null;
+	IntentFilter locationUpdateIntentFilter = new IntentFilter(LOCATION_UPDATE_INTENT);
+	IntentFilter connectivityIntentFilter = new IntentFilter(android.net.ConnectivityManager.CONNECTIVITY_ACTION);
+	BroadcastReceiver locationUpdateBroadcastReceiver = null;
+	BroadcastReceiver connectivityBroadcastReceiver = null;
+	
+	private boolean canAccessInternet = true;
 	
 	/*
 	 * (non-Javadoc)
@@ -101,9 +107,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		// Setting up the WebView
 		webView = (WebView) findViewById(R.id.webview);
 		webView.getSettings().setJavaScriptEnabled(true);
-		// Enable the following if we need JavaScript localStorage 
-		//webView.getSettings().setDomStorageEnabled(true);
-
+		
 		// Disable the vertical scroll bar
 		webView.setVerticalScrollBarEnabled(false);
 
@@ -151,7 +155,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		isBound = true;
 
 		// Instantiate the broadcast receiver
-		broadcastReceiver = new BroadcastReceiver() {
+		locationUpdateBroadcastReceiver = new BroadcastReceiver() {
 
 			@Override
 			public void onReceive(Context context, Intent intent) {
@@ -159,6 +163,18 @@ public class Artifactly extends Activity implements ApplicationConstants {
 				new GetArtifactsForCurrentLocationTask().execute();
 			}
 		};
+		
+		connectivityBroadcastReceiver = new BroadcastReceiver() {
+			
+			@Override
+			public void onReceive(Context arg0, Intent arg1) {
+				
+				canAccessInternet = hasConnectivity();
+			}
+		};
+		
+		// Initialize connectivity flag
+		canAccessInternet = hasConnectivity();
 	}
 
 	/*
@@ -244,8 +260,9 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			isBound = true;
 		}
 
-		// Register broadcast receiver
-		registerReceiver(broadcastReceiver, intentFilter);
+		// Register broadcast receivers
+		registerReceiver(locationUpdateBroadcastReceiver, locationUpdateIntentFilter);
+		registerReceiver(connectivityBroadcastReceiver, connectivityIntentFilter);
 	}
 
 	/*
@@ -271,8 +288,9 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			}
 		}
 		
-		// Unregister broadcast receiver
-		unregisterReceiver(broadcastReceiver);
+		// Unregister broadcast receivers
+		unregisterReceiver(locationUpdateBroadcastReceiver);
+		unregisterReceiver(connectivityBroadcastReceiver);
 	}
 
 	/*
@@ -394,20 +412,6 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			editor.commit();
 		}
 		
-		public void setSoundNotificationPreference(boolean preference) {
-
-			SharedPreferences settings = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-			SharedPreferences.Editor editor = settings.edit();
-			editor.putBoolean(PREFERENCE_SOUND_NOTIFICATION, preference);
-			editor.commit();
-		}
-
-		public boolean getSoundNotificationPreference() {
-			
-			SharedPreferences settings = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-			return settings.getBoolean(PREFERENCE_SOUND_NOTIFICATION, PREFERENCE_SOUND_NOTIFICATION_DEFAULT);
-		}
-		
 		public void setRadius(int radius) {
 
 			if(PREFERENCE_RADIUS_MIN <= radius) {
@@ -422,12 +426,48 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			}
 		}
 
-		public int getRadius() {
+		public void setSoundNotificationPreference(boolean preference) {
 
 			SharedPreferences settings = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-			return settings.getInt(PREFERENCE_RADIUS, PREFERENCE_RADIUS_DEFAULT);
+			SharedPreferences.Editor editor = settings.edit();
+			editor.putBoolean(PREFERENCE_SOUND_NOTIFICATION, preference);
+			editor.commit();
 		}
 
+		public void setLoadStaticMapPreference(boolean preference) {
+			
+			SharedPreferences settings = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+			SharedPreferences.Editor editor = settings.edit();
+			editor.putBoolean(PREFERENCE_LOAD_STATIC_MAP, preference);
+			editor.commit();
+		}
+		
+		public String getPreferences() {
+
+			SharedPreferences settings = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+			
+			JSONObject preferences = new JSONObject();
+			
+			try {
+				
+				// Sound notification preference
+				preferences.put("soundNotification", settings.getBoolean(PREFERENCE_SOUND_NOTIFICATION, PREFERENCE_SOUND_NOTIFICATION_DEFAULT));
+
+				// Radius preference
+				preferences.put("radius", settings.getInt(PREFERENCE_RADIUS, PREFERENCE_RADIUS_DEFAULT));
+
+				// Static map loading preference
+				preferences.put("loadStaticMap", settings.getBoolean(PREFERENCE_LOAD_STATIC_MAP, PREFERENCE_LOAD_STATIC_MAP_DEFAULT));
+
+			}
+			catch(JSONException e) {
+
+				// TODO: inform user with toast waring message
+			}
+
+			return preferences.toString();
+		}
+		
 		public void deleteArtifact(String artifactId, String locationId) {
 
 			int status = localService.deleteArtifact(artifactId, locationId);
@@ -568,14 +608,15 @@ public class Artifactly extends Activity implements ApplicationConstants {
 
 		public boolean canAccessInternet() {
 
-			boolean canAccessInternet = localService.canAccessInternet();
-
-			if(!canAccessInternet) {
-
-				Toast.makeText(getApplicationContext(), R.string.can_access_internet_error, Toast.LENGTH_LONG).show();
-			}
-			
 			return canAccessInternet;
+		}
+		
+		public boolean canLoadStaticMap() {
+			
+			SharedPreferences settings = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+			boolean canLoadStaticMap = settings.getBoolean(PREFERENCE_LOAD_STATIC_MAP, PREFERENCE_LOAD_STATIC_MAP_DEFAULT);
+			
+			return canLoadStaticMap && canAccessInternet;
 		}
 		
 		public String getGoogleSearchApiKey() {
@@ -636,6 +677,30 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		}
 		
 		return true;
+	}
+	
+	/*
+	 * Helper method to check if there is network connectivity
+	 */
+	private boolean hasConnectivity() {
+		
+		ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+	    
+		if(null == connectivityManager) {
+			
+			return false;
+		}
+		
+		NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+		
+		if(null != networkInfo && networkInfo.isAvailable() && networkInfo.isConnected()) {
+			
+			return true;
+		}
+		else {
+			
+			return false;
+		}
 	}
 	
 	private class GetArtifactsForCurrentLocationTask extends AsyncTask<Void, Void, Void> {

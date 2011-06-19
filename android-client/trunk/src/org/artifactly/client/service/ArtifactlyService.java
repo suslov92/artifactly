@@ -33,8 +33,6 @@ import android.database.Cursor;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
@@ -537,34 +535,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 
 		return false;
 	}
-
-	/**
-	 * Check if Internet access is available 
-	 * 
-	 * @return false if no Internet access is available, otherwise true
-	 */
-	protected boolean canAccessInternet() {
 		
-		ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-	    
-		if(null == connectivityManager) {
-			
-			return false;
-		}
-		
-		NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
-		
-		if(null != networkInfo && networkInfo.isAvailable() && networkInfo.isConnected()) {
-			
-			return true;
-		}
-		else {
-			
-			return false;
-		}
-	}
-	
-	
 	/*
 	 * Method that determines if a new location is more accurate the the currently saved location
 	 */

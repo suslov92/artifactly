@@ -55,6 +55,14 @@
 	padding-top: 8px;
 }
 
+.select-background-color {
+	padding-top: 4px;
+	padding-bottom: 2px;
+}
+
+.manage-locations {
+	padding-bottom: 5px !important;
+}
 
 #google-search-branding {
 	float: left;
