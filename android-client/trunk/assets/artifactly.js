@@ -46,7 +46,18 @@ $(document).ready(function() {
 		$('#view-location-loc-name').data(location);
 		$('#view-location-loc-name').val(location.locName);
 		$('#view-location-address').html(location.locAddress);
-		$('#view-location-map img').attr('src', getMapImage(location.locLat, location.locLng, "15", "250", "200"));
+		
+		// Remove an existing stale map before we add a new one
+		$('#view-location-map img').remove();
+		
+		// Add new map
+		if(window.android.canLoadStaticMap()) {
+			
+			$('<img/>')
+			.attr('src', getMapImage(location.locLat, location.locLng, "15", "250", "200"))
+			.appendTo($('#view-location-map'));
+		}
+		
 		addLocationAddressToViewLocationPage(location.locLat, location.locLng);
 		$('#delete-location-name').data({ navigateTo : '#main' });
 		$.mobile.changePage($('#view-location'), "none");
@@ -61,7 +72,18 @@ $(document).ready(function() {
 		$('#view-location-loc-name').data(location);
 		$('#view-location-loc-name').val(location.locName);
 		$('#view-location-address').html(location.locAddress);
-		$('#view-location-map img').attr('src', getMapImage(location.locLat, location.locLng, "15", "250", "200"));
+		
+		// Remove stale map image
+		$('#view-location-map img').remove();
+		
+		// Add new map
+		if(window.android.canLoadStaticMap()) {
+						
+			$('<img/>')
+			.attr('src', getMapImage(location.locLat, location.locLng, "15", "250", "200"))
+			.appendTo($('#view-location-map'));
+		}
+		
 		$('#delete-location-name').data({ navigateTo : '#manage-locations' });
 		$.mobile.changePage($('#view-location'), "none");
 	});
@@ -178,20 +200,19 @@ $(document).ready(function() {
 	 */
 	$('#options').bind('pageshow', function() {
 
-		$('#radius-input').val(window.android.getRadius()).slider('refresh');
 		
-		var checkboxState = window.android.getSoundNotificationPreference();
+		var preferences = JSON.parse(window.android.getPreferences());
 		
-		if(checkboxState) {
-			
-			$('#sound-notification-option-checkbox-text .ui-btn-text').text("Sound Notification: On");
-			$('#sound-notification-option-checkbox').prop("checked", true).checkboxradio("refresh");
-		}
-		else {
-			
-			$('#sound-notification-option-checkbox-text .ui-btn-text').text("Sound Notification: Off");
-			$('#sound-notification-option-checkbox').prop("checked", false).checkboxradio("refresh");
-		}
+		// Setting radius preference
+		$('#radius-input').val(preferences.radius).slider('refresh');
+		
+		// Setting sound notification preference
+		$('#sound-notification-option-checkbox-text .ui-btn-text').text("Sound Notification: " + (preferences.soundNotification ? "On" : "Off"));
+		$('#sound-notification-option-checkbox').prop("checked", preferences.soundNotification).checkboxradio("refresh");
+
+		// Setting load static map preference
+		$('#load-static-map-option-checkbox-text .ui-btn-text').text("Load Maps: " + (preferences.loadStaticMap ? "On" : "Off"));
+		$('#load-static-map-option-checkbox').prop("checked", preferences.loadStaticMap).checkboxradio("refresh");
 	});
 
 	/*
@@ -407,9 +428,9 @@ $(document).ready(function() {
 	/*
 	 * Options' page select menu
 	 */
-	$('#option-select-back-ground-color').change(function() {
+	$('#option-select-background-color').change(function() {
 
-		var selected = $('#option-select-back-ground-color option:selected');
+		var selected = $('#option-select-background-color option:selected');
 		var color = '#ADDFFF';
 		
 		if(selected.val() == "blue") {
@@ -455,6 +476,25 @@ $(document).ready(function() {
 		window.android.setSoundNotificationPreference(checked);
 	});
 
+	/*
+	 * Options' page load static map of/off
+	 */
+	$('#load-static-map-option-checkbox').bind('change', function() {
+		
+		var checked = $('#load-static-map-option-checkbox').prop("checked");
+		
+		if(checked) {
+			
+			$('#load-static-map-option-checkbox-text .ui-btn-text').text("Load Maps: On");
+		}
+		else {
+			
+			$('#load-static-map-option-checkbox-text .ui-btn-text').text("Load Maps: Off");
+		}
+		
+		window.android.setLoadStaticMapPreference(checked);
+	});
+	
 	
 	/*
 	 * Locations' select menu
@@ -470,8 +510,15 @@ $(document).ready(function() {
 			$('#artifact-location-name-div').show();
 			
 			var location = JSON.parse(window.android.getLocation());
-			$('#artifact-current-location-map img').attr('src', getMapImage(location[0], location[1], "15", "250", "200"));
-
+			
+			/*
+			 * For now, we load the static map in this specific case even if the user sets the option to load maps to false
+			 * TODO: Check how we can provide current location information if the user doesn't want to load map images
+			 */
+			if(window.android.canAccessInternet()) {
+			
+				$('#artifact-current-location-map img').attr('src', getMapImage(location[0], location[1], "15", "250", "200"));
+			}
 		}
 		else if(selectedLocation.locName == "New Location") {
 
@@ -520,10 +567,20 @@ function searchComplete(localSearch) {
 			
 			$('#search-result-message').html('');
 			
+			// First we check if the user wants to load map images
+			var canLoadStaticMap = window.android.canLoadStaticMap();
+			
 			// Iterate over the search result
 			for (var i = 0; i < localSearch.results.length; i++) {
+				
+				var imgHtml = "";
+				
+				if(canLoadStaticMap) {
+					
+					imgHtml = '<img src="' + getMapImage(localSearch.results[i].lat, localSearch.results[i].lng, "13", "78", "78") + '"/>';
+				}
 								
-				$('<li/>', { html : '<img src="' + getMapImage(localSearch.results[i].lat, localSearch.results[i].lng, "13", "78", "78") + '"/>' +
+				$('<li/>', { html : imgHtml +
 									'<h3>' + localSearch.results[i].title + '</h3>' +
 									'<p>' + localSearch.results[i].addressLines[0] + '</p>' +
 									'<p>' + localSearch.results[i].city + '</p>' })        
@@ -616,7 +673,17 @@ function getArtifactCallback(data) {
 			$('#view-artifact-loc-name').val(data[0].locName);
 			$('#view-artifact-lat').val((+data[0].lat).toFixed(6));
 			$('#view-artifact-lng').val((+data[0].lng).toFixed(6));
-			$('#view-artifact-map img').attr('src', getMapImage(data[0].lat, data[0].lng, "14", "250", "200"));
+			
+			// Remove stale map image
+			$('#view-artifact-map img').remove();
+			
+			// Add new map
+			if(window.android.canLoadStaticMap()) {
+				
+				$('<img/>')
+				.attr('src', getMapImage(data[0].lat, data[0].lng, "15", "250", "200"))
+				.appendTo($('#view-artifact-map'));
+			}
 		}
 		
 		$.mobile.changePage($('#view-artifact'), "none");
@@ -923,15 +990,7 @@ function htmlEncode(value) {
  * Helper method that creates an URL that returns a Google Maps image
  */
 function getMapImage(lat, lng, zoom, width, height) {
-	
-	var canAccessInternet = window.android.canAccessInternet();
-	
-	if(canAccessInternet) {
 
-		return "http://maps.google.com/maps/api/staticmap?center=" + lat + "," + lng + "&zoom=" + zoom + "&size=" + width + "x" + height + "&markers=color:red%7Csize:small%7C" + lat + "," + lng + "&sensor=false";
-	}
-	else {
-		
-		return "";
-	}
+	return "http://maps.google.com/maps/api/staticmap?center=" + lat + "," + lng + "&zoom=" + zoom + "&size=" + width + "x" + height + "&markers=color:red%7Csize:small%7C" + lat + "," + lng + "&sensor=false";
 }
+

@@ -26,6 +26,8 @@ public interface ApplicationConstants {
 	public static final int PREFERENCE_RADIUS_MIN = 100;
 	public static final String PREFERENCE_BACKGROUND_COLOR_DEFAULT = "#ADDFFF";
 	public static final boolean PREFERENCE_SOUND_NOTIFICATION_DEFAULT = true;
+	public static final String PREFERENCE_LOAD_STATIC_MAP = "load-static-map";
+	public static final boolean PREFERENCE_LOAD_STATIC_MAP_DEFAULT = true;
 	public static final String LOCATION_UPDATE_INTENT = "org.artifactly.client.service.LocationUpdateIntent";
 	
 	/*
