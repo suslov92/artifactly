@@ -295,6 +295,11 @@ $(document).ready(function() {
 		 */
 		if(location.locName != updatedLocName) {
 			
+			/*
+			 * Setting a flag on the view-location so that we know not to navigate to
+			 * a different page when the getLocationsListCallback() is executed
+			 */
+			$('#view-location').data({navigate:'no'});
 			window.android.updateLocation(location.locId, updatedLocName, location.locLat, location.locLng);
 		}
 	});
@@ -768,8 +773,19 @@ function getLocationsListCallback(locations) {
 	
 	$(document).ready(function() {
 	
-		// This call has to occur before the manage-locations-list is manipulated via remove, refresh, etc.
-		$.mobile.changePage($('#manage-locations'), "none");
+		/*
+		 * In case this callback was triggered by a locaiton update, we don't navigate
+		 * to another page
+		 */
+		if("no" != $('#view-location').data("navigate")) {
+			
+			// This call has to occur before the manage-locations-list is manipulated via remove, refresh, etc.
+			$.mobile.changePage($('#manage-locations'), "none");
+		}
+		else {
+			
+			$('#view-location').data({navigate:'yes'});
+		}
 
 		// Reset the list
 		$('#manage-locations-list li').remove();
