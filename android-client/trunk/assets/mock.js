@@ -26,6 +26,11 @@
 if(typeof window.android == "undefined") {
 		
 	window.android = {};
+	
+	window.android.getGoogleSearchApiKey = function() {
+
+		return "YourKey";
+	}
 
 	window.android.getArtifactsForCurrentLocation = function () {
 
@@ -95,11 +100,6 @@ if(typeof window.android == "undefined") {
 			
 			getLocationsOptionsCallback(JSON.parse(locations));
 		}
-	}
-	
-	window.android.getGoogleSearchApiKey = function() {
-
-		return "YourKey";
 	}
 
 	window.android.setBackgroundColor = function(color) {

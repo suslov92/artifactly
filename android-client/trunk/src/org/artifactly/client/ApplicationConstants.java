@@ -41,6 +41,7 @@ public interface ApplicationConstants {
 	 * 32 : Using existing artifact
 	 * 64 : ERROR
 	 */
+	public static final byte IS_MATCH = 0;						  // 00000000
 	public static final byte DEFAULT_MASK = 0;					  // 00000000
 	public static final byte CHOOSE_DIFFERENT_LOC_NAME = 1; 	  // 00000001
 	public static final byte USING_EXISTING_LOCATION_NAME = 2;    // 00000010
@@ -54,4 +55,10 @@ public interface ApplicationConstants {
 	 * Combined byte masks
 	 */
 	public static final byte ARTIFACT_AND_LOCATION_EXIST = 36;	  // 00100100
+	
+	/*
+	 * Multibyte masks
+	 */
+	public static final byte ARTIFACT_NAME_ERROR = 7;			  // 00000111
+	public static final byte LOCATION_NAME_ERROR = 56;			  // 00111000
 }

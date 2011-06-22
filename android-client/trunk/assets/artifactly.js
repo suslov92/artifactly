@@ -360,27 +360,17 @@ $(document).ready(function() {
 
 		var artName = $('#artifact-name').val();
 		var artData = $('#artifact-data').val();
-		
-		var isSuccess = false;
-		
+	
 		var selectedLocation = $('#artifact-location-selection option:selected').data();
 		
 		if(selectedLocation.locName == "Current Location") {
 		
 			var locationName = $('#artifact-location-name').val();
-			isSuccess = window.android.createArtifact(artName, artData, locationName, selectedLocation.locLat, selectedLocation.locLng);
+			window.android.createArtifact(artName, artData, locationName, selectedLocation.locLat, selectedLocation.locLng);
 		}
 		else {
 		
-			isSuccess = window.android.createArtifact(artName, artData, selectedLocation.locName, selectedLocation.locLat, selectedLocation.locLng);
-		}
-		
-		// If the createArtifact call succeeded, we clear the form fields
-		if(isSuccess) {
-
-			$('#artifact-name').val('');
-			$('#artifact-data').val('');
-			$('#artifact-location-name').val('');
+			window.android.createArtifact(artName, artData, selectedLocation.locName, selectedLocation.locLat, selectedLocation.locLng);
 		}
 	});
 	
@@ -643,6 +633,20 @@ function loadMap() {
 		// Hide the maps loading animation
 		$.mobile.pageLoading(true);
 	});
+}
+
+/*
+ * Create artifact callback
+ */
+function createArtifactCallback(data) {
+	
+	// If the createArtifact call succeeded, we clear the form fields
+	if(data.isSuccess) {
+
+		$('#artifact-name').val('');
+		$('#artifact-data').val('');
+		$('#artifact-location-name').val('');
+	}
 }
 
 /*
