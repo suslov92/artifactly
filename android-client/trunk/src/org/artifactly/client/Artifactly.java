@@ -71,7 +71,8 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	private static final String GET_ARTIFACT_CALLBACK = "getArtifactCallback";
 	private static final String GET_ARTIFACTS_FOR_CURRENT_LOCATION_CALLBACK = "getArtifactsForCurrentLocationCallback";
 	private static final String GET_LOCATIONS_OPTIONS_CALLBACK = "getLocationsOptionsCallback";
-	private static final String GET_LOCATIONS_LIST_CALLBACK =  "getLocationsListCallback";
+	private static final String GET_LOCATIONS_LIST_CALLBACK = "getLocationsListCallback";
+	private static final String CREATE_ARTIFACT_CALLBACK = "createArtifactCallback";
 	private static final String SET_BACKGROUND_COLOR = "setBackgroundColor";
 	private static final String RESET_WEBVIEW = "resetWebView";
 	private static final String SHOW_OPTIONS_PAGE = "showOptionsPage";
@@ -462,7 +463,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			}
 			catch(JSONException e) {
 
-				// TODO: inform user with toast waring message
+				Toast.makeText(getApplicationContext(), R.string.loading_preferences_error, Toast.LENGTH_SHORT).show();
 			}
 
 			return preferences.toString();
@@ -470,112 +471,17 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		
 		public void deleteArtifact(String artifactId, String locationId) {
 
-			int status = localService.deleteArtifact(artifactId, locationId);
-
-			switch(status) {
-			case -1:
-				Toast.makeText(getApplicationContext(), R.string.delete_artifact_failure, Toast.LENGTH_LONG).show();
-				break;
-			case 0:
-				Toast.makeText(getApplicationContext(), R.string.delete_artifact_partial, Toast.LENGTH_LONG).show();
-				break;
-			case 1:
-				new GetArtifactsForCurrentLocationTask().execute();
-				Toast.makeText(getApplicationContext(), R.string.delete_artifact_success, Toast.LENGTH_LONG).show();
-				break;
-			default:
-				Log.e(PROD_LOG_TAG, "ERROR: unexpected deleteArtifact() status");
-			}
+			new DeleteArtifactTask().execute(artifactId, locationId);
 		}
 		
 		public void deleteLocation(String locationId) {
 			
-			int status = localService.deleteLocation(locationId);
-
-			switch(status) {
-				case -1:
-					Toast.makeText(getApplicationContext(), R.string.delete_location_failure, Toast.LENGTH_LONG).show();
-					break;
-				case 0:
-					Toast.makeText(getApplicationContext(), R.string.delete_location_partial, Toast.LENGTH_LONG).show();
-					break;
-				case 1:
-					new GetLocationsTask().execute("list");
-					new GetArtifactsForCurrentLocationTask().execute();
-					Toast.makeText(getApplicationContext(), R.string.delete_location_success, Toast.LENGTH_LONG).show();
-					break;
-				default:
-					Log.e(PROD_LOG_TAG, "ERROR: unexpected deleteLocation() status");
-			}
+			new DeleteLocationTask().execute(locationId);
 		}
 
-
-		public boolean createArtifact(String artifactName, String artifactData, String locationName, String locationLat, String locationLng) {
+		public void createArtifact(String artifactName, String artifactData, String locationName, String locationLat, String locationLng) {
 			
-			if(null == artifactName || EMPTY_STRING.equals(artifactName)) {
-
-				Toast.makeText(getApplicationContext(), R.string.create_artifact_name_error, Toast.LENGTH_SHORT).show();
-				return false;
-			}
-			
-			if(null == locationName || EMPTY_STRING.equals(locationName)) {
-
-				Toast.makeText(getApplicationContext(), R.string.create_artifact_location_name_error, Toast.LENGTH_SHORT).show();
-				return false;
-			}
-			
-			byte state = 0;
-			
-			// If latitude and longitude are provided we use them, otherwise we use the current location
-			// TODO: Add check if provided latitude and longitude are valid geo points
-			
-			// First we check if the user selected current location
-			if(null != locationLat &&
-			   !EMPTY_STRING.equals(locationLat) &&
-			   null != locationLng &&
-			   !EMPTY_STRING.equals(locationLng) &&
-			   locationLat.equals("0") &&
-			   locationLng.equals("0")) {
-				
-				state = localService.createArtifact(artifactName, artifactData, locationName);
-				
-			}
-			else if(null != locationLat &&
-					!EMPTY_STRING.equals(locationLat) &&
-					null != locationLng &&
-					!EMPTY_STRING.equals(locationLng) &&
-					isDouble(locationLat) &&
-					isDouble(locationLng)) {
-				
-				state = localService.createArtifact(artifactName, artifactData, locationName, locationLat, locationLng);
-			}
-			else {
-				
-				state = localService.createArtifact(artifactName, artifactData, locationName);
-			}
-			
-			
-			if((state & CREATE_ARTIFACT_LOCATION_ERROR) == CREATE_ARTIFACT_LOCATION_ERROR) {
-				
-				Toast.makeText(getApplicationContext(), R.string.create_artifact_failure, Toast.LENGTH_LONG).show();
-				return false;
-			}
-			if((state & CHOOSE_DIFFERENT_LOC_NAME) == CHOOSE_DIFFERENT_LOC_NAME) {
-				
-				Toast.makeText(getApplicationContext(), R.string.create_artifact_provide_different_location_name, Toast.LENGTH_LONG).show();
-				return false;
-			}
-			else if((state & ARTIFACT_AND_LOCATION_EXIST) == ARTIFACT_AND_LOCATION_EXIST) {
-				
-				Toast.makeText(getApplicationContext(), R.string.create_artifact_already_exists, Toast.LENGTH_LONG).show();
-				return false;
-			}
-			else {
-				
-				new GetArtifactsForCurrentLocationTask().execute();
-				Toast.makeText(getApplicationContext(), R.string.create_artifact_success, Toast.LENGTH_LONG).show();
-				return true;
-			}
+			new CreateArtifactTask().execute(artifactName, artifactData, locationName, locationLat, locationLng);
 		}
 
 		public void showRadius() {
@@ -703,6 +609,114 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		}
 	}
 	
+	
+	private class CreateArtifactTask extends AsyncTask<String, Void, Byte> {
+
+		/*
+		 * args[0] = artifactName
+		 * args[1] = artifactData
+		 * args[2] = locationName
+		 * args[3] = locationLat
+		 * args[4] = locationLng
+		 * 
+		 */
+		@Override
+		protected Byte doInBackground(String... args) {
+			
+			if(null == args[0] || EMPTY_STRING.equals(args[0])) {
+
+				return Byte.valueOf(ARTIFACT_NAME_ERROR);
+			}
+			
+			if(null == args[2] || EMPTY_STRING.equals(args[2])) {
+
+				return Byte.valueOf(LOCATION_NAME_ERROR);
+			}
+			
+			byte state = 0;
+			
+			// If latitude and longitude are provided we use them, otherwise we use the current location
+			// TODO: Add check if provided latitude and longitude are valid geo points
+			
+			// First we check if the user selected current location
+			if(null != args[3] &&
+			   !EMPTY_STRING.equals(args[3]) &&
+			   null != args[4] &&
+			   !EMPTY_STRING.equals(args[4]) &&
+			   args[3].equals("0") &&
+			   args[4].equals("0")) {
+				
+				state = localService.createArtifact(args[0], args[1], args[2]);
+				
+			}
+			else if(null != args[3] &&
+					!EMPTY_STRING.equals(args[3]) &&
+					null != args[4] &&
+					!EMPTY_STRING.equals(args[4]) &&
+					isDouble(args[3]) &&
+					isDouble(args[4])) {
+				
+				state = localService.createArtifact(args[0], args[1], args[2], args[3], args[4]);
+			}
+			else {
+				
+				state = localService.createArtifact(args[0], args[1], args[2]);
+			}
+			
+			return Byte.valueOf(state);
+		}
+		
+		@Override
+		protected void onPostExecute(Byte result) {
+		
+			byte state = result.byteValue();
+			boolean returnValue = false;
+			
+			if((state ^ CREATE_ARTIFACT_LOCATION_ERROR) == IS_MATCH) {
+				
+				Toast.makeText(getApplicationContext(), R.string.create_artifact_failure, Toast.LENGTH_LONG).show();
+				returnValue = false;
+			}
+			else if((state ^ CHOOSE_DIFFERENT_LOC_NAME) == IS_MATCH) {
+				
+				Toast.makeText(getApplicationContext(), R.string.create_artifact_provide_different_location_name, Toast.LENGTH_LONG).show();
+				returnValue = false;
+			}
+			else if((state ^ ARTIFACT_AND_LOCATION_EXIST) == IS_MATCH) {
+				
+				Toast.makeText(getApplicationContext(), R.string.create_artifact_already_exists, Toast.LENGTH_LONG).show();
+				returnValue = false;
+			}
+			else if((state ^ ARTIFACT_NAME_ERROR) == IS_MATCH) {
+				
+				Toast.makeText(getApplicationContext(), R.string.create_artifact_name_error, Toast.LENGTH_SHORT).show();
+				returnValue = false;
+			}
+			else if((state ^ LOCATION_NAME_ERROR) == IS_MATCH) {
+				
+				Toast.makeText(getApplicationContext(), R.string.create_artifact_location_name_error, Toast.LENGTH_SHORT).show();
+				returnValue = false;
+			}
+			else {
+				
+				new GetArtifactsForCurrentLocationTask().execute();
+				Toast.makeText(getApplicationContext(), R.string.create_artifact_success, Toast.LENGTH_LONG).show();
+				returnValue = true;
+			}
+			
+			JSONObject data = new JSONObject();
+			try {
+				
+				data.put("isSuccess", returnValue);
+			}
+			catch (JSONException e) {
+				
+				Log.e(PROD_LOG_TAG, "ERROR: json.put()", e);
+			}
+			
+			callJavaScriptFunction(CREATE_ARTIFACT_CALLBACK, data.toString());
+		}
+	}
 	private class GetArtifactsForCurrentLocationTask extends AsyncTask<Void, Void, Void> {
 
 		@Override
@@ -720,7 +734,6 @@ public class Artifactly extends Activity implements ApplicationConstants {
 
 			return null;
 		}
-
 	}
 
 	private class GetArtifactsTask extends AsyncTask<Void, Void, Void> {
@@ -890,6 +903,80 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			else {
 				
 				Toast.makeText(getApplicationContext(), R.string.update_location_failure, Toast.LENGTH_SHORT).show();
+			}
+		}
+	}
+	private class DeleteLocationTask extends AsyncTask<String, Void, Integer> {
+
+		@Override
+		protected Integer doInBackground(String... args) {
+
+			if(null == localService || null == args[0] || "".equals(args[0])) {
+
+				// Above, we check the parameter. It cannot be null or empty
+				return Integer.valueOf(-2);
+			}
+			else {
+
+				return Integer.valueOf(localService.deleteLocation(args[0]));
+			}
+		}
+
+		@Override
+		protected void onPostExecute(Integer result) {
+
+			switch(result.intValue()) {
+			case -2:
+			case -1:
+				Toast.makeText(getApplicationContext(), R.string.delete_location_failure, Toast.LENGTH_LONG).show();
+				break;
+			case 0:
+				Toast.makeText(getApplicationContext(), R.string.delete_location_partial, Toast.LENGTH_LONG).show();
+				break;
+			case 1:
+				new GetLocationsTask().execute("list");
+				new GetArtifactsForCurrentLocationTask().execute();
+				Toast.makeText(getApplicationContext(), R.string.delete_location_success, Toast.LENGTH_LONG).show();
+				break;
+			default:
+				Log.e(PROD_LOG_TAG, "ERROR: unexpected deleteLocation() status");
+			}
+		}
+	}
+	
+	private class DeleteArtifactTask extends AsyncTask<String, Void, Integer> {
+
+		@Override
+		protected Integer doInBackground(String... args) {
+			
+			if(null == localService || null == args[0] || null == args[1] || "".equals(args[0]) || "".equals(args[1])) {
+				
+				// Above, we check the parameters. They cannot be null or empty
+				return Integer.valueOf(-2);
+			}
+			else {
+				
+				return Integer.valueOf(localService.deleteArtifact(args[0], args[1]));
+			}
+		}
+		
+		@Override
+		protected void onPostExecute(Integer result) {
+			
+			switch(result.intValue()) {
+			case -2:
+			case -1:
+				Toast.makeText(getApplicationContext(), R.string.delete_artifact_failure, Toast.LENGTH_LONG).show();
+				break;
+			case 0:
+				Toast.makeText(getApplicationContext(), R.string.delete_artifact_partial, Toast.LENGTH_LONG).show();
+				break;
+			case 1:
+				new GetArtifactsForCurrentLocationTask().execute();
+				Toast.makeText(getApplicationContext(), R.string.delete_artifact_success, Toast.LENGTH_LONG).show();
+				break;
+			default:
+				Log.e(PROD_LOG_TAG, "ERROR: unexpected deleteArtifact() status");
 			}
 		}
 	}

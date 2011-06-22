@@ -31,4 +31,5 @@
     <string name="options">Options</string>
     <string name="map">Map</string>
     <string name="info">About</string>
+    <string name="loading_preferences_error">ERROR: loading preferences</string>
 </resources>
