@@ -16,8 +16,6 @@
 
 package org.artifactly.client.service;
 
-import java.util.Date;
-
 import org.artifactly.client.content.DbAdapter;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -94,48 +92,9 @@ public class LocalServiceImpl extends Binder implements LocalService {
 	}
 
 	// API method
-	public String getLocation() {
+	public Location getLocation() {
 		
-		Location location = artifactlyService.getLocation();
-		
-		if(null == location) {
-			
-			JSONArray data = new JSONArray();
-			
-			try {
-			
-				data.put(0.0d);
-				data.put(0.0d);
-				data.put(0.0d);
-				data.put(0.0d);
-				data.put(0.0d);
-			}
-			catch (JSONException e) {
-			
-				Log.e(PROD_LOG_TAG, "Error while populating JSONArray", e);
-			}
-			
-			return data.toString();
-		}
-		else {
-			
-			JSONArray data = new JSONArray();
-			
-			try {
-			
-				data.put(location.getLatitude());
-				data.put(location.getLongitude());
-				data.put(location.getAccuracy());
-				data.put(new Date(location.getTime()));
-				data.put(new Date(artifactlyService.getLastLocationUpdateTime()));
-			}
-			catch (JSONException e) {
-				
-				Log.e(PROD_LOG_TAG, "Error while population JSONArray", e);
-			}
-			
-			return data.toString();
-		}
+		return artifactlyService.getLocation();
 	}
 
 	// API method
@@ -190,18 +149,18 @@ public class LocalServiceImpl extends Binder implements LocalService {
 	public String getAtrifact(String id) {
 	
 		// JSON array that holds the result
-		JSONArray items = new JSONArray();
+		JSONObject artifact = new JSONObject();
 		
 		if(null == dbAdapter) {
 			
-			return items.toString();
+			return artifact.toString();
 		}
 		
 		// Getting all the locations
 		Cursor cursor = dbAdapter.select(id);
 		if(null == cursor) {
 			
-			return items.toString();
+			return artifact.toString();
 		}
 		
 		// Checking if the cursor set has any items
@@ -210,7 +169,7 @@ public class LocalServiceImpl extends Binder implements LocalService {
 		if(!hasItems) {
 			
 			cursor.close();
-			return items.toString();
+			return artifact.toString();
 		}
 
 		if(cursor.getCount() != 1) {
@@ -226,29 +185,25 @@ public class LocalServiceImpl extends Binder implements LocalService {
 		int locNameColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_FIELDS[DbAdapter.LOC_NAME]);
 		int longitudeColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LONGITUDE]);
 		int latitudeColumnIndex = cursor.getColumnIndex(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LATITUDE]);
-		
-		JSONObject item = new JSONObject();
 
 		try {
 			
-			item.put(DbAdapter.LOC_ART_FIELDS[DbAdapter.FK_ART_ID], cursor.getInt(artIdColumnIndex));
-			item.put(DbAdapter.ART_FIELDS[DbAdapter.ART_NAME], cursor.getString(artNameColumnIndex));
-			item.put(DbAdapter.ART_FIELDS[DbAdapter.ART_DATA], cursor.getString(artDataColumnIndex));
-			item.put(DbAdapter.LOC_ART_FIELDS[DbAdapter.FK_LOC_ID], cursor.getInt(locIdColumnIndex));
-			item.put(DbAdapter.LOC_FIELDS[DbAdapter.LOC_NAME], cursor.getString(locNameColumnIndex));
-			item.put(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LATITUDE], cursor.getString(latitudeColumnIndex));
-			item.put(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LONGITUDE], cursor.getString(longitudeColumnIndex));
+			artifact.put(DbAdapter.LOC_ART_FIELDS[DbAdapter.FK_ART_ID], cursor.getInt(artIdColumnIndex));
+			artifact.put(DbAdapter.ART_FIELDS[DbAdapter.ART_NAME], cursor.getString(artNameColumnIndex));
+			artifact.put(DbAdapter.ART_FIELDS[DbAdapter.ART_DATA], cursor.getString(artDataColumnIndex));
+			artifact.put(DbAdapter.LOC_ART_FIELDS[DbAdapter.FK_LOC_ID], cursor.getInt(locIdColumnIndex));
+			artifact.put(DbAdapter.LOC_FIELDS[DbAdapter.LOC_NAME], cursor.getString(locNameColumnIndex));
+			artifact.put(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LATITUDE], cursor.getString(latitudeColumnIndex));
+			artifact.put(DbAdapter.LOC_FIELDS[DbAdapter.LOC_LONGITUDE], cursor.getString(longitudeColumnIndex));
 		}
 		catch (JSONException e) {
 			
 			Log.e(PROD_LOG_TAG, "Error while populating JSONObject", e);
 		}
 
-		items.put(item);
-
 		cursor.close();
 		
-		return items.toString();
+		return artifact.toString();
 	}
 
 	// API method

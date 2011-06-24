@@ -32,4 +32,5 @@
     <string name="map">Map</string>
     <string name="info">About</string>
     <string name="loading_preferences_error">ERROR: loading preferences</string>
+    <string name="get_location_error">Was not able to acquire a location</string>
 </resources>

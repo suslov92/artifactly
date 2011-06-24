@@ -51,7 +51,7 @@ if(typeof window.android == "undefined") {
 
 	window.android.getLocation = function() {
 
-		return '[38.5400438, -121.5798584, 84, "' + new Date() + '", "' + new Date() + '"]';
+		return '{"locLat":38.5400438,"locLng":-121.5798584,"locAccuracy":84}';
 	}
 
 	window.android.setRadius = function(radius) {
@@ -112,6 +112,7 @@ if(typeof window.android == "undefined") {
 	}
 	
 	window.android.getSoundNotificationPreference = function() {
+		
 		return true;
 	}
 	
@@ -122,7 +123,7 @@ if(typeof window.android == "undefined") {
 	
 	window.android.canLoadStaticMap = function() {
 		
-		return false;
+		return true;
 	}
 	
 	// Since all the current artifact loading is done from within the Activity, we need to simulate that call

@@ -295,6 +295,11 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		
 		float[] distanceResult = new float[1];
 
+		if(null == currentLocation) {
+			
+			return false;
+		}
+		
 		try {
 		
 			Location.distanceBetween(currentLocation.getLatitude(),
@@ -393,11 +398,6 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 				gpsLocationListener = getNewLocationListener(GPS_PROVIDER);
 				locationManager.requestLocationUpdates(mainLocationProviderName, GPS_LOCATION_MIN_TIME, GPS_LOCATION_MIN_DISTANCE, gpsLocationListener);
 				currentLocation = locationManager.getLastKnownLocation(mainLocationProviderName);
-			}
-			else {
-
-				// TODO: notify user
-				Log.w(PROD_LOG_TAG, "All available location providers [network, gps] are not available");
 			}
 			
 			// Also enable Passive provider
