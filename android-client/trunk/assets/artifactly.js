@@ -512,7 +512,7 @@ $(document).ready(function() {
 			 */
 			if(window.android.canAccessInternet()) {
 			
-				$('#artifact-current-location-map img').attr('src', getMapImage(location[0], location[1], "15", "250", "200"));
+				$('#artifact-current-location-map img').attr('src', getMapImage(location.locLat, location.locLng, "15", "250", "200"));
 			}
 		}
 		else if(selectedLocation.locName == "New Location") {
@@ -604,8 +604,8 @@ function loadMap() {
 
 	$(document).ready(function() {
 		
-		var data = JSON.parse(window.android.getLocation());
-		var latlng = new google.maps.LatLng(data[0], data[1]);
+		var location = JSON.parse(window.android.getLocation());
+		var latlng = new google.maps.LatLng(location.locLat, location.locLng);
 
 		var myOptions = {
 				zoom: 15,
@@ -621,7 +621,7 @@ function loadMap() {
 		marker.setMap(map);
 		marker.setAnimation(google.maps.Animation.DROP);
 
-		var content = "Latitude = " + (data[0]).toFixed(6) + "<br />Longitude = " + (data[1]).toFixed(6) +"<br />Accuracy = " + data[2] + " m";
+		var content = "Latitude = " + (location.locLat).toFixed(6) + "<br />Longitude = " + (location.locLng).toFixed(6) +"<br />Accuracy = " + (location.locAccuracy).toFixed(2) + " m";
 		var infowindow = new google.maps.InfoWindow({
 			content: content
 		});
@@ -661,40 +661,32 @@ function getArtifactsCallback(artifacts) {
 /*
  * Get artifact callback
  */
-function getArtifactCallback(data) {
+function getArtifactCallback(artifact) {
 
 	$(document).ready(function() {
-		
-		if(data.length != 1) {
 
-			// In case of an error, we go back to the main page
-			$.mobile.changePage($('#main'), "none");
-		}
-		else {
+		/*
+		 * Attach the artifact id to the artifact name field so that
+		 * we can use it to update the artifact values
+		 */
+		$('#view-artifact-art-name').data(artifact);
+		$('#view-artifact-art-name').val(artifact.artName);
+		$('#view-artifact-art-data').val(artifact.artData);
+		$('#view-artifact-loc-name').val(artifact.locName);
+		$('#view-artifact-lat').val((+artifact.lat).toFixed(6));
+		$('#view-artifact-lng').val((+artifact.lng).toFixed(6));
 
-			/*
-			 * Attach the artifact id to the artifact name field so that
-			 * we can use it to update the artifact values
-			 */
-			$('#view-artifact-art-name').data(data[0]);
-			$('#view-artifact-art-name').val(data[0].artName);
-			$('#view-artifact-art-data').val(data[0].artData);
-			$('#view-artifact-loc-name').val(data[0].locName);
-			$('#view-artifact-lat').val((+data[0].lat).toFixed(6));
-			$('#view-artifact-lng').val((+data[0].lng).toFixed(6));
-			
-			// Remove stale map image
-			$('#view-artifact-map img').remove();
-			
-			// Add new map
-			if(window.android.canLoadStaticMap()) {
-				
-				$('<img/>')
-				.attr('src', getMapImage(data[0].lat, data[0].lng, "15", "250", "200"))
-				.appendTo($('#view-artifact-map'));
-			}
+		// Remove stale map image
+		$('#view-artifact-map img').remove();
+
+		// Add new map
+		if(window.android.canLoadStaticMap()) {
+
+			$('<img/>')
+			.attr('src', getMapImage(artifact.lat, artifact.lng, "15", "250", "200"))
+			.appendTo($('#view-artifact-map'));
 		}
-		
+
 		$.mobile.changePage($('#view-artifact'), "none");
 	});
 }
@@ -929,8 +921,8 @@ function getSearchCenterPoint() {
 	
 	$(document).ready(function() {
 
-		var data = JSON.parse(window.android.getLocation());
-		var latlng = new google.maps.LatLng(data[0], data[1]);
+		var location = JSON.parse(window.android.getLocation());
+		var latlng = new google.maps.LatLng(location.locLat, location.locLng);
 
 		$('body').data({ searchCenterPoinLatLng : latlng });
 		geocoder = new google.maps.Geocoder(); 

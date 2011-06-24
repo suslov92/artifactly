@@ -16,6 +16,8 @@
 
 package org.artifactly.client.service;
 
+import android.location.Location;
+
 public interface LocalService {
 
 	/**
@@ -62,28 +64,13 @@ public interface LocalService {
 	 * @return false on error, otherwise true
 	 */
 	public boolean updateLocation(String locationId, String locationName, String locationLat, String locationLng);
-	
-	/**
-	 * Starts the location updates
-	 * 
-	 * @return
-	 */
-	public boolean startLocationTracking();
-	
-	/**
-	 * Stops the location updates
-	 * 
-	 * @return
-	 */
-	public boolean stopLocationTracking();
-	
 
 	/**
 	 * Get the current location, latitude, longitude, accuracy
 	 * 
-	 * @return JSON string containing latitude, longitude, accuracy
+	 * @return location
 	 */
-	public String getLocation();
+	public Location getLocation();
 	
 	/**
 	 * Get all artifacts

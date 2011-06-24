@@ -29,6 +29,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
@@ -109,10 +110,10 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		webView = (WebView) findViewById(R.id.webview);
 		webView.getSettings().setJavaScriptEnabled(true);
 		
+		webView.addJavascriptInterface(new JavaScriptInterface(), JAVASCRIPT_BRIDGE_PREFIX);
+		
 		// Disable the vertical scroll bar
 		webView.setVerticalScrollBarEnabled(false);
-
-		webView.addJavascriptInterface(new JavaScriptInterface(), JAVASCRIPT_BRIDGE_PREFIX);
 
 		webView.setWebChromeClient(new WebChromeClient() {
 			
@@ -494,7 +495,9 @@ public class Artifactly extends Activity implements ApplicationConstants {
 
 		public String getLocation() {
 
-			return localService.getLocation();
+			Location location = localService.getLocation();
+			return  locationToJSON(location);
+			
 		}
 
 		public void getArtifact(String id) {
@@ -568,6 +571,45 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		};
 	}
 
+	/*
+	 * Helper method that turns a Location object into JSON
+	 */
+	private String locationToJSON(Location location) {
+		
+		JSONObject data = new JSONObject();
+		
+		if(null == location) {
+
+			Toast.makeText(getApplicationContext(), R.string.get_location_error, Toast.LENGTH_LONG).show();
+			
+			try {
+				
+				data.put("locLat", 0.0d);
+				data.put("locLng", 0.0d);
+				data.put("locAccuracy", 0.0d);
+			}
+			catch (JSONException e) {
+
+				Log.e(PROD_LOG_TAG, "Error while populating JSONArray", e);
+			}
+		}
+		else {
+
+			try {
+
+				data.put("locLat", location.getLatitude());
+				data.put("locLng", location.getLongitude());
+				data.put("locAccuracy", location.getAccuracy());
+			}
+			catch (JSONException e) {
+
+				Log.e(PROD_LOG_TAG, "Error while population JSONArray", e);
+			}
+		}
+		
+		return data.toString();
+	}
+	
 	/*
 	 * Helper method that checks if a string is a valid Double
 	 */
@@ -700,7 +742,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			else {
 				
 				new GetArtifactsForCurrentLocationTask().execute();
-				Toast.makeText(getApplicationContext(), R.string.create_artifact_success, Toast.LENGTH_LONG).show();
+				Toast.makeText(getApplicationContext(), R.string.create_artifact_success, Toast.LENGTH_SHORT).show();
 				returnValue = true;
 			}
 			
@@ -793,16 +835,16 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	private class GetArtifactTask extends AsyncTask<String, Void, Boolean> {
 
 		@Override
-		protected Boolean doInBackground(String... ids) {
+		protected Boolean doInBackground(String... args) {
 
 			if(null == localService) {
 				
-				callJavaScriptFunction(GET_ARTIFACT_CALLBACK, "[]");
+				callJavaScriptFunction(GET_ARTIFACT_CALLBACK, "{}");
 				return Boolean.FALSE;
 			}
 			else {
 				
-				String result = localService.getAtrifact(ids[0]);
+				String result = localService.getAtrifact(args[0]);
 				callJavaScriptFunction(GET_ARTIFACT_CALLBACK, result);
 			}
 
@@ -936,7 +978,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			case 1:
 				new GetLocationsTask().execute("list");
 				new GetArtifactsForCurrentLocationTask().execute();
-				Toast.makeText(getApplicationContext(), R.string.delete_location_success, Toast.LENGTH_LONG).show();
+				Toast.makeText(getApplicationContext(), R.string.delete_location_success, Toast.LENGTH_SHORT).show();
 				break;
 			default:
 				Log.e(PROD_LOG_TAG, "ERROR: unexpected deleteLocation() status");
@@ -973,7 +1015,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 				break;
 			case 1:
 				new GetArtifactsForCurrentLocationTask().execute();
-				Toast.makeText(getApplicationContext(), R.string.delete_artifact_success, Toast.LENGTH_LONG).show();
+				Toast.makeText(getApplicationContext(), R.string.delete_artifact_success, Toast.LENGTH_SHORT).show();
 				break;
 			default:
 				Log.e(PROD_LOG_TAG, "ERROR: unexpected deleteArtifact() status");
