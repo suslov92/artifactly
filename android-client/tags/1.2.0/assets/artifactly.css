@@ -1,0 +1,106 @@
+/*
+ * Artifactly CSS
+ *
+ */
+ 
+.artifactly-label {
+	font-weight: bold !important;
+}
+
+.artifact-button-group {
+	text-align: center;
+}
+
+.location-button-group {
+	text-align: center;
+}
+
+.artifact-main-page-footer {
+
+	position: absolute !important;
+	bottom: 0;
+	left: 0;
+	padding-bottom: 5px;
+	padding-top: 5px;"	
+}
+
+.delete-artifact-name {
+	font-weight: bold;
+	text-align: center;
+}
+
+.delete-location-name {
+	font-weight: bold;
+	text-align: center;
+}
+
+.delete-artifact-header {
+	text-align: center;
+}
+
+.view-artifact-map {
+	text-align: center;
+}
+
+.view-location-map {
+	text-align: center;
+}
+
+.artifactly-list-divider h3 {
+	padding-left: 20px;
+	padding-top: 5px;
+}
+
+.artifactly-list-divider img {
+	padding-top: 8px;
+}
+
+.select-background-color {
+	padding-top: 4px;
+	padding-bottom: 2px;
+}
+
+.manage-locations {
+	padding-bottom: 5px !important;
+}
+
+#google-search-branding {
+	float: left;
+}
+
+#map {
+	width:100%;
+	height:100%;	
+}
+
+#map-content {
+	width:100%;
+	height:100%;
+	padding:0;
+}
+
+#map-canvas {
+	width:100%;
+	height:100%;
+}
+
+#app-info-content {
+	text-align: center;
+	font-weight: bold;
+}
+
+#sound-notification-option div {
+	font-weight: bold !important;
+}
+
+#view-location-address {
+	text-align: center;
+}
+
+#manage-locations-list li p {
+	font-weight: normal !important;
+}
+
+li img {
+	padding: 1px;
+}
