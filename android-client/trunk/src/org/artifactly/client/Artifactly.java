@@ -261,7 +261,10 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			bindService(new Intent(this, ArtifactlyService.class), serviceConnection, BIND_AUTO_CREATE);
 			isBound = true;
 		}
-
+		
+		// When application starts/resumes, we load the artifacts for the current location
+		new GetArtifactsForCurrentLocationTask().execute();
+		
 		// Register broadcast receivers
 		registerReceiver(locationUpdateBroadcastReceiver, locationUpdateIntentFilter);
 		registerReceiver(connectivityBroadcastReceiver, connectivityIntentFilter);
@@ -398,7 +401,15 @@ public class Artifactly extends Activity implements ApplicationConstants {
 				stringBuilder.append(JAVASCRIPT_FUNCTION_OPEN_PARENTHESIS);
 				stringBuilder.append(json);
 				stringBuilder.append(JAVASCRIPT_FUNCTION_CLOSE_PARENTHESIS);
-				webView.loadUrl(stringBuilder.toString());
+				
+				try {
+				
+					webView.loadUrl(stringBuilder.toString());
+				}
+				catch(Exception e) {
+					
+					Log.e(PROD_LOG_TAG, "callJavaScriptFunction(...)", e);
+				}
 			}
 		});
 	}
@@ -558,9 +569,6 @@ public class Artifactly extends Activity implements ApplicationConstants {
 
 				localService = (LocalService)iBinder;
 				isBound = true;
-				
-				// When application starts, we load the artifacts for the current location
-				new GetArtifactsForCurrentLocationTask().execute();
 			}
 
 			public void onServiceDisconnected(ComponentName componentName) {
@@ -759,22 +767,50 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			callJavaScriptFunction(CREATE_ARTIFACT_CALLBACK, data.toString());
 		}
 	}
-	private class GetArtifactsForCurrentLocationTask extends AsyncTask<Void, Void, Void> {
+	private class GetArtifactsForCurrentLocationTask extends AsyncTask<Void, Void, Boolean> {
 
 		@Override
-		protected Void doInBackground(Void... params) {
+		protected Boolean doInBackground(Void... params) {
 
+			/*
+			 * Check if the localService is null, in which case we wait for some time and try again
+			 */
 			if(null == localService) {
 				
-				callJavaScriptFunction(GET_ARTIFACTS_FOR_CURRENT_LOCATION_CALLBACK, "[]");
+				try {
+
+					// Give enough time so that the localService can bind
+					Thread.sleep(400);
+				}
+				catch(Exception e) {
+
+					Log.w(PROD_LOG_TAG, "EXCEPTION: Thread.sleep(N)", e);
+				}
 			}
-			else {
+			
+			if(null != localService) {
 
 				String result = localService.getArtifactsForCurrentLocation();
 				callJavaScriptFunction(GET_ARTIFACTS_FOR_CURRENT_LOCATION_CALLBACK, result);
+				return Boolean.TRUE;
 			}
-
-			return null;
+			else {
+				
+				callJavaScriptFunction(GET_ARTIFACTS_FOR_CURRENT_LOCATION_CALLBACK, "[]");
+				return Boolean.FALSE;
+			}
+		}
+		
+		@Override
+		protected void onPostExecute(Boolean result) {
+		
+			/*
+			 * Show Toast in here because onPostExecute executes in UI thread
+			 */
+			if(!result.booleanValue()) {
+				
+				Toast.makeText(getApplicationContext(), R.string.get_artifact_for_current_location_error, Toast.LENGTH_LONG).show();
+			}
 		}
 	}
 
