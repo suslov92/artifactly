@@ -33,4 +33,5 @@
     <string name="info">About</string>
     <string name="loading_preferences_error">ERROR: loading preferences</string>
     <string name="get_location_error">Was not able to acquire a location</string>
+    <string name="get_artifact_for_current_location_error">ERROR CODE 100 : Service not loaded</string>
 </resources>
