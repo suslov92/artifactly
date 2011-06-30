@@ -29,6 +29,40 @@ $(document).ready(function() {
 	$('body').data({ refreshLocations : true });
 
 	/*
+	 * Clicking on the welcome page's new artifact image
+	 */
+	$('#welcome').delegate('#welcome-new-artifact-img', 'click', function(event) {
+		
+		$.mobile.changePage($('#new-artifact'), "none");
+	});
+	
+	/*
+	 * Clicking on the welcome page's artifacts image
+	 */
+	$('#welcome').delegate('#welcome-artifacts-img', 'click' , function(event) {
+	
+		//$('body').data({ requestingPage:'welcome' });
+		window.android.getArtifactsForCurrentLocation();
+		$.mobile.changePage($('#main'), "none");
+	});
+	
+	/*
+	 * Clicking on the welcome page's locations image
+	 */
+	$('#welcome').delegate('#welcome-locations-img', 'click', function(event) {
+		
+		window.android.getLocations("list");
+	});
+	
+	/*
+	 * Clicking on the welcome page's options image
+	 */
+	$('#welcome').delegate('#welcome-options-img', 'click', function(event) {
+		
+		$.mobile.changePage($('#options'), "none");
+	});
+	
+	/*
 	 * Clicking on an artifact list item
 	 */
 	$('#artifactly-list').delegate('.artifactly-list-item', 'click', function(event) {  
@@ -172,15 +206,6 @@ $(document).ready(function() {
 	});
 	
 	/*
-	 * Clicking on the manage locations button
-	 */
-	$('#manage-locations-button').click(function(event) {
-		
-		// NOTE: the getLocations callback will switch to the manage locations page
-		window.android.getLocations("list");
-	});
-		
-	/*
 	 * Initialize the new artifact page
 	 */
 	$('#new-artifact').bind('pageshow', function() {
@@ -200,19 +225,35 @@ $(document).ready(function() {
 	 */
 	$('#options').bind('pageshow', function() {
 
-		
+		console.log("foo");
 		var preferences = JSON.parse(window.android.getPreferences());
 		
 		// Setting radius preference
 		$('#radius-input').val(preferences.radius).slider('refresh');
 		
+		// Resetting options
+		$("input:radio[name='sound-notification']:checked").attr("checked", false).checkboxradio("refresh");
+		$("input:radio[name='load-maps']:checked").attr("checked", false).checkboxradio("refresh");
+		
 		// Setting sound notification preference
-		$('#sound-notification-option-checkbox-text .ui-btn-text').text("Sound Notification: " + (preferences.soundNotification ? "On" : "Off"));
-		$('#sound-notification-option-checkbox').prop("checked", preferences.soundNotification).checkboxradio("refresh");
-
+		if(preferences.soundNotification) {
+		
+			$("#sound-notification-on").attr("checked", true).checkboxradio("refresh");
+		}
+		else {
+			
+			$("#sound-notification-off").attr("checked", true).checkboxradio("refresh");
+		}
+		
 		// Setting load static map preference
-		$('#load-static-map-option-checkbox-text .ui-btn-text').text("Load Maps: " + (preferences.loadStaticMap ? "On" : "Off"));
-		$('#load-static-map-option-checkbox').prop("checked", preferences.loadStaticMap).checkboxradio("refresh");
+		if(preferences.loadStaticMap) {
+			
+			$("#load-maps-on").attr("checked", true).checkboxradio("refresh");
+		}
+		else {
+			
+			$("#load-maps-off").attr("checked", true).checkboxradio("refresh");
+		}
 	});
 
 	/*
@@ -419,77 +460,48 @@ $(document).ready(function() {
 			}
 		}
 	});
-
-	/*
-	 * Options' page select menu
-	 */
-	$('#option-select-background-color').change(function() {
-
-		var selected = $('#option-select-background-color option:selected');
-		var color = '#ADDFFF';
-		
-		if(selected.val() == "blue") {
-			
-			$('.ui-page').css('background', '#ADDFFF');
-			color = "#ADDFFF";
-		}
-		else if(selected.val() == "pink") {
-			
-			$('.ui-page').css('background', '#FFCECE');
-			color = "#FFCECE";
-		}
-		else if(selected.val() == "green") {
-			
-			$('.ui-page').css('background', '#D2FFC4');
-			color = "#D2FFC4";
-		}
-		else if(selected.val() == "white") {
-			
-			$('.ui-page').css('background', '#FFFFFF');
-			color = "#FFFFFF";
-		}
-		
-		window.android.setBackgroundColor(color);
-	});
 	
 	/*
 	 * Options' page sound notification on/off
 	 */
-	$('#sound-notification-option-checkbox').bind('change', function() {
+	$("input:radio[name='sound-notification']").change(function() {
 		
-		var checked = $('#sound-notification-option-checkbox').prop("checked");
+		var value = $("input:radio[name='sound-notification']:checked").val();
 		
-		if(checked) {
-			
-			$('#sound-notification-option-checkbox-text .ui-btn-text').text("Sound Notification: On");
-		}
-		else {
-			
-			$('#sound-notification-option-checkbox-text .ui-btn-text').text("Sound Notification: Off");
-		}
-		
-		window.android.setSoundNotificationPreference(checked);
-	});
-
-	/*
-	 * Options' page load static map of/off
-	 */
-	$('#load-static-map-option-checkbox').bind('change', function() {
-		
-		var checked = $('#load-static-map-option-checkbox').prop("checked");
-		
-		if(checked) {
-			
-			$('#load-static-map-option-checkbox-text .ui-btn-text').text("Load Maps: On");
-		}
-		else {
-			
-			$('#load-static-map-option-checkbox-text .ui-btn-text').text("Load Maps: Off");
-		}
-		
-		window.android.setLoadStaticMapPreference(checked);
+	    if (value == 'on') {
+	    	
+	    	window.android.setSoundNotificationPreference(true);
+	    }
+	    else if (value == 'off') {
+	    	
+	    	window.android.setSoundNotificationPreference(false);
+	    }
+	    else {
+	    	
+	    	console.log("ERROR: No matching sound notification preference");
+	    }
 	});
 	
+	/*
+	 * Options' page static maps on/off
+	 */
+	$("input:radio[name='load-maps']").change(function() {
+		
+		var value = $("input:radio[name='load-maps']:checked").val();
+		
+	    if (value == 'on') {
+	    	
+	    	window.android.setLoadStaticMapPreference(true);
+	    }
+	    else if (value == 'off') {
+	    	
+	    	window.android.setLoadStaticMapPreference(false);
+	    }
+	    else {
+	    	
+	    	console.log("ERROR: No matching sound notification preference");
+	    }
+	});
 	
 	/*
 	 * Locations' select menu
@@ -695,8 +707,12 @@ function getArtifactsForCurrentLocationCallback(locations) {
 
 	$(document).ready(function() {
 
-		$('#artifactly-list li').remove();
-		$('#artifactly-list ul').listview('refresh');
+		var numLi = $('#artifactly-list li').size();
+		if(numLi > 0) {
+		
+			$('#artifactly-list li').remove();
+			$('#artifactly-list ul').listview('refresh');
+		}
 		
 		if(!locations || locations.length < 1) {
 
@@ -722,8 +738,11 @@ function getArtifactsForCurrentLocationCallback(locations) {
 					.appendTo($('#artifactly-list ul'))
 				});
 			});
-
-			$('#artifactly-list ul').listview('refresh');
+			
+			if('welcome' != $('.ui-page-active').attr('id')) {
+				
+				$('#artifactly-list ul').listview('refresh');
+			}
 		}
 	});
 }
@@ -799,7 +818,8 @@ function getLocationsListCallback(locations) {
 			$('#manage-locations-list-message').text("");
 			$.each(locations, function(i, location) {
 
-				var element = $('<li/>', { html : '<h3>' + location.locName + '</h3>' })
+				var element = $('<li/>', { html : '<h3>' + location.locName + '</h3>' +
+												  '<p>Loading address ...</p>' })
 				.data(location)
 				.appendTo($('#manage-locations-list ul'));
 
@@ -808,7 +828,7 @@ function getLocationsListCallback(locations) {
 					/*
 					 * The following method will append the address to the <li/> element
 					 */
-					appendLocationAddress(location.locLat, location.locLng, element);
+					appendLocationAddress(location.locLat, location.locLng, element, location.locName);
 				}
 			});
 		}
@@ -820,7 +840,7 @@ function getLocationsListCallback(locations) {
 /*
  * Helper method that appends the formatted address to the provided DOM element
  */
-function appendLocationAddress(lat, lng , element) {
+function appendLocationAddress(lat, lng , element, locationName) {
 	
 	$(document).ready(function() {
 		
@@ -828,7 +848,8 @@ function appendLocationAddress(lat, lng , element) {
 			type:'Get',
 			url:'http://maps.googleapis.com/maps/api/geocode/json?address=' + lat + ',' + lng + '&sensor=true',
 			success:function(data) {
-
+				element.html("");
+				element.append('<h3>' + locationName + '</h3>');
 				element.append('<p>' + data.results[0].formatted_address + '</p>');
 				element.data({ locAddress : data.results[0].formatted_address });
 			}
@@ -861,15 +882,7 @@ function resetWebView() {
 
 	$(document).ready(function() {
 		
-		$.mobile.changePage($('#main'), "none");
-	});
-}
-
-function setBackgroundColor(color) {
-	
-	$(document).ready(function() {
-		
-		$('.ui-page').css('background', color.bgc);
+		$.mobile.changePage($('#welcome'), "none");
 	});
 }
 
@@ -973,6 +986,46 @@ function showAppInfoPage() {
 
 		$.mobile.changePage($('#app-info'), "none");
 	});
+}
+
+/*
+ * Android menu option: Welcome
+ */
+function showWelcomePage() {
+	
+	$(document).ready(function() {
+
+		$.mobile.changePage($('#welcome'), "none");
+	});
+}
+
+/*
+ * Android orientation event
+ */
+function showOrientationPortraitMode() {
+	
+	// Keep the padding synchronzied with what's in CSS
+	$('.welcome-content-container').css('padding-top', '40px !important');
+
+	$('.welcome-grid').removeClass('ui-grid-c').addClass('ui-grid-a');
+	$('.welcome-item-a').removeClass('ui-block-a').addClass('ui-block-a');
+	$('.welcome-item-b').removeClass('ui-block-b').addClass('ui-block-b');
+	$('.welcome-item-c').removeClass('ui-block-c').addClass('ui-block-a');
+	$('.welcome-item-d').removeClass('ui-block-d').addClass('ui-block-b');
+}
+
+/*
+ * Android orientation event
+ */
+function showOrientationLandscapeMode() {
+	
+	$('.welcome-content-container').css('padding-top', '15px !important');
+	
+	$('.welcome-grid').removeClass('ui-grid-a').addClass('ui-grid-c');
+	$('.welcome-item-a').removeClass('ui-block-a').addClass('ui-block-a');
+	$('.welcome-item-b').removeClass('ui-block-b').addClass('ui-block-b');
+	$('.welcome-item-c').removeClass('ui-block-a').addClass('ui-block-c');
+	$('.welcome-item-d').removeClass('ui-block-b').addClass('ui-block-d');
 }
 
 /*

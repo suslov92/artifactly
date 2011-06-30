@@ -13,10 +13,46 @@
 </head> 
 <body> 
 
+<div data-role="page" id="welcome">
+
+	<div data-role="header" data-backbtn="false" data-position="inline">
+		<h3>Artifactly</h3>
+	</div>
+
+	<div data-role="content">
+
+		<fieldset class="ui-grid-a welcome-content-container welcome-grid">
+			<div class="ui-block-a welcome-content welcome-item-a">
+				<img id="welcome-new-artifact-img" src="images/new-launcher.png" alt="New Artifact" />
+				<br />
+				<span class="welcome-title">New Artifact</span>
+			</div>
+			<div class="ui-block-b welcome-content welcome-item-b">
+				<img id="welcome-artifacts-img" src="images/artifacts-launcher.png" alt="Artifacts" />
+				<br />
+				<span class="welcome-title">Artifacts</span>
+			</div>
+			<div class="ui-block-a welcome-content welcome-item-c">
+				<img id="welcome-locations-img" src="images/locations-launcher.png" alt="Locations" />
+				<br />
+				<span class="welcome-title">Locations</span>
+			</div>
+			<div class="ui-block-b welcome-content welcome-item-d">
+				<img id="welcome-options-img" src="images/options-launcher.png" alt="Info" />
+				<br />
+				<span class="welcome-title">Options</span>
+			</div>  
+		</fieldset>
+
+	</div>
+
+</div>
+
 <div data-role="page" id="main">
 
 	<div data-role="header" data-backbtn="false" data-position="inline">
-		<h3>Home</h3>
+		<a href="#welcome" data-icon="back" data-transition="none">Back</a>
+		<h3>Artifacts</h3>
 		<a href="#new-artifact" data-icon="plus" data-transition="none" class="ui-btn-right">Artifact</a>
 	</div>
 
@@ -32,8 +68,8 @@
 <div data-role="page" id="new-artifact">
 	
 	<div data-role="header" data-backbtn="false" data-position="inline">
-		<a href="#main" data-icon="home" data-transition="none">Home</a>
-		<h1>Create</h1>
+		<a href="#main" data-icon="home" data-transition="none">Artifacts</a>
+		<h3>Create</h3>
 		<a href="#new-location" data-icon="plus" data-transition="none">Location</a>
 	</div>
 
@@ -70,8 +106,8 @@
 <div data-role="page" id="new-location">
 
 	<div data-role="header" data-backbtn="false" data-position="inline">
-		<a href="#main" data-icon="home" data-transition="none">Home</a>
-		<h1>Location</h1>
+		<a href="#main" data-icon="home" data-transition="none">Artifacts</a>
+		<h3>Location</h3>
 		<a href="#new-artifact" data-icon="back" data-transition="none">Back</a>
 	</div>
 	
@@ -101,8 +137,8 @@
 <div data-role="page" id="map">
 
 	<div data-role="header" data-backbtn="false" data-position="inline">
-		<a href="#main" data-icon="home" data-transition="none">Home</a>
-		<h1>Map</h1>
+		<a href="#main" data-icon="home" data-transition="none">Artifacts</a>
+		<h3>Map</h3>
 	</div>
 
 	<div data-role="content" id="map-content">
@@ -114,7 +150,7 @@
 <div data-role="page" id="options">
 
 	<div data-role="header" data-backbtn="false" data-position="inline">
-		<a href="#main" data-icon="home" data-transition="none">Home</a>
+		<a href="#main" data-icon="home" data-transition="none">Artifacts</a>
 		<h1>Options</h1>
 	</div>
 
@@ -125,30 +161,31 @@
 				min="100" max="20000" /> <input type="button" name="set-radius"
 				id="set-radius" value="Set Radius" />
 		</div>
-
-		<div class="select-background-color">
-			<select name="option-select-background-color" id="option-select-background-color">
-				<option disabled>Background Color</option>
-				<option value="blue">Blue</option>
-				<option value="pink">Pink</option>
-				<option value="green">Green</option>
-				<option value="white">White</option>
-			</select>
-		</div>
 		
-		<div class="manage-locations">
-			<input type="button" name="manage-locations-button" id="manage-locations-button" value="Manage Locations" />
-		</div>
+		<fieldset data-role="controlgroup" data-type="horizontal">
+			<div class="options-one-line ">
+				<legend>Sound Alert:</legend>
+				<div class="options-align-right">
+					<input type="radio" name="sound-notification" id="sound-notification-on" value="on" checked="checked">
+					<label for="sound-notification-on">On</label>
+					<input type="radio" name="sound-notification" id="sound-notification-off" value="off">
+					<label for="sound-notification-off">Off</label>
+				</div>
+			</div>
+		</fieldset>
 		
-		<fieldset data-role="controlgroup">
-			<input type="checkbox" name="sound-notification-option-checkbox" id="sound-notification-option-checkbox" class="custom" checked />
-			<label for="sound-notification-option-checkbox" id="sound-notification-option-checkbox-text">Sound Notification: On</label>
+		<fieldset data-role="controlgroup" data-type="horizontal" >
+			<div class="options-one-line">
+				<legend>Load Maps:</legend>
+				<div class="options-align-right">
+					<input type="radio" name="load-maps" id="load-maps-on" value="on" checked="checked">
+					<label for="load-maps-on">On</label>
+					<input type="radio" name="load-maps" id="load-maps-off" value="off">
+					<label for="load-maps-off">Off</label>
+				</div>
+			</div>
 		</fieldset>
-
-		<fieldset data-role="controlgroup">
-			<input type="checkbox" name="load-static-map-option-checkbox" id="load-static-map-option-checkbox" class="custom" checked />
-			<label for="load-static-map-option-checkbox" id="load-static-map-option-checkbox-text">Load Maps: On</label>
-		</fieldset>
+		
 	</div>
 	
 </div>
@@ -156,8 +193,8 @@
 <div data-role="page" id="view-artifact">
 
 	<div data-role="header" data-backbtn="false" data-position="inline">
-		<a href="#main" data-icon="home" data-transition="none">Home</a>
-		<h1>Artifact</h1>
+		<a href="#main" data-icon="home" data-transition="none">Artifacts</a>
+		<h3>Artifact</h3>
 	</div>
 	
 	<div data-role="content">
@@ -187,8 +224,8 @@
 <div data-role="page" id="view-location">
 
 	<div data-role="header" data-backbtn="false" data-position="inline">
-		<a href="#main" data-icon="home" data-transition="none">Home</a>
-		<h1>Location</h1>
+		<a href="#main" data-icon="home" data-transition="none">Artifacts</a>
+		<h3>Location</h3>
 		<a href="#manage-locations" data-icon="back" data-transition="none">Back</a>
 	</div>
 	
@@ -215,8 +252,8 @@
 <div data-role="page" id="manage-locations">
 	
 	<div data-role="header" data-backbtn="false" data-position="inline">
-		<a href="#main" data-icon="home" data-transition="none">Home</a>
-		<h1>Locations</h1>
+		<a href="#welcome" data-icon="back" data-transition="none">Back</a>
+		<h3>Locations</h3>
 	</div>
 
 	<div data-role="content">
@@ -231,12 +268,12 @@
 <div data-role="page" id="app-info">
 
 	<div data-role="header" data-backbtn="false" data-position="inline">
-		<a href="#main" data-icon="home" data-transition="none">Home</a>
+		<a href="#main" data-icon="home" data-transition="none">Artifacts</a>
 		<h1>About</h1>
 	</div>
 	
 	<div data-role="content" id="app-info-content">
-		<p>v1.2.0</p>
+		<p>v1.3.0</p>
 		<p>Thomas Amsler</p>
 		<a href="http://www.artifactly.org">www.artifactly.org</a>
 		<br />
