@@ -4,8 +4,13 @@
  */
   
 .ui-page {
-	/* background: #F7F7F7; */
 	background: transparent url(images/background-tile.png);
+}
+
+/* Change all the labels' font */
+label {
+	font: bold large arial,sans-serif !important;
+	padding-top: 10px;
 }
 
 .artifactly-label {
@@ -21,7 +26,6 @@
 }
 
 .artifact-main-page-footer {
-
 	position: absolute !important;
 	bottom: 0;
 	left: 0;
@@ -70,20 +74,55 @@
 }
 
 /*  
- * Keep the padding-top synchronized with what's in artifactly.js. 
+ * Keep the next three padding-top synchronized with what's in artifactly.js. 
  * We set it here so that the first page load gets the correct padding
  */
 .welcome-content-container {
-	padding-top: 40px !important;
+	padding-top: 30px !important;
 }
+
+.welcome-item-c {
+	padding-top: 55px !important;
+}
+
+.welcome-item-d {
+	padding-top: 55px !important;
+}
+
 
 .welcome-content {
 	text-align: center;
 	padding-top: 35px;
 }
 
+#options-sound-notification-controlgroup {
+	padding-top: 20px;
+}
+
+#options-sound-notification-controlgroup .ui-controlgroup-label {
+	width: auto;
+	float: left;
+	font: normal large arial,sans-serif;
+}
+
+#options-sound-notification-controlgroup .ui-controlgroup-controls {
+	width: auto;
+	float: right;
+}
+
+#options-load-map-controlgroup .ui-controlgroup-label {
+	width: auto;
+	float: left;
+	font: normal large arial,sans-serif;
+}
+
+#options-load-map-controlgroup .ui-controlgroup-controls {
+	width: auto;
+	float: right;
+}
+
 .welcome-title {
-	font:bold large arial,sans-serif;
+	font: bold large arial,sans-serif;
 }
 
 .options-one-line {

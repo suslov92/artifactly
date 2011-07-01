@@ -41,9 +41,8 @@ $(document).ready(function() {
 	 */
 	$('#welcome').delegate('#welcome-artifacts-img', 'click' , function(event) {
 	
-		//$('body').data({ requestingPage:'welcome' });
 		window.android.getArtifactsForCurrentLocation();
-		$.mobile.changePage($('#main'), "none");
+		$.mobile.changePage($('#manage-artifacts'), "none");
 	});
 	
 	/*
@@ -93,7 +92,7 @@ $(document).ready(function() {
 		}
 		
 		addLocationAddressToViewLocationPage(location.locLat, location.locLng);
-		$('#delete-location-name').data({ navigateTo : '#main' });
+		$('#delete-location-name').data({ navigateTo : '#manage-artifacts' });
 		$.mobile.changePage($('#view-location'), "none");
 	});
 	
@@ -172,7 +171,7 @@ $(document).ready(function() {
 		var data = $('#delete-artifact-name').data();
 		window.android.deleteArtifact(data.artId, data.locId);
 		$('.ui-dialog').dialog('close');
-		$.mobile.changePage($('#main'), "none");
+		$.mobile.changePage($('#manage-artifacts'), "none");
 	});
 	
 	/*
@@ -225,7 +224,6 @@ $(document).ready(function() {
 	 */
 	$('#options').bind('pageshow', function() {
 
-		console.log("foo");
 		var preferences = JSON.parse(window.android.getPreferences());
 		
 		// Setting radius preference
@@ -391,7 +389,7 @@ $(document).ready(function() {
 
 		$('#artifact-name').val('');
 		$('#artifact-data').val('');
-		$.mobile.changePage($('#main'), "none");
+		$.mobile.changePage($('#manage-artifacts'), "none");
 	});
 
 	/*
@@ -1004,8 +1002,10 @@ function showWelcomePage() {
  */
 function showOrientationPortraitMode() {
 	
-	// Keep the padding synchronzied with what's in CSS
-	$('.welcome-content-container').css('padding-top', '40px !important');
+	// Keep the next three paddings synchronzied with what's in CSS
+	$('.welcome-content-container').css('padding-top', '30px !important');
+	$('.welcome-item-c').css('padding-top', '55px !important');
+	$('.welcome-item-d').css('padding-top', '55px !important');
 
 	$('.welcome-grid').removeClass('ui-grid-c').addClass('ui-grid-a');
 	$('.welcome-item-a').removeClass('ui-block-a').addClass('ui-block-a');
@@ -1020,6 +1020,15 @@ function showOrientationPortraitMode() {
 function showOrientationLandscapeMode() {
 	
 	$('.welcome-content-container').css('padding-top', '15px !important');
+	
+	/*
+	 * The next three lines reset CSS top padding for two items, which is set
+	 * in showOrientationPortraitMode() funciton. welcome-item-a or 
+	 * welcome-item-b have the correct top padding for this orientation
+	 */
+	var padding = $('.welcome-item-a').css('padding-top');
+	$('.welcome-item-c').css('padding-top', padding + ' !important');
+	$('.welcome-item-d').css('padding-top', padding + ' !important');
 	
 	$('.welcome-grid').removeClass('ui-grid-a').addClass('ui-grid-c');
 	$('.welcome-item-a').removeClass('ui-block-a').addClass('ui-block-a');

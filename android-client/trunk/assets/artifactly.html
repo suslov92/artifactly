@@ -48,12 +48,12 @@
 
 </div>
 
-<div data-role="page" id="main">
+<div data-role="page" id="manage-artifacts">
 
 	<div data-role="header" data-backbtn="false" data-position="inline">
-		<a href="#welcome" data-icon="back" data-transition="none">Back</a>
+		<a href="#welcome" data-role="button" data-icon="home" data-transition="none" data-iconpos="notext" data-theme="c"></a>
 		<h3>Artifacts</h3>
-		<a href="#new-artifact" data-icon="plus" data-transition="none" class="ui-btn-right">Artifact</a>
+		<a href="#new-artifact" data-role="button" data-icon="plus" data-transition="none" data-theme="c">Artifact</a>
 	</div>
 
 	<div data-role="content">
@@ -68,25 +68,23 @@
 <div data-role="page" id="new-artifact">
 	
 	<div data-role="header" data-backbtn="false" data-position="inline">
-		<a href="#main" data-icon="home" data-transition="none">Artifacts</a>
+		<a href="#welcome" data-role="button"  data-icon="home" data-transition="none" data-iconpos="notext" data-theme="c"></a>
 		<h3>Create</h3>
-		<a href="#new-location" data-icon="plus" data-transition="none">Location</a>
+		<a href="#new-location" data-role="button" data-icon="plus" data-transition="none" data-theme="c">Location</a>
 	</div>
 
 	<div data-role="content">	
-		<div data-role="fieldcontain">
-    		<label for="artifact-name">Artifact Name:</label>
-    		<input type="text" name="artifact-name" id="artifact-name" value=""/>
-		</div>
-		<div data-role="fieldcontain">
-    		<label for="artifact-data">Notes:</label>
-    		<input type="text" name="artifact-data" id="artifact-data" value=""/>
-		</div>
-		<div data-role="fieldcontain">
-			<label for="artifact-location-selection" class="select">Location Name:</label>
-			<select name="artifact-location-selection" id="artifact-location-selection">
-			</select>
-		</div>
+    	
+    	<label for="artifact-name">Item Name:</label>
+    	<input type="text" name="artifact-name" id="artifact-name" value=""/>
+    	
+    	<label for="artifact-data">Notes:</label>
+    	<input type="text" name="artifact-data" id="artifact-data" value=""/>
+		
+		<label for="artifact-location-selection" class="select">Location Name:</label>
+		<select name="artifact-location-selection" id="artifact-location-selection">
+		</select>
+		
 		<div data-role="fieldcontain" id="artifact-location-name-div">
     		<label for="artifact-location-name">Location Name:</label>
     		<input type="text" name="artifact-location-name" id="artifact-location-name" value=""/>
@@ -106,9 +104,9 @@
 <div data-role="page" id="new-location">
 
 	<div data-role="header" data-backbtn="false" data-position="inline">
-		<a href="#main" data-icon="home" data-transition="none">Artifacts</a>
+		<a href="#welcome" data-role="button" data-icon="home" data-transition="none" data-iconpos="notext" data-theme="c"></a>
 		<h3>Location</h3>
-		<a href="#new-artifact" data-icon="back" data-transition="none">Back</a>
+		<a href="#new-artifact" data-role="button" data-icon="back" data-transition="none" data-iconpos="notext" data-theme="c"></a>
 	</div>
 	
 	<div data-role="content">
@@ -137,7 +135,7 @@
 <div data-role="page" id="map">
 
 	<div data-role="header" data-backbtn="false" data-position="inline">
-		<a href="#main" data-icon="home" data-transition="none">Artifacts</a>
+		<a href="#welcome" data-role="button" data-icon="home" data-iconpos="notext" data-transition="none" data-theme="c"></a>
 		<h3>Map</h3>
 	</div>
 
@@ -150,40 +148,32 @@
 <div data-role="page" id="options">
 
 	<div data-role="header" data-backbtn="false" data-position="inline">
-		<a href="#main" data-icon="home" data-transition="none">Artifacts</a>
+		<a href="#welcome" data-role="button" data-icon="home" data-iconpos="notext" data-transition="none" data-theme="c"></a>
 		<h1>Options</h1>
 	</div>
 
 	<div data-role="content">
 
-		<div data-role="fieldcontain">
+		<div data-role="fieldcontain" id="options-radius-fieldcontain">
 			<input type="range" name="slider" id="radius-input" value="1000"
 				min="100" max="20000" /> <input type="button" name="set-radius"
 				id="set-radius" value="Set Radius" />
 		</div>
 		
-		<fieldset data-role="controlgroup" data-type="horizontal">
-			<div class="options-one-line ">
-				<legend>Sound Alert:</legend>
-				<div class="options-align-right">
-					<input type="radio" name="sound-notification" id="sound-notification-on" value="on" checked="checked">
-					<label for="sound-notification-on">On</label>
-					<input type="radio" name="sound-notification" id="sound-notification-off" value="off">
-					<label for="sound-notification-off">Off</label>
-				</div>
-			</div>
+		<fieldset data-role="controlgroup" data-type="horizontal" id="options-sound-notification-controlgroup">
+			<legend>Sound Alert:</legend>
+			<input type="radio" name="sound-notification" id="sound-notification-on" value="on" checked="checked">
+			<label for="sound-notification-on">On</label>
+			<input type="radio" name="sound-notification" id="sound-notification-off" value="off">
+			<label for="sound-notification-off">Off</label>
 		</fieldset>
 		
-		<fieldset data-role="controlgroup" data-type="horizontal" >
-			<div class="options-one-line">
-				<legend>Load Maps:</legend>
-				<div class="options-align-right">
-					<input type="radio" name="load-maps" id="load-maps-on" value="on" checked="checked">
-					<label for="load-maps-on">On</label>
-					<input type="radio" name="load-maps" id="load-maps-off" value="off">
-					<label for="load-maps-off">Off</label>
-				</div>
-			</div>
+		<fieldset data-role="controlgroup" data-type="horizontal" id="options-load-map-controlgroup">
+			<legend>Load Maps:</legend>
+			<input type="radio" name="load-maps" id="load-maps-on" value="on" checked="checked">
+			<label for="load-maps-on">On</label>
+			<input type="radio" name="load-maps" id="load-maps-off" value="off">
+			<label for="load-maps-off">Off</label>
 		</fieldset>
 		
 	</div>
@@ -193,13 +183,15 @@
 <div data-role="page" id="view-artifact">
 
 	<div data-role="header" data-backbtn="false" data-position="inline">
-		<a href="#main" data-icon="home" data-transition="none">Artifacts</a>
+		<a href="#welcome" data-role="button" data-icon="home" data-iconpos="notext" data-transition="none" data-theme="c"></a>
 		<h3>Artifact</h3>
+		<a href="#manage-artifacts" data-role="button" data-icon="back" data-transition="none" data-iconpos="notext" data-theme="c"></a>
+		
 	</div>
 	
 	<div data-role="content">
 
-		<label for="view-artifact-art-name">Artifact Name:</label>
+		<label for="view-artifact-art-name">Item Name:</label>
 		<input type="text" name="view-artifact-art-name" id="view-artifact-art-name" value=""/>
 		
 		<label for="view-artifact-art-data">Notes:</label>
@@ -224,9 +216,9 @@
 <div data-role="page" id="view-location">
 
 	<div data-role="header" data-backbtn="false" data-position="inline">
-		<a href="#main" data-icon="home" data-transition="none">Artifacts</a>
+		<a href="#welcome" data-role="button" data-icon="home" data-iconpos="notext" data-transition="none" data-theme="c"></a>
 		<h3>Location</h3>
-		<a href="#manage-locations" data-icon="back" data-transition="none">Back</a>
+		<a href="#manage-locations" data-role="button" data-icon="back" data-transition="none" data-iconpos="notext" data-theme="c"></a>
 	</div>
 	
 	<div data-role="content">
@@ -252,7 +244,7 @@
 <div data-role="page" id="manage-locations">
 	
 	<div data-role="header" data-backbtn="false" data-position="inline">
-		<a href="#welcome" data-icon="back" data-transition="none">Back</a>
+		<a href="#welcome" data-role="button" data-icon="home" data-iconpos="notext" data-transition="none" data-theme="c"></a>
 		<h3>Locations</h3>
 	</div>
 
@@ -268,7 +260,7 @@
 <div data-role="page" id="app-info">
 
 	<div data-role="header" data-backbtn="false" data-position="inline">
-		<a href="#main" data-icon="home" data-transition="none">Artifacts</a>
+		<a href="#welcome" data-role="button" data-icon="home" data-iconpos="notext" data-transition="none" data-theme="c"></a>
 		<h1>About</h1>
 	</div>
 	
