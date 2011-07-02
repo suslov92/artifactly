@@ -4,11 +4,15 @@
  */
   
 .ui-page {
-	background: transparent url(images/background-tile.png);
+	background: #EBF5FF;
+}
+
+.ui-title {
+	font: bold medium arial,sans-serif !important;
 }
 
 /* Change all the labels' font */
-label {
+label, .ui-controlgroup-label {
 	font: bold large arial,sans-serif !important;
 	padding-top: 10px;
 }
@@ -57,11 +61,10 @@ label {
 
 .artifactly-list-divider h3 {
 	padding-left: 20px;
-	padding-top: 5px;
 }
 
 .artifactly-list-divider img {
-	padding-top: 8px;
+	padding-top: 7px;
 }
 
 .select-background-color {
