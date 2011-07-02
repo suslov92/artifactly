@@ -35,4 +35,8 @@
     <string name="loading_preferences_error">ERROR: loading preferences</string>
     <string name="get_location_error">Was not able to acquire a location</string>
     <string name="get_artifact_for_current_location_error">ERROR CODE 100 : Service not loaded</string>
+    <string name="preference_sound_alert_on">Sound Alert ON</string>
+    <string name="preference_sound_alert_off">Sound Alert OFF</string>
+    <string name="preference_load_maps_on">Load Maps ON</string>
+    <string name="preference_load_maps_off">Load Maps OFF</string>
 </resources>

@@ -74,7 +74,6 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	private static final String GET_LOCATIONS_OPTIONS_CALLBACK = "getLocationsOptionsCallback";
 	private static final String GET_LOCATIONS_LIST_CALLBACK = "getLocationsListCallback";
 	private static final String CREATE_ARTIFACT_CALLBACK = "createArtifactCallback";
-	//private static final String SET_BACKGROUND_COLOR = "setBackgroundColor";
 	private static final String RESET_WEBVIEW = "resetWebView";
 	private static final String SHOW_OPTIONS_PAGE = "showOptionsPage";
 	private static final String SHOW_MAP_PAGE = "showMapPage";
@@ -128,26 +127,6 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			}
 		});
 		
-//		webView.setWebViewClient(new WebViewClient() {
-//
-//			@Override
-//			public void onPageFinished (WebView view, String url) {
-//
-//				/*
-//				 * Since we use jQueryMobile, this is fired on each page change. So
-//				 * we can use it to set the background color to what the user has selected
-//				 */
-//				try {
-//					
-//					callJavaScriptFunction(SET_BACKGROUND_COLOR, getBackgroundColor());
-//				}
-//				catch(Exception e) {
-//
-//					Log.e(PROD_LOG_TAG, "ERROR: callJavaScriptFunction : SET_BACKGROUND_COLOR", e);
-//				}
-//			}
-//		});
-
 		webView.loadUrl(ARTIFACTLY_URL);
 		
 		/*
@@ -269,9 +248,6 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			isBound = true;
 		}
 		
-		// When application starts/resumes, we load the artifacts for the current location
-		//new GetArtifactsForCurrentLocationTask().execute();
-		
 		// Register broadcast receivers
 		registerReceiver(locationUpdateBroadcastReceiver, locationUpdateIntentFilter);
 		registerReceiver(connectivityBroadcastReceiver, connectivityIntentFilter);
@@ -388,27 +364,6 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			callJavaScriptFunction(SHOW_SERVICE_RESULT, data);
 		}
 	}
-
-//	/*
-//	 * Helper method that gets the user defined background color and returns it
-//	 * as a JSONObject that can be sent to the WebView
-//	 */
-//	private String getBackgroundColor() {
-//		
-//		SharedPreferences settings = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-//		JSONObject jsonObject = new JSONObject();
-//
-//		try {
-//			
-//			jsonObject.put("bgc",  settings.getString(PREFERENCE_BACKGROUND_COLOR, PREFERENCE_BACKGROUND_COLOR_DEFAULT));
-//		}
-//		catch(JSONException e) {
-//
-//			Log.e(PROD_LOG_TAG, "ERROR: json.put()", e);
-//		}
-//		
-//		return jsonObject.toString();
-//	}
 	
 	/*
 	 * Helper method to call JavaScript methods
@@ -449,25 +404,17 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	// Define methods that are called from JavaScript
 	public class JavaScriptInterface {
 		
-//		public void setBackgroundColor(String color) {
-//			
-//			SharedPreferences settings = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-//			SharedPreferences.Editor editor = settings.edit();
-//			editor.putString(PREFERENCE_BACKGROUND_COLOR, color);
-//			editor.commit();
-//		}
-		
 		public void setRadius(int radius) {
 
 			if(PREFERENCE_RADIUS_MIN <= radius) {
-
-				String message = String.format(getResources().getString(R.string.set_location_radius), radius);
-				Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
 
 				SharedPreferences settings = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
 				SharedPreferences.Editor editor = settings.edit();
 				editor.putInt(PREFERENCE_RADIUS, radius);
 				editor.commit();
+				
+				String message = String.format(getResources().getString(R.string.set_location_radius), radius);
+				Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
 			}
 		}
 
@@ -477,6 +424,15 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			SharedPreferences.Editor editor = settings.edit();
 			editor.putBoolean(PREFERENCE_SOUND_NOTIFICATION, preference);
 			editor.commit();
+			
+			if(preference) {
+				
+				Toast.makeText(getApplicationContext(), R.string.preference_sound_alert_on, Toast.LENGTH_SHORT).show();
+			}
+			else {
+				
+				Toast.makeText(getApplicationContext(), R.string.preference_sound_alert_off, Toast.LENGTH_SHORT).show();
+			}
 		}
 
 		public void setLoadStaticMapPreference(boolean preference) {
@@ -485,6 +441,15 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			SharedPreferences.Editor editor = settings.edit();
 			editor.putBoolean(PREFERENCE_LOAD_STATIC_MAP, preference);
 			editor.commit();
+			
+			if(preference) {
+				
+				Toast.makeText(getApplicationContext(), R.string.preference_load_maps_on, Toast.LENGTH_SHORT).show();
+			}
+			else {
+				
+				Toast.makeText(getApplicationContext(), R.string.preference_load_maps_off, Toast.LENGTH_SHORT).show();
+			}
 		}
 		
 		public String getPreferences() {

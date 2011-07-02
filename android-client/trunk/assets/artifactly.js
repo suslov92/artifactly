@@ -721,7 +721,7 @@ function getArtifactsForCurrentLocationCallback(locations) {
 			$('#artifactly-message').text("");
 			$.each(locations, function(i, location) {
 
-				$('<li/>', { html : '<p><img src="images/map-marker.png" /></p>' +
+				$('<li/>', { html : '<img src="images/map-marker.png" />' +
 									'<h3>' + location.locName + '</h3>' +
 									'<span class="ui-li-count">' + location.artifacts.length + '</span>'})
 				.attr('data-role', 'list-divider')
