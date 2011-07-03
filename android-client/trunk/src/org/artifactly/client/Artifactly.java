@@ -67,7 +67,6 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	private static final String JAVASCRIPT_BRIDGE_PREFIX = "android";
 
 	// JavaScript functions
-	private static final String SHOW_SERVICE_RESULT = "showServiceResult";
 	private static final String GET_ARTIFACTS_CALLBACK = "getArtifactsCallback";
 	private static final String GET_ARTIFACT_CALLBACK = "getArtifactCallback";
 	private static final String GET_ARTIFACTS_FOR_CURRENT_LOCATION_CALLBACK = "getArtifactsForCurrentLocationCallback";
@@ -81,8 +80,9 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	private static final String SHOW_WELCOME_PAGE = "showWelcomePage";
 	private static final String SHOW_ORIENTATION_PORTRAIT_MODE = "showOrientationPortraitMode";
 	private static final String SHOW_ORIENTATION_LANDSCAPE_MODE = "showOrientationLandscapeMode";
+	private static final String SHOW_ARTIFACTS_PAGE = "showArtifactsPage";
+	private static final String BROADCAST_CURRENT_LOCATION = "broadcastCurrentLocation";
 	
-
 	private WebView webView = null;
 
 	private Handler mHandler = new Handler();
@@ -94,8 +94,10 @@ public class Artifactly extends Activity implements ApplicationConstants {
 
 	IntentFilter locationUpdateIntentFilter = new IntentFilter(LOCATION_UPDATE_INTENT);
 	IntentFilter connectivityIntentFilter = new IntentFilter(android.net.ConnectivityManager.CONNECTIVITY_ACTION);
+	IntentFilter hasArtifactsAtCurrentLocationIntentFilter = new IntentFilter(HAS_ARTIFACTS_AT_CURRENT_LOCATION_INTENT);
 	BroadcastReceiver locationUpdateBroadcastReceiver = null;
 	BroadcastReceiver connectivityBroadcastReceiver = null;
+	BroadcastReceiver hasArtifactsAtCurrentLocationReceiver = null;
 	
 	private boolean canAccessInternet = true;
 	
@@ -144,7 +146,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 
 			@Override
 			public void onReceive(Context context, Intent intent) {
-				
+
 				new GetArtifactsForCurrentLocationTask().execute();
 			}
 		};
@@ -155,6 +157,19 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			public void onReceive(Context arg0, Intent arg1) {
 				
 				canAccessInternet = hasConnectivity();
+			}
+		};
+		
+		hasArtifactsAtCurrentLocationReceiver = new BroadcastReceiver() {
+			
+			@Override
+			public void onReceive(Context context, Intent intent) {
+				
+				if(null != localService) {
+
+					Location location = localService.getLocation();
+					callJavaScriptFunction(BROADCAST_CURRENT_LOCATION, locationToJSON(location));
+				}
 			}
 		};
 		
@@ -251,6 +266,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		// Register broadcast receivers
 		registerReceiver(locationUpdateBroadcastReceiver, locationUpdateIntentFilter);
 		registerReceiver(connectivityBroadcastReceiver, connectivityIntentFilter);
+		registerReceiver(hasArtifactsAtCurrentLocationReceiver, hasArtifactsAtCurrentLocationIntentFilter);
 	}
 
 	/*
@@ -279,6 +295,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		// Unregister broadcast receivers
 		unregisterReceiver(locationUpdateBroadcastReceiver);
 		unregisterReceiver(connectivityBroadcastReceiver);
+		unregisterReceiver(hasArtifactsAtCurrentLocationReceiver);
 	}
 
 	/*
@@ -356,13 +373,8 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	@Override
 	public void onNewIntent(Intent intent) {
 
-		Bundle extras = intent.getExtras();
-
-		if(null != extras && extras.containsKey(NOTIFICATION_INTENT_KEY)) {
-
-			String data = extras.getString(NOTIFICATION_INTENT_KEY);
-			callJavaScriptFunction(SHOW_SERVICE_RESULT, data);
-		}
+		callJavaScriptFunction(SHOW_ARTIFACTS_PAGE);
+		new GetArtifactsForCurrentLocationTask().execute();
 	}
 	
 	/*
@@ -504,8 +516,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		public String getLocation() {
 
 			Location location = localService.getLocation();
-			return  locationToJSON(location);
-			
+			return locationToJSON(location);
 		}
 
 		public void getArtifact(String id) {

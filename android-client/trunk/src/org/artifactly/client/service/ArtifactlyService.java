@@ -123,6 +123,9 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	// Intent for sending location update broadcast
 	private Intent locationUpdateIntent = new Intent(LOCATION_UPDATE_INTENT);
 	
+	// Intent for sending has artifacts at current location broadcast
+	private Intent hasArtifactsAtCurrentLocationIntent = new Intent(HAS_ARTIFACTS_AT_CURRENT_LOCATION_INTENT);
+	
 	public ArtifactlyService() {
 		
 		super();
@@ -452,7 +455,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 
 	/*
 	 * This method sends a message using Android's notification manager.
-	 * It set up an intent so that the UI can be launched from within the notification message.
+	 * It sets up an intent so that the UI can be launched from within the notification message.
 	 */
 	private void sendNotification() {
 		
@@ -642,7 +645,8 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 			
 			// Update the current location with the new one
 			currentLocation = location;
-			
+
+			// Sending a location update broadcast to client 
 			sendBroadcast(locationUpdateIntent);
 
 			// Since we are getting a more accurate location, we should check if the 
@@ -674,6 +678,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 
 				lastSendNotificationTime = System.currentTimeMillis();
 				sendNotification();
+				sendBroadcast(hasArtifactsAtCurrentLocationIntent);
 			}
 			else {
 				
