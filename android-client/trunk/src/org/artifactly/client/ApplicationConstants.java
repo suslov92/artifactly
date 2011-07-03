@@ -29,6 +29,7 @@ public interface ApplicationConstants {
 	public static final String PREFERENCE_LOAD_STATIC_MAP = "load-static-map";
 	public static final boolean PREFERENCE_LOAD_STATIC_MAP_DEFAULT = true;
 	public static final String LOCATION_UPDATE_INTENT = "org.artifactly.client.service.LocationUpdateIntent";
+	public static final String HAS_ARTIFACTS_AT_CURRENT_LOCATION_INTENT = "org.artifactly.client.service.HasArtifactsAtCurrentLocationIntent";
 	
 	/*
 	 *  Byte masks for creating artifact/location

@@ -41,8 +41,8 @@ $(document).ready(function() {
 	 */
 	$('#welcome').delegate('#welcome-artifacts-img', 'click' , function(event) {
 	
-		window.android.getArtifactsForCurrentLocation();
 		$.mobile.changePage($('#manage-artifacts'), "none");
+		window.android.getArtifactsForCurrentLocation();
 	});
 	
 	/*
@@ -637,8 +637,13 @@ function loadMap() {
 		});
 
 		google.maps.event.addListener(marker, 'click', function() {
-			infowindow.open(map,marker);
+			infowindow.open(map, marker);
 		});
+		
+		/*
+		 * Storing the map reference so that we can update it in the broadcastCurrentLocation() function
+		 */
+		$('#map-content').data({ mapReference : map });
 		
 		// Hide the maps loading animation
 		$.mobile.pageLoading(true);
@@ -836,6 +841,48 @@ function getLocationsListCallback(locations) {
 }
 
 /*
+ * Activity dispatching location change broadcast 
+ */
+function broadcastCurrentLocation(location) {
+	
+	$(document).ready(function() {
+		
+		/*
+		 * Updating the loction marker on the map page
+		 */
+		
+		// Get the current page and check if it's the map page
+		console.log("DEBUG: mapReference() callled");
+		
+		var page = $.mobile.activePage;
+		var mapReference = $('#map-content').data("mapReference");
+		
+		if(page == "map" && undefined != mapReference && null != mapReference) {
+			
+			console.log("DEBUG: on map page and found map reference ...");
+			var latlng = new google.maps.LatLng(location.locLat, location.locLng);
+			mapReference.panTo(latlng);
+			
+			var marker = new google.maps.Marker();
+			marker.setPosition(latlng);
+			marker.setMap(mapReference);
+			marker.setAnimation(google.maps.Animation.DROP);
+			
+			var content = "Latitude = " + (location.locLat).toFixed(6) + "<br />Longitude = " + (location.locLng).toFixed(6) +"<br />Accuracy = " + (location.locAccuracy).toFixed(2) + " m";
+			var infowindow = new google.maps.InfoWindow({
+				content: content
+			});
+
+			google.maps.event.addListener(marker, 'click', function() {
+				infowindow.open(mapReference, marker);
+			});
+			
+			console.log("DEBUG: done creating marker and putting it on the map");
+		}
+	});
+}
+
+/*
  * Helper method that appends the formatted address to the provided DOM element
  */
 function appendLocationAddress(lat, lng , element, locationName) {
@@ -881,21 +928,6 @@ function resetWebView() {
 	$(document).ready(function() {
 		
 		$.mobile.changePage($('#welcome'), "none");
-	});
-}
-
-function showServiceResult(data) {
-
-	$(document).ready(function() {
-
-		$('#artifactly-list li').remove();
-
-		$.each(data, function(i, val) {
-
-			$('#artifactly-list ul').append('<li><a href="#view-artifact" data-transition="none">' + val.name + '</a></li>');
-		});
-
-		$('#artifactly-list ul').listview('refresh');
 	});
 }
 
@@ -953,6 +985,19 @@ function getSearchCenterPoint() {
 	});
 }
 
+
+/*
+ * When user clicks on the Artifactly notification event, the activity
+ * dispatches to show the artifacts
+ */
+function showArtifactsPage() {
+	
+	$(document).ready(function() {
+
+		$.mobile.changePage($('#manage-artifacts'), "none");
+	});
+}
+
 /*
  * Android menu option: Options
  */
@@ -976,7 +1021,7 @@ function showMapPage() {
 }
 
 /*
- * Android menu option: Info
+ * Android menu option: Info/About
  */
 function showAppInfoPage() {
 
