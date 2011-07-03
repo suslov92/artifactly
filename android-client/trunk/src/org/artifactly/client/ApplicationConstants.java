@@ -22,7 +22,7 @@ public interface ApplicationConstants {
 	public static final String PREFERENCE_RADIUS = "radius";
 	public static final String PREFERENCE_BACKGROUND_COLOR = "background-color";
 	public static final String PREFERENCE_SOUND_NOTIFICATION = "sound-notification";
-	public static final int PREFERENCE_RADIUS_DEFAULT = 1000;
+	public static final int PREFERENCE_RADIUS_DEFAULT = 2000;
 	public static final int PREFERENCE_RADIUS_MIN = 100;
 	public static final String PREFERENCE_BACKGROUND_COLOR_DEFAULT = "#ADDFFF";
 	public static final boolean PREFERENCE_SOUND_NOTIFICATION_DEFAULT = true;

@@ -98,21 +98,6 @@ public class LocalServiceImpl extends Binder implements LocalService {
 	}
 
 	// API method
-	public byte createArtifact(String artifactName, String artifactData, String locationName) {
-		
-		Location currentLocation = artifactlyService.getLocation();
-		
-		if(null != currentLocation) {
-		
-			return createArtifact(artifactName, artifactData, locationName, Double.toString(currentLocation.getLatitude()), Double.toString(currentLocation.getLongitude()));
-		}
-		else {
-			
-			return -1;
-		}
-	}
-
-	// API method
 	public String getArtifacts() {
 		
 		return getFilteredArtifacts(ALL_ARTIFACTS_FILTER);
@@ -146,7 +131,7 @@ public class LocalServiceImpl extends Binder implements LocalService {
 	}
 	
 	// API method
-	public String getAtrifact(String id) {
+	public String getAtrifact(String artId, String locId) {
 	
 		// JSON array that holds the result
 		JSONObject artifact = new JSONObject();
@@ -157,7 +142,7 @@ public class LocalServiceImpl extends Binder implements LocalService {
 		}
 		
 		// Getting all the locations
-		Cursor cursor = dbAdapter.select(id);
+		Cursor cursor = dbAdapter.select(artId, locId);
 		if(null == cursor) {
 			
 			return artifact.toString();
@@ -375,11 +360,11 @@ public class LocalServiceImpl extends Binder implements LocalService {
 		}
 	}
 
-	public boolean updateArtifact(String artifactId, String artifactName, String artifactData, String locationId, String locationName) {
+	public int updateArtifact(String artifactId, String artifactName, String artifactData, String locationId, String locationName) {
 		
 		if(null == dbAdapter) {
 			
-			return false;
+			return -2;
 		}
 		
 		return dbAdapter.updateArtifact(artifactId, artifactName, artifactData, locationId, locationName);

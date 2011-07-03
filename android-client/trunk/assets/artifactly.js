@@ -67,7 +67,8 @@ $(document).ready(function() {
 	$('#artifactly-list').delegate('.artifactly-list-item', 'click', function(event) {  
 
 		var artId = $(this).data("artId");
-		window.android.getArtifact(artId);
+		var locId = $(this).data("locId");
+		window.android.getArtifact(artId, locId);
 	});
 	
 	/*
@@ -317,6 +318,7 @@ $(document).ready(function() {
 		if(data.artName != artName || data.artData != artData || data.locName != locName) {
 		
 			window.android.updateArtifact(data.artId, artName, artData, data.locId, locName);
+			$('#view-artifact-art-name').data({artName:artName, artData:artData, locName:locName});
 		}
 	});
 	
@@ -340,6 +342,7 @@ $(document).ready(function() {
 			 */
 			$('#view-location').data({navigate:'no'});
 			window.android.updateLocation(location.locId, updatedLocName, location.locLat, location.locLng);
+			$('#view-location-loc-name').data({locName:updatedLocName});
 		}
 	});
 
@@ -389,7 +392,13 @@ $(document).ready(function() {
 
 		$('#artifact-name').val('');
 		$('#artifact-data').val('');
+		
+		/*
+		 * When user clicks on close button, we show the updated
+		 * artifacts page
+		 */
 		$.mobile.changePage($('#manage-artifacts'), "none");
+		window.android.getArtifactsForCurrentLocation();
 	});
 
 	/*
@@ -517,6 +526,11 @@ $(document).ready(function() {
 			var location = JSON.parse(window.android.getLocation());
 			
 			/*
+			 * Since we have the current location, we attach it to the Current Locaiton menu option
+			 */
+			$('#artifact-location-selection option:selected').data({ locLat : location.locLat, locLng : location.locLng });
+			
+			/*
 			 * For now, we load the static map in this specific case even if the user sets the option to load maps to false
 			 * TODO: Check how we can provide current location information if the user doesn't want to load map images
 			 */
@@ -615,22 +629,28 @@ function loadMap() {
 	$(document).ready(function() {
 		
 		var location = JSON.parse(window.android.getLocation());
-		var latlng = new google.maps.LatLng(location.locLat, location.locLng);
+		var latLng = new google.maps.LatLng(location.locLat, location.locLng);
 
 		var myOptions = {
 				zoom: 15,
-				center: latlng,
-				mapTypeId: google.maps.MapTypeId.ROADMAP
+				center: latLng,
+				mapTypeId: google.maps.MapTypeId.ROADMAP,
+				navigationControl: true,
+			    navigationControlOptions: {
+			        style: google.maps.NavigationControlStyle.SMALL,
+			        position: google.maps.ControlPosition.TOP_RIGHT
+			    },
 		};
 
 		var map = new google.maps.Map(document.getElementById("map-canvas"), myOptions);
-		map.panTo(latlng);
+		map.panTo(latLng);
 
-		var marker = new google.maps.Marker();
-		marker.setPosition(latlng);
-		marker.setMap(map);
-		marker.setAnimation(google.maps.Animation.DROP);
-
+		var marker = new google.maps.Marker({
+			position: latLng,
+			map: map,
+			animation : google.maps.Animation.DROP
+		});
+		
 		var content = "Latitude = " + (location.locLat).toFixed(6) + "<br />Longitude = " + (location.locLng).toFixed(6) +"<br />Accuracy = " + (location.locAccuracy).toFixed(2) + " m";
 		var infowindow = new google.maps.InfoWindow({
 			content: content
@@ -841,43 +861,27 @@ function getLocationsListCallback(locations) {
 }
 
 /*
- * Activity dispatching location change broadcast 
+ * Handle activity dispatching location change broadcast
+ * On each alocation change, we add a small marker on the map
  */
 function broadcastCurrentLocation(location) {
 	
 	$(document).ready(function() {
 		
-		/*
-		 * Updating the loction marker on the map page
-		 */
-		
 		// Get the current page and check if it's the map page
-		console.log("DEBUG: mapReference() callled");
-		
-		var page = $.mobile.activePage;
+		var pageId = $.mobile.activePage.attr("id");
 		var mapReference = $('#map-content').data("mapReference");
 		
-		if(page == "map" && undefined != mapReference && null != mapReference) {
+		if(pageId == "map" && undefined != mapReference && null != mapReference) {
 			
-			console.log("DEBUG: on map page and found map reference ...");
-			var latlng = new google.maps.LatLng(location.locLat, location.locLng);
-			mapReference.panTo(latlng);
+			var latLng = new google.maps.LatLng(location.locLat, location.locLng);
 			
-			var marker = new google.maps.Marker();
-			marker.setPosition(latlng);
-			marker.setMap(mapReference);
-			marker.setAnimation(google.maps.Animation.DROP);
-			
-			var content = "Latitude = " + (location.locLat).toFixed(6) + "<br />Longitude = " + (location.locLng).toFixed(6) +"<br />Accuracy = " + (location.locAccuracy).toFixed(2) + " m";
-			var infowindow = new google.maps.InfoWindow({
-				content: content
+			var marker = new google.maps.Marker({
+				position: latLng,
+				map: mapReference,
+				icon: 'images/marker-light-blue.png',
+				animation : google.maps.Animation.DROP
 			});
-
-			google.maps.event.addListener(marker, 'click', function() {
-				infowindow.open(mapReference, marker);
-			});
-			
-			console.log("DEBUG: done creating marker and putting it on the map");
 		}
 	});
 }
