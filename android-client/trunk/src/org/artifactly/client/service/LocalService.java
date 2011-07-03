@@ -33,16 +33,6 @@ public interface LocalService {
 	public byte createArtifact(String artifactName, String artifactData, String locationName, String latitude, String longitude);
 	
 	/**
-	 * Creates an Artifact at the current location
-	 * 
-	 * @param artifactName Artifact name
-	 * @param artifactData Artifact data
-	 * @param locationName Location name
-	 * @return byte mask indicating different status combinations
-	 */
-	public byte createArtifact(String artifactName, String artifactData, String locationName);
-	
-	/**
 	 * Update an Artifact
 	 * 
 	 * @param artifactId
@@ -50,9 +40,9 @@ public interface LocalService {
 	 * @param artifactData
 	 * @param locationId
 	 * @param locationName
-	 * @return false on error, otherwise true
+	 * @return 1 on success, -1 if we have an artifact name collision, -2 on error
 	 */
-	public boolean updateArtifact(String artifactId, String artifactName, String artifactData, String locationId, String locationName);
+	public int updateArtifact(String artifactId, String artifactName, String artifactData, String locationId, String locationName);
 	
 	/**
 	 * Update a Location
@@ -105,10 +95,11 @@ public interface LocalService {
 	/**
 	 * Get an artifact that matches the provided id
 	 * 
-	 * @param id Artifact DB row id
-	 * @return JSON artifact that matches the provided id
+	 * @param artId Artifact DB row id
+	 * @param locId Location DB row id
+	 * @return JSON artifact that matches the provided IDs
 	 */
-	public String getAtrifact(String id);
+	public String getAtrifact(String artId, String locId);
 	
 	/**
 	 * Get all locations
