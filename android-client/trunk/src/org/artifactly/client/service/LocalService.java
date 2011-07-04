@@ -40,7 +40,7 @@ public interface LocalService {
 	 * @param artifactData
 	 * @param locationId
 	 * @param locationName
-	 * @return 1 on success, -1 if we have an artifact name collision, -2 on error
+	 * @return 1 on success, -1 if we have an artifact name collision, -4 if we have a location name collision, -2 on error
 	 */
 	public int updateArtifact(String artifactId, String artifactName, String artifactData, String locationId, String locationName);
 	
@@ -51,9 +51,9 @@ public interface LocalService {
 	 * @param locationName
 	 * @param locationLat
 	 * @param locationLng
-	 * @return false on error, otherwise true
+	 * @return 1 on success, -1 if we have a location name collision, -2 on error
 	 */
-	public boolean updateLocation(String locationId, String locationName, String locationLat, String locationLng);
+	public int updateLocation(String locationId, String locationName, String locationLat, String locationLng);
 
 	/**
 	 * Get the current location, latitude, longitude, accuracy
