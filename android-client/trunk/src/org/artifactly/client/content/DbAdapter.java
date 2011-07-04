@@ -125,7 +125,7 @@ public class DbAdapter implements ApplicationConstants {
 			}
 			
 			// Check if the location exists. If it does, we reuse it
-			locationRowID = getLocation(locationName, latitude, longitude);
+			locationRowID = getLocation(latitude, longitude);
 			
 			//If the above location search didn't match, we create a new location record
 			if(-1 == locationRowID) {
@@ -258,6 +258,14 @@ public class DbAdapter implements ApplicationConstants {
 			return -1;
 		}
 		
+		/*
+		 * Then, we need to check if location name gets changed to an existing location name
+		 */
+		if(!isValidLocation(locationName, locationId)) {
+			
+			return -4;
+		}
+		
 		ContentValues artContentValues = new ContentValues();
 		artContentValues.put(ART_FIELDS[ART_NAME], artifactName);
 		artContentValues.put(ART_FIELDS[ART_DATA], artifactData);
@@ -273,14 +281,22 @@ public class DbAdapter implements ApplicationConstants {
 	/*
 	 * Update a Location
 	 */
-	public boolean updateLocation(String locationId, String locationName, String locationLat, String locationLng) {
+	public int updateLocation(String locationId, String locationName, String locationLat, String locationLng) {
 		
-		// TODO: Allow user to update the Lat/Lng via moving the marker on the map
+		/*
+		 * First, we need to check if the update changes the location name to
+		 * an existing location name. 
+		 */
+		boolean hasLocation = hasLocation(locationName);
+		if(hasLocation) {
+			
+			return -1;
+		}
 		ContentValues locContentValues = new ContentValues();
 		locContentValues.put(LOC_FIELDS[LOC_NAME], locationName);
 		int numberLocRowsAffected = mSQLiteDatabase.update(DB_TABLE_LOCATION, locContentValues, LOC_FIELDS[LOC_ID] + "=?", new String[] {locationId});
 		
-		return ((numberLocRowsAffected ==  1) ? true : false);
+		return ((numberLocRowsAffected ==  1) ? 1 : -2);
 	}
 	
 	/*
@@ -359,6 +375,38 @@ public class DbAdapter implements ApplicationConstants {
 		}
 	}
 
+	/*
+	 * Helper method that checks if a location with the provided name exists
+	 */
+	private boolean hasLocation(String locationName) {
+		
+		
+		Cursor cursor = mSQLiteDatabase.query(true,
+				DB_TABLE_LOCATION,
+				LOC_FIELDS,
+				LOC_FIELDS[LOC_NAME] + "=?",
+				new String [] {locationName},
+				null,
+				null,
+				null,
+				null);
+
+		if((null != cursor) && (1 == cursor.getCount())) {
+
+			cursor.close();
+			return true;
+		}
+		else {
+
+			if(null != cursor) {
+
+				cursor.close();
+			}
+
+			return false;
+		}
+	}
+	
 	/*
 	 * Helper method that checks if the provided locationRowId is part of an existing location and artifact relationship
 	 */
@@ -459,51 +507,16 @@ public class DbAdapter implements ApplicationConstants {
 		}
 	}
 	
-
 	/*
-	 * Helper method that search by latitude and longitude for an existing location
+	 * Helper method that searches by latitude, and longitude for an existing location
 	 */
-//	private long getLocation(String latitude, String longitude) {
-//		
-//		Cursor cursor = mSQLiteDatabase.query(true,
-//				DB_TABLE_LOCATION,
-//				LOC_FIELDS,
-//				LOC_FIELDS[LOC_LATITUDE] + "=? AND " + LOC_FIELDS[LOC_LONGITUDE] + "=?",
-//				new String [] {latitude, longitude},
-//				null,
-//				null,
-//				null,
-//				null);
-//
-//		if((null != cursor) && (1 == cursor.getCount())) {
-//			
-//			cursor.moveToFirst();
-//			int idColumnIndex = cursor.getColumnIndex(LOC_FIELDS[LOC_ID]);
-//			long rowId = cursor.getLong(idColumnIndex);
-//			cursor.close();
-//			return rowId;
-//		}
-//		else {
-//			
-//			if(null != cursor) {
-//			
-//				cursor.close();
-//			}
-//			
-//			return -1;
-//		}
-//	}
-	
-	/*
-	 * Helper method that searches by name, latitude, and longitude for an existing location
-	 */
-	private long getLocation(String name, String latitude, String longitude) {
+	private long getLocation(String latitude, String longitude) {
 
 		Cursor cursor = mSQLiteDatabase.query(true,
 				DB_TABLE_LOCATION,
 				LOC_FIELDS,
-				LOC_FIELDS[LOC_NAME] + "=? AND " + LOC_FIELDS[LOC_LATITUDE] + "=? AND " + LOC_FIELDS[LOC_LONGITUDE] + "=?",
-				new String [] {name, latitude, longitude},
+				LOC_FIELDS[LOC_LATITUDE] + "=? AND " + LOC_FIELDS[LOC_LONGITUDE] + "=?",
+				new String [] {latitude, longitude},
 				null,
 				null,
 				null,
@@ -530,8 +543,74 @@ public class DbAdapter implements ApplicationConstants {
 	
 	/*
 	 * Helper method that queries locations for the provided name. The result should contain zero or only
-	 * one location. If the location doesn't match the provided Lat/Lng then we signal a failure
-	 * so that the user can choose another name. Use case: user selected current location.
+	 * one location. If the location doesn't match the provided location ID, then we signal a failure
+	 * so that the user can choose another name.
+	 */
+	private boolean isValidLocation(String name, String locationId) {
+
+		Cursor cursor = null;
+		
+		try {
+			
+			// Search for locations that match the given name
+			cursor = mSQLiteDatabase.query(true,
+					DB_TABLE_LOCATION,
+					LOC_FIELDS,
+					LOC_FIELDS[LOC_NAME] + "=?",
+					new String [] {name},
+					null,
+					null,
+					null,
+					null);
+
+			if((null != cursor) && (1 == cursor.getCount())) {
+
+				cursor.moveToFirst();
+
+				int locIdColumnIndex = cursor.getColumnIndex(LOC_FIELDS[LOC_ID]);
+				String locId = String.valueOf(cursor.getLong(locIdColumnIndex));
+				
+				if(null != locationId && null != locId && locationId.equals(locId)) {
+
+					cursor.close();
+					return true;
+				}
+				else {
+
+					cursor.close();
+					return false;
+				}
+			}
+			else if((null != cursor) && (0 == cursor.getCount())) {
+
+				cursor.close();
+				return true;
+			}
+			else {
+
+				if(null != cursor) {
+
+					cursor.close();
+				}
+				return false;
+			}
+		}
+		catch(SQLiteException e) {
+
+			if(null != cursor) {
+
+				cursor.close();
+				return false;
+			}
+		}
+
+		return false;
+	}
+	
+	/*
+	 * Helper method that queries locations for the provided name. The result should contain zero or only
+	 * one location. If the location doesn't match the provided Lat/Lng, then we signal a failure
+	 * so that the user can choose another name.
 	 */
 	private boolean isValidLocation(String name, String latitude, String longitude) {
 

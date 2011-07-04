@@ -52,7 +52,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	private static final String ARTIFACTLY_URL = "file:///android_asset/artifactly.html#welcome";
 
 	private static final String PROD_LOG_TAG = " ** A.A. **";
-	private static final String DEBUG_LOG_TAG = " ** DEBUG A.A. **";
+	//private static final String DEBUG_LOG_TAG = " ** DEBUG A.A. **";
 
 	// Preferences
 	private static final String PREFS_NAME = "ArtifactlyPrefsFile";
@@ -922,6 +922,10 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			 */
 			switch(result.intValue()) {
 			
+				case -4:
+					// location name collision
+					Toast.makeText(getApplicationContext(), R.string.update_artifact_duplicate_location_name, Toast.LENGTH_LONG).show();
+					break;
 				case -3:
 					// invalid input
 					Toast.makeText(getApplicationContext(), R.string.update_artifact_invalid_input, Toast.LENGTH_LONG).show();
@@ -944,42 +948,51 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		}
 	}
 	
-	private class UpdateLocationTask extends AsyncTask<String, Void, Boolean> {
+	private class UpdateLocationTask extends AsyncTask<String, Void, Integer> {
 		
 		@Override
-		protected Boolean doInBackground(String ... args) {
+		protected Integer doInBackground(String ... args) {
 			
 			if(null == localService) {
 				
-				return Boolean.FALSE;
+				return Integer.valueOf(-2);
 			}
 			else if(null == args[0] || null == args[1] || null == args[2] || null == args[3] ||
 					"".equals(args[0]) || "".equals(args[1]) || "".equals(args[2]) || "".equals(args[3])) {
 				
 				// Above, we check all the fields. They cannot be null or empty
-				return Boolean.FALSE;
+				return Integer.valueOf(-3);
 			}
 			else {
 				
-				return Boolean.valueOf(localService.updateLocation(args[0], args[1], args[2], args[3]));
+				return Integer.valueOf(localService.updateLocation(args[0], args[1], args[2], args[3]));
 			}
 		}
 		
 		@Override
-		protected void onPostExecute(Boolean result) {
+		protected void onPostExecute(Integer result) {
 		
-			/*
-			 * Show Toast in here because onPostExecute executes in UI thread
-			 */
-			if(result.booleanValue()) {
-				
-				new GetArtifactsForCurrentLocationTask().execute();
-				new GetLocationsTask().execute("list");
-				Toast.makeText(getApplicationContext(), R.string.update_location_success, Toast.LENGTH_SHORT).show();
-			}
-			else {
-				
-				Toast.makeText(getApplicationContext(), R.string.update_location_failure, Toast.LENGTH_SHORT).show();
+			switch(result.intValue()) {
+			
+				case -3:
+					// invalid input
+					Toast.makeText(getApplicationContext(), R.string.update_location_invalid_input, Toast.LENGTH_LONG).show();
+					break;
+				case -2:
+					// general error
+					Toast.makeText(getApplicationContext(), R.string.update_location_failure, Toast.LENGTH_LONG).show();
+					break;
+				case -1: 
+					// location name collision
+					Toast.makeText(getApplicationContext(), R.string.update_location_duplicate_location_name, Toast.LENGTH_LONG).show();
+					break;
+				case 1:
+					new GetArtifactsForCurrentLocationTask().execute();
+					new GetLocationsTask().execute("list");
+					Toast.makeText(getApplicationContext(), R.string.update_location_success, Toast.LENGTH_SHORT).show();
+					break;
+				default:
+					Log.e(PROD_LOG_TAG, "ERROR: unexpected update location result");
 			}
 		}
 	}
@@ -1003,7 +1016,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		protected void onPostExecute(Integer result) {
 
 			switch(result.intValue()) {
-			case -2:
+			case -2: // Intentional no break statement for this case
 			case -1:
 				Toast.makeText(getApplicationContext(), R.string.delete_location_failure, Toast.LENGTH_LONG).show();
 				break;
