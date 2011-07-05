@@ -2,7 +2,17 @@
  * Artifactly CSS
  *
  */
-  
+ 
+ 
+@font-face {
+	font-family: nunito-bold;
+	src: url('file:///android_asset/fonts/Nunito-Bold.ttf') format('truetype');
+}
+
+.artifact-button-group .ui-icon {
+	left: 20px !important;
+}
+
 .ui-page {
 	background: #EBF5FF;
 }
@@ -80,22 +90,17 @@ label, .ui-controlgroup-label {
  * Keep the next three padding-top synchronized with what's in artifactly.js. 
  * We set it here so that the first page load gets the correct padding
  */
-.welcome-content-container {
-	padding-top: 30px !important;
-}
-
 .welcome-item-c {
-	padding-top: 55px !important;
+	padding-top: 35px !important;
 }
 
 .welcome-item-d {
-	padding-top: 55px !important;
+	padding-top: 35px !important;
 }
-
+ 
 
 .welcome-content {
 	text-align: center;
-	padding-top: 35px;
 }
 
 #options-sound-notification-controlgroup {
@@ -125,6 +130,13 @@ label, .ui-controlgroup-label {
 }
 
 .welcome-title {
+	font: bold x-large nunito-bold,arial,sans-serif;
+	text-align: center;
+	margin-bottom: 0px;
+	padding-bottom: 0px;
+}
+
+.welcome-label {
 	font: bold large arial,sans-serif;
 }
 

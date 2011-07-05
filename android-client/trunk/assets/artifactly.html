@@ -15,32 +15,30 @@
 
 <div data-role="page" id="welcome">
 
-	<div data-role="header" data-backbtn="false" data-position="inline">
-		<h3>Artifactly</h3>
-	</div>
-
 	<div data-role="content">
+	
+		<span class="welcome-title"><h1>Artifactly</h1></span>
 
 		<fieldset class="ui-grid-a welcome-content-container welcome-grid">
 			<div class="ui-block-a welcome-content welcome-item-a">
 				<img id="welcome-new-artifact-img" src="images/new-launcher.png" alt="New Artifact" />
 				<br />
-				<span class="welcome-title">New Artifact</span>
+				<span class="welcome-label">New Artifact</span>
 			</div>
 			<div class="ui-block-b welcome-content welcome-item-b">
 				<img id="welcome-artifacts-img" src="images/artifacts-launcher.png" alt="Artifacts" />
 				<br />
-				<span class="welcome-title">Artifacts</span>
+				<span class="welcome-label">Artifacts</span>
 			</div>
 			<div class="ui-block-a welcome-content welcome-item-c">
 				<img id="welcome-locations-img" src="images/locations-launcher.png" alt="Locations" />
 				<br />
-				<span class="welcome-title">Locations</span>
+				<span class="welcome-label">Locations</span>
 			</div>
 			<div class="ui-block-b welcome-content welcome-item-d">
-				<img id="welcome-options-img" src="images/options-launcher.png" alt="Info" />
+				<img id="welcome-options-img" src="images/options-launcher.png" alt="Options" />
 				<br />
-				<span class="welcome-title">Options</span>
+				<span class="welcome-label">Options</span>
 			</div>  
 		</fieldset>
 
@@ -209,6 +207,7 @@
 		<div data-role="controlgroup" data-type="horizontal" class="artifact-button-group">
 			<input type="button" name="update-artifact" id="update-artifact" value="Update" />
  			<input type="button" name="delete-artifact" id="delete-artifact" value="Delete" />
+ 			<input type="button" name="close-artifact-icon" id="close-artifact-icon" data-icon="home" value="&nbsp;" />
 		</div>
 	</div>
 	
@@ -238,6 +237,7 @@
 		<div data-role="controlgroup" data-type="horizontal" class="location-button-group">
 			<input type="button" name="update-location" id="update-location" value="Update" />
 			<input type="button" name="delete-location" id="delete-location" value="Delete" />
+			<input type="button" name="close-location-icon" id="close-location-icon" data-icon="home" value="&nbsp;" />
 		</div>
 	</div>
 </div>
