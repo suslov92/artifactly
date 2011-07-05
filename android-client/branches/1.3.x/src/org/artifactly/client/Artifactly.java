@@ -49,7 +49,7 @@ import android.widget.Toast;
 
 public class Artifactly extends Activity implements ApplicationConstants {
 
-	private static final String ARTIFACTLY_URL = "file:///android_asset/artifactly.html#welcome";
+	private static final String ARTIFACTLY_URL = "file:///android_asset/artifactly.html";
 
 	private static final String PROD_LOG_TAG = " ** A.A. **";
 	//private static final String DEBUG_LOG_TAG = " ** DEBUG A.A. **";
