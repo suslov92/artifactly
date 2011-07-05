@@ -358,6 +358,14 @@ $(document).ready(function() {
 	});
 	
 	/*
+	 * Close/home button in update artifact view
+	 */
+	$('#close-artifact-icon').click(function() {
+		
+		$.mobile.changePage($('#welcome'), "none");
+	});
+	
+	/*
 	 * Delete location
 	 */
 	$('#delete-location').click(function() {
@@ -366,6 +374,14 @@ $(document).ready(function() {
 		$('#delete-location-name').html(location.locName);
 		$('#delete-location-name').data(location);
 		$.mobile.changePage($('#location-dialog'), "none");
+	});
+	
+	/*
+	 * Close/home button in update locaiton view
+	 */
+	$('#close-location-icon').click(function() {
+		
+		$.mobile.changePage($('#welcome'), "none");
 	});
 
 	/*
@@ -1052,9 +1068,8 @@ function showWelcomePage() {
 function showOrientationPortraitMode() {
 	
 	// Keep the next three paddings synchronzied with what's in CSS
-	$('.welcome-content-container').css('padding-top', '30px !important');
-	$('.welcome-item-c').css('padding-top', '55px !important');
-	$('.welcome-item-d').css('padding-top', '55px !important');
+	$('.welcome-item-c').css('padding-top', '35px !important');
+	$('.welcome-item-d').css('padding-top', '35px !important');
 
 	$('.welcome-grid').removeClass('ui-grid-c').addClass('ui-grid-a');
 	$('.welcome-item-a').removeClass('ui-block-a').addClass('ui-block-a');
@@ -1067,8 +1082,6 @@ function showOrientationPortraitMode() {
  * Android orientation event
  */
 function showOrientationLandscapeMode() {
-	
-	$('.welcome-content-container').css('padding-top', '15px !important');
 	
 	/*
 	 * The next three lines reset CSS top padding for two items, which is set
