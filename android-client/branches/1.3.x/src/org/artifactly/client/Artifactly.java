@@ -29,6 +29,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Configuration;
 import android.location.Location;
 import android.net.ConnectivityManager;
@@ -100,6 +101,8 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	BroadcastReceiver hasArtifactsAtCurrentLocationReceiver = null;
 	
 	private boolean canAccessInternet = true;
+	
+	private String version = "";
 	
 	/*
 	 * (non-Javadoc)
@@ -175,6 +178,16 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		
 		// Initialize connectivity flag
 		canAccessInternet = hasConnectivity();
+		
+		// Get version informaiton
+		try {
+			
+			version = this.getPackageManager().getPackageInfo(this.getPackageName(), 0).versionName;
+		}
+		catch (NameNotFoundException e) {
+			
+			Log.w(PROD_LOG_TAG, "Exception accessing version information", e);
+		}
 	}
 
 	/*
@@ -415,6 +428,11 @@ public class Artifactly extends Activity implements ApplicationConstants {
 
 	// Define methods that are called from JavaScript
 	public class JavaScriptInterface {
+		
+		public String getVersion() {
+			
+			return version;
+		}
 		
 		public void setRadius(int radius) {
 
