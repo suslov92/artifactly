@@ -1047,6 +1047,8 @@ function showAppInfoPage() {
 
 	$(document).ready(function() {
 
+		var version = window.android.getVersion();
+		$('#app-info-vesrion').html("v" + version);
 		$.mobile.changePage($('#app-info'), "none");
 	});
 }
