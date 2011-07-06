@@ -93,12 +93,12 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	private LocalService localService = null;
 	private boolean isBound = false;
 
-	IntentFilter locationUpdateIntentFilter = new IntentFilter(LOCATION_UPDATE_INTENT);
-	IntentFilter connectivityIntentFilter = new IntentFilter(android.net.ConnectivityManager.CONNECTIVITY_ACTION);
-	IntentFilter hasArtifactsAtCurrentLocationIntentFilter = new IntentFilter(HAS_ARTIFACTS_AT_CURRENT_LOCATION_INTENT);
-	BroadcastReceiver locationUpdateBroadcastReceiver = null;
-	BroadcastReceiver connectivityBroadcastReceiver = null;
-	BroadcastReceiver hasArtifactsAtCurrentLocationReceiver = null;
+	private IntentFilter locationUpdateIntentFilter = new IntentFilter(LOCATION_UPDATE_INTENT);
+	private IntentFilter connectivityIntentFilter = new IntentFilter(android.net.ConnectivityManager.CONNECTIVITY_ACTION);
+	private IntentFilter hasArtifactsAtCurrentLocationIntentFilter = new IntentFilter(HAS_ARTIFACTS_AT_CURRENT_LOCATION_INTENT);
+	private BroadcastReceiver locationUpdateBroadcastReceiver = null;
+	private BroadcastReceiver connectivityBroadcastReceiver = null;
+	private BroadcastReceiver hasArtifactsAtCurrentLocationReceiver = null;
 	
 	private boolean canAccessInternet = true;
 	
