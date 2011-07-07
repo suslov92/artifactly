@@ -9,7 +9,7 @@
 	src: url('file:///android_asset/fonts/Nunito-Bold.ttf') format('truetype');
 }
 
-.artifact-button-group .ui-icon {
+.artifact-button-group .ui-icon, .location-button-group .ui-icon {
 	left: 20px !important;
 }
 
