@@ -111,7 +111,6 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
 		setContentView(R.layout.main);
 		
 		// Setting up the WebView
@@ -179,7 +178,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		// Initialize connectivity flag
 		canAccessInternet = hasConnectivity();
 		
-		// Get version informaiton
+		// Get version information from AndroidManifest.xml
 		try {
 			
 			version = this.getPackageManager().getPackageInfo(this.getPackageName(), 0).versionName;
@@ -249,7 +248,6 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	 */
 	@Override
 	public void onStart() {
-		
 		super.onStart();
 
 		if(!isBound) {
@@ -266,7 +264,6 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	 */
 	@Override
 	public void onResume() {
-
 		super.onResume();
 
 		if(!isBound) {
@@ -288,7 +285,6 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	 */
 	@Override
 	public void onPause() {
-
 		super.onPause();
 
 		if(isBound) {
@@ -317,10 +313,9 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	 */
 	@Override
 	public void onStop() {
-		
 		super.onStop();
 
-		// Reset the WebView to show the main page
+		// Reset the WebView to show the welcome page
 		callJavaScriptFunction(RESET_WEBVIEW);
 		
 		if(isBound) {
@@ -344,7 +339,6 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	 */
 	@Override
 	public void onDestroy() {
-		
 		super.onDestroy();
 
 		if(isBound) {
@@ -436,7 +430,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 		
 		public void setRadius(int radius) {
 
-			if(PREFERENCE_RADIUS_MIN <= radius) {
+			if(PREFERENCE_RADIUS_MIN <= radius && radius <= PREFERENCE_RADIUS_MAX) {
 
 				SharedPreferences settings = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
 				SharedPreferences.Editor editor = settings.edit();
@@ -446,6 +440,40 @@ public class Artifactly extends Activity implements ApplicationConstants {
 				String message = String.format(getResources().getString(R.string.set_location_radius), radius);
 				Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
 			}
+			else {
+				
+				String message = String.format(getResources().getString(R.string.set_location_radius_error), PREFERENCE_RADIUS_MIN, PREFERENCE_RADIUS_MAX);
+				Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
+			}
+		}
+		
+		public void setRadiusUnit(String type) {
+			
+			SharedPreferences settings = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+			SharedPreferences.Editor editor = settings.edit();
+			editor.putString(PREFERENCE_RADIUS_UNIT, type);
+			editor.commit();
+			
+			String unit = "";
+			if(UNIT_M.equals(type)) {
+				
+				unit = "meters";
+			}
+			else if(UNIT_KM.equals(type)) {
+				
+				unit = "kilometers";
+			}
+			else if(UNIT_FT.equals(type)) {
+				
+				unit = "feet";
+			}
+			else if(UNIT_MI.equals(type)) {
+				
+				unit = "miles";
+			}
+
+			String message = String.format(getResources().getString(R.string.preference_radius_unit), unit);
+			Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
 		}
 
 		public void setSoundNotificationPreference(boolean preference) {
@@ -495,6 +523,9 @@ public class Artifactly extends Activity implements ApplicationConstants {
 
 				// Radius preference
 				preferences.put("radius", settings.getInt(PREFERENCE_RADIUS, PREFERENCE_RADIUS_DEFAULT));
+				
+				// Radius unit preference
+				preferences.put("radiusUnit", settings.getString(PREFERENCE_RADIUS_UNIT, PREFERENCE_RADIUS_UNIT_DEFAULT));
 
 				// Static map loading preference
 				preferences.put("loadStaticMap", settings.getBoolean(PREFERENCE_LOAD_STATIC_MAP, PREFERENCE_LOAD_STATIC_MAP_DEFAULT));

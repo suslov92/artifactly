@@ -228,11 +228,12 @@ $(document).ready(function() {
 		var preferences = JSON.parse(window.android.getPreferences());
 		
 		// Setting radius preference
-		$('#radius-input').val(preferences.radius).slider('refresh');
+		$('#options-radius-input').val(preferences.radius);
 		
 		// Resetting options
 		$("input:radio[name='sound-notification']:checked").attr("checked", false).checkboxradio("refresh");
 		$("input:radio[name='load-maps']:checked").attr("checked", false).checkboxradio("refresh");
+		$("input:radio[name='options-radius-unit']:checked").attr("checked", false).checkboxradio("refresh");
 		
 		// Setting sound notification preference
 		if(preferences.soundNotification) {
@@ -253,6 +254,11 @@ $(document).ready(function() {
 			
 			$("#load-maps-off").attr("checked", true).checkboxradio("refresh");
 		}
+		
+		/*
+		 * Constructing the jQuery selector using : options-radius-unit- + [m, km, ft, mi]
+		 */
+		$("#options-radius-unit-" + preferences.radiusUnit).attr("checked", true).checkboxradio("refresh");
 	});
 
 	/*
@@ -389,8 +395,30 @@ $(document).ready(function() {
 	 */
 	$('#set-radius').click(function() {
 
-		var radius = $('#radius-input').val();
+		var radius = $('#options-radius-input').val();
+		
+		/*
+		 * Remove whitespace and check the entered value if it's a number.
+		 * If it's not a number, we set the radius to -1 and let the 
+		 * Activity handle the error case. -1 is less than the minimum radius.
+		 */
+		if(isNaN($.trim(radius))) {
+
+			radius = -1;
+		}
+		
 		window.android.setRadius(+radius);
+	});
+	
+	/*
+	 * Select radius unit click handler
+	 */
+	$("input:radio[name='options-radius-unit']").change(function() {
+		
+		var value = $("input:radio[name='options-radius-unit']:checked").val();
+		
+		window.android.setRadiusUnit(value);
+		
 	});
 
 	/*

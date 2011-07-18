@@ -151,13 +151,22 @@
 	</div>
 
 	<div data-role="content">
-
-		<div data-role="fieldcontain" id="options-radius-fieldcontain">
-			<label for="radius-input">Artifact Search Radius (meters):</label>
-			<input type="range" name="slider" id="radius-input" value="2000"
-				min="100" max="20000" /> <input type="button" name="set-radius"
-				id="set-radius" value="Set Radius" />
-		</div>
+		<fieldset data-role="controlgroup" data-type="horizontal" id="options-radius">
+			<legend>Location Range:</legend>
+			<input type="number" name="options-radius-input" id="options-radius-input" class="options-radius-input" value="2000" min="1" max="20000"/>
+			<input type="button" name="set-radius" id="set-radius" value="Save" />
+		</fieldset>
+		<fieldset data-role="controlgroup" data-type="horizontal" id="options-radius-units">
+			<legend>Units:</legend>
+			<input type="radio" name="options-radius-unit" id="options-radius-unit-m" value="m" checked="checked">
+			<label for="options-radius-unit-m">m</label>
+			<input type="radio" name="options-radius-unit" id="options-radius-unit-km" value="km">
+			<label for="options-radius-unit-km">km</label>
+			<input type="radio" name="options-radius-unit" id="options-radius-unit-ft" value="ft">
+			<label for="options-radius-unit-ft">ft</label>
+			<input type="radio" name="options-radius-unit" id="options-radius-unit-mi" value="mi">
+			<label for="options-radius-unit-mi">mi</label>
+		</fieldset>
 		
 		<fieldset data-role="controlgroup" data-type="horizontal" id="options-sound-notification-controlgroup">
 			<legend>Sound Alert:</legend>

@@ -18,16 +18,27 @@ package org.artifactly.client;
 
 public interface ApplicationConstants {
 
+	/*
+	 * Radius units
+	 */
+	public static final String UNIT_M = "m";
+	public static final String UNIT_KM = "km";
+	public static final String UNIT_FT = "ft";
+	public static final String UNIT_MI = "mi";
+	
 	public static final String NOTIFICATION_INTENT_KEY = "message";
 	public static final String PREFERENCE_RADIUS = "radius";
 	public static final String PREFERENCE_BACKGROUND_COLOR = "background-color";
 	public static final String PREFERENCE_SOUND_NOTIFICATION = "sound-notification";
 	public static final int PREFERENCE_RADIUS_DEFAULT = 2000;
-	public static final int PREFERENCE_RADIUS_MIN = 100;
+	public static final int PREFERENCE_RADIUS_MIN = 1;
+	public static final int PREFERENCE_RADIUS_MAX = 20000;
 	public static final String PREFERENCE_BACKGROUND_COLOR_DEFAULT = "#ADDFFF";
 	public static final boolean PREFERENCE_SOUND_NOTIFICATION_DEFAULT = true;
 	public static final String PREFERENCE_LOAD_STATIC_MAP = "load-static-map";
 	public static final boolean PREFERENCE_LOAD_STATIC_MAP_DEFAULT = true;
+	public static final String PREFERENCE_RADIUS_UNIT = "radius-unit";
+	public static final String PREFERENCE_RADIUS_UNIT_DEFAULT = UNIT_M;
 	public static final String LOCATION_UPDATE_INTENT = "org.artifactly.client.service.LocationUpdateIntent";
 	public static final String HAS_ARTIFACTS_AT_CURRENT_LOCATION_INTENT = "org.artifactly.client.service.HasArtifactsAtCurrentLocationIntent";
 	
@@ -62,4 +73,5 @@ public interface ApplicationConstants {
 	 */
 	public static final byte ARTIFACT_NAME_ERROR = 7;			  // 00000111
 	public static final byte LOCATION_NAME_ERROR = 56;			  // 00111000
+	
 }
