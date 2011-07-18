@@ -61,6 +61,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 
 	// Location radius
 	private int radius = PREFERENCE_RADIUS_DEFAULT;
+	private String radiusUnit = PREFERENCE_RADIUS_UNIT_DEFAULT;
 	
 	// Sound Notification Preference
 	private boolean soundNotificationPreference = PREFERENCE_SOUND_NOTIFICATION_DEFAULT;
@@ -226,20 +227,19 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 			
 			int newRadius = sharedPreferences.getInt(key, PREFERENCE_RADIUS_DEFAULT);
 
-			// TODO: Determine what the appropriate minimum radius is.
 			if(0 < newRadius) {
 				
 				radius = newRadius;
 				sendBroadcast(locationUpdateIntent);
 			}
-			else {
-
-				// TODO: notify user
-			}
 		}
 		else if(PREFERENCE_SOUND_NOTIFICATION.equals(key)) {
 			
 			soundNotificationPreference = sharedPreferences.getBoolean(key, PREFERENCE_SOUND_NOTIFICATION_DEFAULT);
+		}
+		else if(PREFERENCE_RADIUS_UNIT.equals(key)) {
+			
+			radiusUnit = sharedPreferences.getString(key, PREFERENCE_RADIUS_UNIT_DEFAULT);
 		}
 	}
 
@@ -268,6 +268,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		settings = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
 		settings.registerOnSharedPreferenceChangeListener(this);
 		radius = settings.getInt(PREFERENCE_RADIUS, PREFERENCE_RADIUS_DEFAULT);
+		radiusUnit = settings.getString(PREFERENCE_RADIUS_UNIT, PREFERENCE_RADIUS_UNIT_DEFAULT);
 		soundNotificationPreference = settings.getBoolean(PREFERENCE_SOUND_NOTIFICATION, PREFERENCE_SOUND_NOTIFICATION_DEFAULT);
 
 		// Setting up the database
@@ -315,7 +316,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 			Log.e(PROD_LOG_TAG, "ERROR: Was not able to parse povided lat/lng to a Double", exception);
 		}
 
-		if(((int)distanceResult[0]) <= radius) {
+		if(((int)distanceResult[0]) <= getRadiusInMeters()) {
 			
 			return true;
 		}
@@ -323,6 +324,34 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		return false;
 	}
 
+	/*
+	 * Helper method that returns the defined radius in meters
+	 */
+	protected int getRadiusInMeters() {
+		
+		if(UNIT_M.equals(radiusUnit)) {
+			
+			return radius;
+		}
+		else if(UNIT_KM.equals(radiusUnit)) {
+			
+			return radius * 1000;
+			
+		}
+		else if(UNIT_FT.equals(radiusUnit)) {
+			
+			return (int)(radius * 0.3048f);
+			
+		}
+		else if(UNIT_MI.equals(radiusUnit)) {
+			
+			return (int)(radius * 1609.344f);
+		}
+		
+		Log.e(PROD_LOG_TAG, "ERROR: Radius unit not recoginzied");
+		return radius;
+	}
+	
 	/*
 	 * Dispatch method for local service
 	 */
@@ -337,14 +366,6 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 	protected void stopLocationTracking() {
 
 		unregisterLocationListeners();
-	}
-
-	/*
-	 * Dispatch method for local service
-	 */
-	protected int getRadius() {
-		
-		return radius;
 	}
 	
 	/*
@@ -556,7 +577,7 @@ public class ArtifactlyService extends Service implements OnSharedPreferenceChan
 		
 		// Check if the new location's accuracy lies within the defined search radius
 		if(newLocation.hasAccuracy() &&
-		   ((int)newLocation.getAccuracy()) > radius &&
+		   ((int)newLocation.getAccuracy()) > getRadiusInMeters() &&
 		   ((int)newLocation.getAccuracy()) > LOCATION_MAX_ACCURACY_DELTA) {
 			
 			return false;

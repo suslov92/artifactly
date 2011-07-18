@@ -125,17 +125,4 @@ if(typeof window.android == "undefined") {
 		
 		return true;
 	}
-	
-	// Since all the current artifact loading is done from within the Activity, we need to simulate that call
-	//setTimeout("window.android.getArtifactsForCurrentLocation()", 500);
-//	setTimeout("init()", 550);
-//
-//	// INIT
-//	function init() {
-//
-//		$(document).ready(function() {
-//
-//			$('.ui-page').css('background', '#ADDFFF');
-//		});
-//	}
 }

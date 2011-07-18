@@ -15,7 +15,8 @@
     <string name="start_location_tracking_success">Started location tracking</string>
     <string name="start_location_tracking_failure">Failed to start location tracking</string>
     <string name="can_access_internet_error">No Internet access available</string>
-    <string name="set_location_radius">Location radius is %1$d</string>
+    <string name="set_location_radius">Location range is %1$d</string>
+    <string name="set_location_radius_error">Number must lie between %1$d and %2$d</string>
     <string name="delete_artifact_success">Deleted Artifact</string>
     <string name="delete_artifact_failure">Failed to delete Artifact</string>
     <string name="delete_location_success">Deleted Location</string>
@@ -42,4 +43,5 @@
     <string name="preference_sound_alert_off">Sound Alert OFF</string>
     <string name="preference_load_maps_on">Load Maps ON</string>
     <string name="preference_load_maps_off">Load Maps OFF</string>
+    <string name="preference_radius_unit">Setting range unit to %1$s</string>
 </resources>
