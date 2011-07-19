@@ -77,24 +77,8 @@ $(document).ready(function() {
 	$('#artifactly-list').delegate('.artifactly-list-divider', 'click', function(event) {  
 
 		var location = $(this).data();
-		$('#view-location-loc-name').data(location);
-		$('#view-location-loc-name').val(location.locName);
-		$('#view-location-address').html(location.locAddress);
 		
-		// Remove an existing stale map before we add a new one
-		$('#view-location-map img').remove();
-		
-		// Add new map
-		if(window.android.canLoadStaticMap()) {
-			
-			$('<img/>')
-			.attr('src', getMapImage(location.locLat, location.locLng, "15", "250", "200"))
-			.appendTo($('#view-location-map'));
-		}
-		
-		addLocationAddressToViewLocationPage(location.locLat, location.locLng);
-		$('#delete-location-name').data({ navigateTo : '#manage-artifacts' });
-		$.mobile.changePage($('#view-location'), "none");
+		viewLocationPage(location, false);
 	});
 	
 	/*
@@ -103,23 +87,12 @@ $(document).ready(function() {
 	$('#manage-locations-list').delegate('li', 'click', function(event) {  
 
 		var location = $(this).data();
-		$('#view-location-loc-name').data(location);
-		$('#view-location-loc-name').val(location.locName);
-		$('#view-location-address').html(location.locAddress);
 		
-		// Remove stale map image
-		$('#view-location-map img').remove();
-		
-		// Add new map
-		if(window.android.canLoadStaticMap()) {
-						
-			$('<img/>')
-			.attr('src', getMapImage(location.locLat, location.locLng, "15", "250", "200"))
-			.appendTo($('#view-location-map'));
-		}
-		
-		$('#delete-location-name').data({ navigateTo : '#manage-locations' });
-		$.mobile.changePage($('#view-location'), "none");
+		/*
+		 * When we construct the manage locations list, we already lookup 
+		 * the address and attache it to the location. Thus we pass in 'true'
+		 */
+		viewLocationPage(location, true);
 	});
 	
 	/*
@@ -1159,5 +1132,41 @@ function htmlEncode(value) {
 function getMapImage(lat, lng, zoom, width, height) {
 
 	return "http://maps.google.com/maps/api/staticmap?center=" + lat + "," + lng + "&zoom=" + zoom + "&size=" + width + "x" + height + "&markers=color:red%7Csize:small%7C" + lat + "," + lng + "&sensor=false";
+}
+
+/*
+ * Helper method that populates the view-location page
+ * 
+ * @param location : location object
+ * @param hasAddress : boolean indicating if the location parameter has the address
+ */
+function viewLocationPage(location, hasAddress) {
+	
+	$('#view-location-loc-name').data(location);
+	$('#view-location-loc-name').val(location.locName);
+	
+	if(hasAddress) {
+		
+		$('#view-location-address').html(location.locAddress);
+	}
+	
+	// Remove stale map image
+	$('#view-location-map img').remove();
+	
+	// Add new map
+	if(window.android.canLoadStaticMap()) {
+					
+		$('<img/>')
+		.attr('src', getMapImage(location.locLat, location.locLng, "15", "250", "200"))
+		.appendTo($('#view-location-map'));
+	}
+	
+	if(!hasAddress) {
+		
+		addLocationAddressToViewLocationPage(location.locLat, location.locLng);
+	}
+	
+	$('#delete-location-name').data({ navigateTo : '#manage-locations' });
+	$.mobile.changePage($('#view-location'), "none");
 }
 
