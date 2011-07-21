@@ -379,4 +379,14 @@ public class LocalServiceImpl extends Binder implements LocalService {
 		
 		return dbAdapter.updateLocation(locationId, locationName, locationLat, locationLng);
 	}
+	
+	public int updateLocationCoodinates(String locationId, String locationName, String locationLat, String locationLng) {
+		
+		if(null == dbAdapter) {
+			
+			return -2;
+		}
+		
+		return dbAdapter.updateLocationCoodinates(locationId, locationName, locationLat, locationLng);
+	}
 }

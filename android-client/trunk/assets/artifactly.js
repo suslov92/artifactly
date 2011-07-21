@@ -320,7 +320,7 @@ $(document).ready(function() {
 			 * a different page when the getLocationsListCallback() is executed
 			 */
 			$('#view-location').data({navigate:'no'});
-			window.android.updateLocation(location.locId, updatedLocName, location.locLat, location.locLng);
+			window.android.updateLocation(location.locId, updatedLocName, (location.locLat).toFixed(6), (location.locLng).toFixed(6));
 			$('#view-location-loc-name').data({locName:updatedLocName});
 		}
 	});
@@ -356,7 +356,20 @@ $(document).ready(function() {
 	});
 	
 	/*
-	 * Close/home button in update locaiton view
+	 * Click on view location map image
+	 */
+	$('#view-location-map').click(function() {
+		
+		$.mobile.changePage($('#location-chooser-map'), "none");
+		
+		// Showing the loading animation
+		$.mobile.pageLoading();
+
+		loadMapApi('loadLocationChooserMap');
+	});
+	
+	/*
+	 * Close/home button in update location view
 	 */
 	$('#close-location-icon').click(function() {
 		
@@ -431,11 +444,11 @@ $(document).ready(function() {
 		if(selectedLocation.locName == "Current Location") {
 		
 			var locationName = $('#artifact-location-name').val();
-			window.android.createArtifact(artName, artData, locationName, selectedLocation.locLat, selectedLocation.locLng);
+			window.android.createArtifact(artName, artData, locationName, (selectedLocation.locLat).toFixed(6), (selectedLocation.locLng).toFixed(6));
 		}
 		else {
 		
-			window.android.createArtifact(artName, artData, selectedLocation.locName, selectedLocation.locLat, selectedLocation.locLng);
+			window.android.createArtifact(artName, artData, selectedLocation.locName, (selectedLocation.locLat).toFixed(6), (selectedLocation.locLng).toFixed(6));
 		}
 	});
 	
@@ -565,6 +578,17 @@ $(document).ready(function() {
 			$('#artifact-location-name-div').hide();
 		}
 	});
+	
+	/*
+	 * Location chooser update button click handler
+	 */
+	$('#location-chooser-update').click(function() {
+		var location = $('#location-chooser-map').data();
+		$('#view-location').data({navigate:'no'});
+		window.android.updateLocationCoodinates(location.locId, location.locName, (location.locLat).toFixed(6), (location.locLng).toFixed(6));
+		viewLocationPage(location, false);
+	});
+	
 }); // END jQuery main block
 
 /*
@@ -686,6 +710,55 @@ function loadMap() {
 		$.mobile.pageLoading(true);
 	});
 }
+
+/*
+ * Map page callback
+ */
+function loadLocationChooserMap() {
+
+	$(document).ready(function() {
+		
+		$('#location-chooser-update').button('disable');
+		
+		var location = $('#view-location-loc-name').data();
+		var latLng = new google.maps.LatLng(location.locLat, location.locLng);
+
+		var myOptions = {
+				zoom: 15,
+				center: latLng,
+				mapTypeId: google.maps.MapTypeId.ROADMAP,
+				navigationControl: true,
+			    navigationControlOptions: {
+			        style: google.maps.NavigationControlStyle.SMALL,
+			        position: google.maps.ControlPosition.TOP_RIGHT
+			    },
+		};
+
+		var map = new google.maps.Map(document.getElementById("location-chooser-canvas"), myOptions);
+		map.panTo(latLng);
+
+		var marker = new google.maps.Marker({
+			position: latLng,
+			map: map,
+			animation: google.maps.Animation.DROP,
+			draggable: true
+		});
+		
+		google.maps.event.addListener(marker, 'dragend', function() {
+			
+			/*
+			 * Store the location data so that we can persist it when the user clicks 
+			 * on the update button
+			 */
+			$('#location-chooser-update').button('enable');
+			$('#location-chooser-map').data({locId:location.locId, locName:location.locName, locLat:marker.position.lat(), locLng:marker.position.lng()});
+		});
+		
+		// Hide the maps loading animation
+		$.mobile.pageLoading(true);
+	});
+}
+
 
 /*
  * Create artifact callback
@@ -1142,31 +1215,34 @@ function getMapImage(lat, lng, zoom, width, height) {
  */
 function viewLocationPage(location, hasAddress) {
 	
-	$('#view-location-loc-name').data(location);
-	$('#view-location-loc-name').val(location.locName);
-	
-	if(hasAddress) {
+	$(document).ready(function() {
 		
-		$('#view-location-address').html(location.locAddress);
-	}
-	
-	// Remove stale map image
-	$('#view-location-map img').remove();
-	
-	// Add new map
-	if(window.android.canLoadStaticMap()) {
-					
-		$('<img/>')
-		.attr('src', getMapImage(location.locLat, location.locLng, "15", "250", "200"))
-		.appendTo($('#view-location-map'));
-	}
-	
-	if(!hasAddress) {
-		
-		addLocationAddressToViewLocationPage(location.locLat, location.locLng);
-	}
-	
-	$('#delete-location-name').data({ navigateTo : '#manage-locations' });
-	$.mobile.changePage($('#view-location'), "none");
+		$('#view-location-loc-name').data(location);
+		$('#view-location-loc-name').val(location.locName);
+
+		if(hasAddress) {
+
+			$('#view-location-address').html(location.locAddress);
+		}
+
+		// Remove stale map image
+		$('#view-location-map img').remove();
+
+		// Add new map
+		if(window.android.canLoadStaticMap()) {
+
+			$('<img/>')
+			.attr('src', getMapImage(location.locLat, location.locLng, "15", "250", "200"))
+			.appendTo($('#view-location-map'));
+		}
+
+		if(!hasAddress) {
+
+			addLocationAddressToViewLocationPage(location.locLat, location.locLng);
+		}
+
+		$('#delete-location-name').data({ navigateTo : '#manage-locations' });
+		$.mobile.changePage($('#view-location'), "none");
+	});
 }
 
