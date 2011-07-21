@@ -320,7 +320,7 @@ $(document).ready(function() {
 			 * a different page when the getLocationsListCallback() is executed
 			 */
 			$('#view-location').data({navigate:'no'});
-			window.android.updateLocation(location.locId, updatedLocName, (location.locLat).toFixed(6), (location.locLng).toFixed(6));
+			window.android.updateLocation(location.locId, updatedLocName, (+location.locLat).toFixed(6), (+location.locLng).toFixed(6));
 			$('#view-location-loc-name').data({locName:updatedLocName});
 		}
 	});
@@ -444,11 +444,11 @@ $(document).ready(function() {
 		if(selectedLocation.locName == "Current Location") {
 		
 			var locationName = $('#artifact-location-name').val();
-			window.android.createArtifact(artName, artData, locationName, (selectedLocation.locLat).toFixed(6), (selectedLocation.locLng).toFixed(6));
+			window.android.createArtifact(artName, artData, locationName, (+selectedLocation.locLat).toFixed(6), (+selectedLocation.locLng).toFixed(6));
 		}
 		else {
 		
-			window.android.createArtifact(artName, artData, selectedLocation.locName, (selectedLocation.locLat).toFixed(6), (selectedLocation.locLng).toFixed(6));
+			window.android.createArtifact(artName, artData, selectedLocation.locName, (+selectedLocation.locLat).toFixed(6), (+selectedLocation.locLng).toFixed(6));
 		}
 	});
 	
@@ -585,7 +585,7 @@ $(document).ready(function() {
 	$('#location-chooser-update').click(function() {
 		var location = $('#location-chooser-map').data();
 		$('#view-location').data({navigate:'no'});
-		window.android.updateLocationCoodinates(location.locId, location.locName, (location.locLat).toFixed(6), (location.locLng).toFixed(6));
+		window.android.updateLocationCoodinates(location.locId, location.locName, (+location.locLat).toFixed(6), (+location.locLng).toFixed(6));
 		viewLocationPage(location, false);
 	});
 	
@@ -692,7 +692,7 @@ function loadMap() {
 			animation : google.maps.Animation.DROP
 		});
 		
-		var content = "Latitude = " + (location.locLat).toFixed(6) + "<br />Longitude = " + (location.locLng).toFixed(6) +"<br />Accuracy = " + (location.locAccuracy).toFixed(2) + " m";
+		var content = "Latitude = " + (+location.locLat).toFixed(6) + "<br />Longitude = " + (+location.locLng).toFixed(6) +"<br />Accuracy = " + (+location.locAccuracy).toFixed(2) + " m";
 		var infowindow = new google.maps.InfoWindow({
 			content: content
 		});
