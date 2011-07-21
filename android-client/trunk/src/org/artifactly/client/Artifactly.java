@@ -615,6 +615,11 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			
 			new UpdateLocationTask().execute(locId, locName, locLat, locLng);
 		}
+		
+		public void updateLocationCoodinates(String locId, String locName, String locLat, String locLng) {
+			
+			new UpdateLocationCoodinatesTask().execute(locId, locName, locLat, locLng);
+		}
 	} 
 
 	// Method that returns a service connection
@@ -1045,6 +1050,57 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			}
 		}
 	}
+	
+	private class UpdateLocationCoodinatesTask extends AsyncTask<String, Void, Integer> {
+		
+		@Override
+		protected Integer doInBackground(String ... args) {
+			
+			if(null == localService) {
+				
+				return Integer.valueOf(-2);
+			}
+			else if(null == args[0] || null == args[1] || null == args[2] || null == args[3] ||
+					"".equals(args[0]) || "".equals(args[1]) || "".equals(args[2]) || "".equals(args[3])) {
+				
+				// Above, we check all the fields. They cannot be null or empty
+				return Integer.valueOf(-3);
+			}
+			else {
+				
+				return Integer.valueOf(localService.updateLocationCoodinates(args[0], args[1], args[2], args[3]));
+			}
+		}
+		
+		@Override
+		protected void onPostExecute(Integer result) {
+		
+			switch(result.intValue()) {
+			
+				case -3:
+					// invalid input
+					Toast.makeText(getApplicationContext(), R.string.update_location_invalid_input, Toast.LENGTH_LONG).show();
+					break;
+				case -2:
+					// general error
+					Toast.makeText(getApplicationContext(), R.string.update_location_failure, Toast.LENGTH_LONG).show();
+					break;
+				case -1: 
+					// coordinate collision
+					Toast.makeText(getApplicationContext(), R.string.update_location_coordinates_exist, Toast.LENGTH_LONG).show();
+					break;
+				case 1:
+					new GetArtifactsForCurrentLocationTask().execute();
+					new GetLocationsTask().execute("list");
+					Toast.makeText(getApplicationContext(), R.string.update_location_success, Toast.LENGTH_SHORT).show();
+					break;
+				default:
+					Log.e(PROD_LOG_TAG, "ERROR: unexpected update location result");
+			}
+		}
+	}
+	
+	
 	private class DeleteLocationTask extends AsyncTask<String, Void, Integer> {
 
 		@Override

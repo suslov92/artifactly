@@ -31,6 +31,7 @@
     <string name="update_location_success">Updated Location</string>
     <string name="update_location_failure">Failed to update Location</string>
     <string name="update_location_duplicate_location_name">Location with this name already exists</string>
+    <string name="update_location_coordinates_exist">Location already exists at selected coordinates</string>
     <string name="update_location_invalid_input">Invalid input</string>
     <string name="options">Options</string>
     <string name="map">Map</string>

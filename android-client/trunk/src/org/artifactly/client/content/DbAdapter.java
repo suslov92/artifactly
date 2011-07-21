@@ -299,6 +299,34 @@ public class DbAdapter implements ApplicationConstants {
 		return ((numberLocRowsAffected ==  1) ? 1 : -2);
 	}
 	
+	
+	/*
+	 * Update a location's coordinates
+	 */
+	public int updateLocationCoodinates(String locationId, String locationName, String locationLat, String locationLng) {
+		
+		
+		/*
+		 * Check if location for provided coordinates exist
+		 */
+		long locId = getLocation(locationLat, locationLng);
+		
+		if(-1 == locId) {
+		
+			ContentValues locContentValues = new ContentValues();
+			locContentValues.put(LOC_FIELDS[LOC_NAME], locationName);
+			locContentValues.put(LOC_FIELDS[LOC_LATITUDE], locationLat);
+			locContentValues.put(LOC_FIELDS[LOC_LONGITUDE], locationLng);
+			int numberLocRowsAffected = mSQLiteDatabase.update(DB_TABLE_LOCATION, locContentValues, LOC_FIELDS[LOC_ID] + "=?", new String[] {locationId});
+
+			return ((numberLocRowsAffected ==  1) ? 1 : -2);
+		}
+		else {
+			
+			return -1;
+		}
+	}
+	
 	/*
 	 * Select all the location and artifact relationships
 	 * NOTE: Caller must call cursor.close()

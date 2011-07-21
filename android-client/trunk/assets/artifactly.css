@@ -175,22 +175,29 @@ label, .ui-controlgroup-label {
 	float: right;
 }
 
+.location-chooser-buttons {
+	position:absolute;
+   	bottom:0;
+   	width:100%;
+   	text-align: center;	
+}
+
 #google-search-branding {
 	float: left;
 }
 
-#map {
+#map, #location-chooser-map {
 	width:100%;
 	height:100%;	
 }
 
-#map-content {
+#map-content, #location-chooser-content {
 	width:100%;
 	height:100%;
 	padding:0;
 }
 
-#map-canvas {
+#map-canvas, #location-chooser-canvas {
 	width:100%;
 	height:100%;
 }

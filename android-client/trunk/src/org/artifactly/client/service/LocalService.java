@@ -54,6 +54,17 @@ public interface LocalService {
 	 * @return 1 on success, -1 if we have a location name collision, -2 on error
 	 */
 	public int updateLocation(String locationId, String locationName, String locationLat, String locationLng);
+	
+	/**
+	 * Update a location's coordinates
+	 * 
+	 * @param locationId
+	 * @param locationName
+	 * @param locationLat
+	 * @param locationLng
+	 * @return 1 on success, -1 if we have a location coordinate collision, -2 on error
+	 */
+	public int updateLocationCoodinates(String locationId, String locationName, String locationLat, String locationLng);
 
 	/**
 	 * Get the current location, latitude, longitude, accuracy
