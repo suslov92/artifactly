@@ -1,0 +1,232 @@
+/*
+ * Artifactly CSS
+ *
+ */
+ 
+ 
+@font-face {
+	font-family: nunito-bold;
+	src: url('file:///android_asset/fonts/Nunito-Bold.ttf') format('truetype');
+}
+
+.options-radius-input {
+	width: 80px !important;
+}
+
+.artifact-button-group .ui-icon, .location-button-group .ui-icon {
+	left: 20px !important;
+}
+
+.ui-page {
+	background: #EBF5FF;
+}
+
+.ui-title {
+	font: bold medium arial,sans-serif !important;
+}
+
+/* Change all the labels' font */
+label, .ui-controlgroup-label {
+	font: bold large arial,sans-serif !important;
+	padding-top: 10px;
+}
+
+.artifactly-label {
+	font-weight: bold !important;
+}
+
+.artifact-button-group {
+	text-align: center;
+}
+
+.location-button-group {
+	text-align: center;
+}
+
+.artifact-main-page-footer {
+	position: absolute !important;
+	bottom: 0;
+	left: 0;
+	padding-bottom: 5px;
+	padding-top: 5px;"	
+}
+
+.delete-artifact-name {
+	font-weight: bold;
+	text-align: center;
+}
+
+.delete-location-name {
+	font-weight: bold;
+	text-align: center;
+}
+
+.delete-artifact-header {
+	text-align: center;
+}
+
+.view-artifact-map,
+.view-location-map {
+	text-align: center;
+}
+
+.view-location-map-help {
+	text-align: center;
+	font: normal small arial,sans-serif;
+	margin-top:0px;
+	margin-bottom:0px;
+}
+
+div.view-location-map > img {
+	border:2px solid blue;
+}
+
+.artifactly-list-divider h3 {
+	padding-left: 20px;
+}
+
+.artifactly-list-divider img {
+	padding-top: 7px;
+}
+
+.select-background-color {
+	padding-top: 4px;
+	padding-bottom: 2px;
+}
+
+.manage-locations {
+	padding-bottom: 5px !important;
+}
+
+/*  
+ * Keep the next three padding-top synchronized with what's in artifactly.js. 
+ * We set it here so that the first page load gets the correct padding
+ */
+.welcome-item-c {
+	padding-top: 35px !important;
+}
+
+.welcome-item-d {
+	padding-top: 35px !important;
+}
+ 
+
+.welcome-content {
+	text-align: center;
+}
+
+#options-sound-notification-controlgroup {
+	padding-top: 20px;
+}
+
+#options-sound-notification-controlgroup .ui-controlgroup-label {
+	width: auto;
+	float: left;
+	font: normal large arial,sans-serif;
+}
+
+#options-sound-notification-controlgroup .ui-controlgroup-controls {
+	width: auto;
+	float: right;
+}
+
+#options-load-map-controlgroup .ui-controlgroup-label {
+	width: auto;
+	float: left;
+	font: normal large arial,sans-serif;
+}
+
+#options-load-map-controlgroup .ui-controlgroup-controls {
+	width: auto;
+	float: right;
+}
+
+#options-radius-units .ui-controlgroup-label {
+	width: auto;
+	float: left;
+	font: normal large arial,sans-serif;
+}
+
+#options-radius-units .ui-controlgroup-controls  {
+	width: auto;
+	float: right;
+}
+
+#options-radius .ui-controlgroup-label {
+	width: auto;
+	float: left;
+	font: normal large arial,sans-serif;
+}
+
+#options-radius .ui-controlgroup-controls  {
+	width: auto;
+	float: right;
+	white-space:nowrap;
+}
+
+.welcome-title {
+	font: bold x-large nunito-bold,arial,sans-serif;
+	text-align: center;
+	margin-bottom: 0px;
+	padding-bottom: 0px;
+}
+
+.welcome-label {
+	font: bold large arial,sans-serif;
+}
+
+.options-one-line {
+	white-space:nowrap;
+}
+
+.options-align-right {
+	float: right;
+}
+
+.location-chooser-buttons {
+	position:absolute;
+   	bottom:0;
+   	width:100%;
+   	text-align: center;	
+}
+
+#google-search-branding {
+	float: left;
+}
+
+#map, #location-chooser-map {
+	width:100%;
+	height:100%;	
+}
+
+#map-content, #location-chooser-content {
+	width:100%;
+	height:100%;
+	padding:0;
+}
+
+#map-canvas, #location-chooser-canvas {
+	width:100%;
+	height:100%;
+}
+
+#app-info-content {
+	text-align: center;
+	font-weight: bold;
+}
+
+#sound-notification-option div {
+	font-weight: bold !important;
+}
+
+#view-location-address {
+	text-align: center;
+}
+
+#manage-locations-list li p {
+	font-weight: normal !important;
+}
+
+li img {
+	padding: 1px;
+}
