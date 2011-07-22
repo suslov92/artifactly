@@ -65,12 +65,20 @@ label, .ui-controlgroup-label {
 	text-align: center;
 }
 
-.view-artifact-map {
+.view-artifact-map,
+.view-location-map {
 	text-align: center;
 }
 
-.view-location-map {
+.view-location-map-help {
 	text-align: center;
+	font: normal small arial,sans-serif;
+	margin-top:0px;
+	margin-bottom:0px;
+}
+
+div.view-location-map > img {
+	border:2px solid blue;
 }
 
 .artifactly-list-divider h3 {

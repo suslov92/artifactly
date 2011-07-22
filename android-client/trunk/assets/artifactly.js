@@ -756,6 +756,8 @@ function loadLocationChooserMap() {
 		
 		// Hide the maps loading animation
 		$.mobile.pageLoading(true);
+		
+		window.android.showMessage("update_location_help");
 	});
 }
 

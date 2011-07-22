@@ -45,4 +45,5 @@
     <string name="preference_load_maps_on">Load Maps ON</string>
     <string name="preference_load_maps_off">Load Maps OFF</string>
     <string name="preference_radius_unit">Setting range unit to %1$s</string>
+    <string name="update_location_help">Drag the location marker to change the location</string>
 </resources>

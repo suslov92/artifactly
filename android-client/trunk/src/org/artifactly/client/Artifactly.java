@@ -620,6 +620,14 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			
 			new UpdateLocationCoodinatesTask().execute(locId, locName, locLat, locLng);
 		}
+		
+		public void showMessage(String messageKey) {
+			
+			if("update_location_help".equals(messageKey)) {
+			
+				Toast.makeText(getApplicationContext(), R.string.update_location_help, Toast.LENGTH_LONG).show();
+			}
+		}
 	} 
 
 	// Method that returns a service connection
