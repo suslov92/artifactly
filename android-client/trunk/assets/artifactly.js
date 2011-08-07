@@ -260,22 +260,23 @@ $(document).ready(function() {
 		
 		loadMapApi('getSearchCenterPoint');
 		
+		var apiKeys = JSON.parse(window.android.getApiKeys());
+		$('#new-location').data(apiKeys);
+		
 		var canAccessInternet = window.android.canAccessInternet();
 		if(canAccessInternet && typeof(google) == "undefined") {
 			
 			// Can access the Internet, thus we can load the Google JSAPI
-			var apiKey = window.android.getGoogleSearchApiKey();
 			var script = document.createElement("script");
-			script.src = "https://www.google.com/jsapi?key=" + apiKey + "&callback=loadSearchApi";
+			script.src = "https://www.google.com/jsapi?key=" + apiKeys.localSearch + "&callback=loadSearchApi";
 			script.type = "text/javascript";
 			document.getElementsByTagName("head")[0].appendChild(script);
 		}
 		else if(canAccessInternet && typeof(google.search) == "undefined") {
 			
 			// Can access the Internet, thus we can load the Google JSAPI
-			var apiKey = window.android.getGoogleSearchApiKey();
 			var script = document.createElement("script");
-			script.src = "https://www.google.com/jsapi?key=" + apiKey + "&callback=loadSearchApi";
+			script.src = "https://www.google.com/jsapi?key=" + apiKeys.localSearch + "&callback=loadSearchApi";
 			script.type = "text/javascript";
 			document.getElementsByTagName("head")[0].appendChild(script);
 		}
@@ -453,6 +454,76 @@ $(document).ready(function() {
 	});
 	
 	/*
+	 * Nearby Google places button
+	 */
+	$('#nearby-places-button').click(function() {
+		
+		$(document).ready(function() {
+			
+			var latLng = $('body').data("searchCenterPoinLatLng");
+			var apiKeys = $('#new-location').data();
+			
+			$.ajax({
+				type:'Get',
+				url:'https://maps.googleapis.com/maps/api/place/search/json?location=' + latLng.lat() + ',' + latLng.lng() + '&types=establishment&radius=1000&sensor=false&key=' + apiKeys.placesSearch,
+				success:function(data) {
+					
+					// Reset the list
+					$('#search-result-list li').remove();
+					$('#search-result-list ul').listview('refresh');
+					
+					$('#search-result-message').html('');
+					$('#entered-search-term').html('');
+					$('#google-search-branding').html('');
+					
+					$('#br-visability').addClass('br-visability');
+					
+					if (data.results && data.results.length > 0) {
+						
+						for (var i = 0; i < data.results.length; i++) {
+
+							$('<li/>', { html : '<h3>' + data.results[i].name + '</h3>' })        
+								.data({
+									locName : htmlDecode(stripHtml(data.results[i].name)),
+									locLat : data.results[i].geometry.location.lat,
+									locLng : data.results[i].geometry.location.lng    
+								})        
+								.appendTo($('#search-result-list ul'));
+						}
+
+						// Refresh the list so that all the data is shown
+						$('#search-result-list ul').listview('refresh');
+					}
+					else {
+						
+						if(data.status == "ZERO_RESULTS") {
+							
+							$('#search-result-message').html("<p>Search: Zero Results</p>");
+						}
+						else if(data.status == "OVER_QUERY_LIMIT") {
+						
+							$('#search-result-message').html("<p>Search: Over Query Limit</p>");
+						}
+						else if(data.status == "REQUEST_DENIED") {
+							
+							$('#search-result-message').html("<p>Search: Request Denied</p>");
+							
+						}
+						else if(data.status == "INVALID_REQUEST") {
+							
+							$('#search-result-message').html("<p>Search: Invalid Request</p>");
+						}
+						else {
+							
+							$('#search-result-message').html("<p>Search: Zero Results</p>");
+						}
+					}
+				}
+			});
+		});
+	});
+	
+	/*
 	 * Search location button
 	 */
 	$('#search-location-button').click(function() {
@@ -621,6 +692,8 @@ function searchComplete(localSearch) {
 		// Reset the list
 		$('#search-result-list li').remove();
 		$('#search-result-list ul').listview('refresh');
+		
+		$('#br-visability').removeClass('br-visability');
 		
 		// Do we have any search results
 		if (localSearch.results && localSearch.results.length > 0) {
