@@ -84,6 +84,9 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	private static final String SHOW_ARTIFACTS_PAGE = "showArtifactsPage";
 	private static final String BROADCAST_CURRENT_LOCATION = "broadcastCurrentLocation";
 	
+	// Thread sleep time before we try the callJavaScriptFunction(...) call again
+	private static final int THREAD_SLEEP_BEFORE_RETRY_JS_CALL = 300; 
+	private static final int THREAD_SLEEP_BEFORE_RETRY_ACCESS_LOCALSERVICE = 1000;
 	private WebView webView = null;
 
 	private Handler mHandler = new Handler();
@@ -365,11 +368,11 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			case Configuration.ORIENTATION_PORTRAIT:
 				
 				callJavaScriptFunction(SHOW_ORIENTATION_PORTRAIT_MODE);
-			break;
+				break;
 			case Configuration.ORIENTATION_LANDSCAPE:
 				
 				callJavaScriptFunction(SHOW_ORIENTATION_LANDSCAPE_MODE);
-			break;
+				break;
 		}
 	}
 	
@@ -405,6 +408,16 @@ public class Artifactly extends Activity implements ApplicationConstants {
 					webView.loadUrl(stringBuilder.toString());
 				}
 				catch(Exception e) {
+					
+					try {
+						
+						Thread.sleep(THREAD_SLEEP_BEFORE_RETRY_JS_CALL);
+						webView.loadUrl(stringBuilder.toString());
+					}
+					catch (InterruptedException ie) {
+						
+						Log.w(PROD_LOG_TAG, "EXCEPTION: Thread.sleep(N)", ie);
+					}
 					
 					Log.e(PROD_LOG_TAG, "callJavaScriptFunction(...)", e);
 				}
@@ -596,9 +609,21 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			return canLoadStaticMap && canAccessInternet;
 		}
 		
-		public String getGoogleSearchApiKey() {
+		public String getApiKeys() {
 			
-			return getResources().getString(R.string.google_search_api_key);
+			JSONObject apiKeys = new JSONObject();
+			
+			try {
+				
+				apiKeys.put("localSearch", getResources().getString(R.string.google_search_api_key));
+				apiKeys.put("placesSearch", getResources().getString(R.string.google_places_api_key));
+			}
+			catch(JSONException e) {
+
+				Toast.makeText(getApplicationContext(), R.string.loading_api_keys_error, Toast.LENGTH_SHORT).show();
+			}
+
+			return apiKeys.toString();
 		}
 		
 		public void getLocations(String callback) {
@@ -841,7 +866,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 				try {
 
 					// Give enough time so that the localService can bind
-					Thread.sleep(1000);
+					Thread.sleep(THREAD_SLEEP_BEFORE_RETRY_ACCESS_LOCALSERVICE);
 				}
 				catch(Exception e) {
 
