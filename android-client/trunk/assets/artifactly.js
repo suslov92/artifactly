@@ -460,6 +460,8 @@ $(document).ready(function() {
 		
 		$(document).ready(function() {
 			
+			$('#search-result-message').html('Loading ...');
+			
 			var latLng = $('body').data("searchCenterPoinLatLng");
 			var apiKeys = $('#new-location').data();
 			
@@ -475,8 +477,6 @@ $(document).ready(function() {
 					$('#search-result-message').html('');
 					$('#entered-search-term').html('');
 					$('#google-search-branding').html('');
-					
-					$('#br-visability').addClass('br-visability');
 					
 					if (data.results && data.results.length > 0) {
 						
@@ -692,8 +692,6 @@ function searchComplete(localSearch) {
 		// Reset the list
 		$('#search-result-list li').remove();
 		$('#search-result-list ul').listview('refresh');
-		
-		$('#br-visability').removeClass('br-visability');
 		
 		// Do we have any search results
 		if (localSearch.results && localSearch.results.length > 0) {

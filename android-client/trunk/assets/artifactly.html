@@ -109,23 +109,19 @@
 	
 	<div data-role="content">
 		
-		<div data-role="fieldcontain">
-    		<input type="text" name="search-entry" id="search-entry" value=""/>
-    		<input type="button" name="search-location-button" id="search-location-button" data-inline="true" value="Search" />
-    		<span>- OR -</span>
-    		<input type="button" name="nearby-places-button" id="nearby-places-button" data-inline="true" value="Nearby" />
+		<div id="new-locaiton-search-group" data-role="fieldcontain">
+    		<input type="text" name="search-entry" id="search-entry"  class="new-location-search-text" value=""/>
+    		<input type="button" name="search-location-button" id="search-location-button" data-icon="search" data-iconpos="notext" value=""/>
 		</div>
+		<input type="button" name="nearby-places-button" id="nearby-places-button" data-inline="true" value="Nearby" />
+		<br />
 		<span>
 		<b>Current Location:</b><br />
 		</span>
 		<div id="new-location-center-point"></div>
-		<br id="br-visability"/>
 		<div id="entered-search-term"></div>
-		<br id="br-visability"/>
 		<div id="google-search-branding"></div>
-		<br id="br-visability"/>
 		<div id="search-result-message"></div>
-		<br id="br-visability"/>
 		<div id="search-result-list">
 			<ul data-role="listview" data-inset="true"></ul>
 		</div>
@@ -173,11 +169,13 @@
 	</div>
 
 	<div data-role="content">
+	
 		<fieldset data-role="controlgroup" data-type="horizontal" id="options-radius">
 			<legend>Location Range:</legend>
 			<input type="number" name="options-radius-input" id="options-radius-input" class="options-radius-input" value="2000" min="1" max="20000"/>
 			<input type="button" name="set-radius" id="set-radius" value="Save" />
 		</fieldset>
+	
 		<fieldset data-role="controlgroup" data-type="horizontal" id="options-radius-units">
 			<legend>Units:</legend>
 			<input type="radio" name="options-radius-unit" id="options-radius-unit-m" value="m" checked="checked">

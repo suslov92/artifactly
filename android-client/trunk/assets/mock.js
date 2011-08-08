@@ -27,9 +27,9 @@ if(typeof window.android == "undefined") {
 		
 	window.android = {};
 	
-	window.android.getGoogleSearchApiKey = function() {
-
-		return "YourKey";
+	window.android.getApiKeys = function() {
+		
+		return '';
 	}
 
 	window.android.getArtifactsForCurrentLocation = function () {
