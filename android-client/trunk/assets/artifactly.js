@@ -250,7 +250,6 @@ $(document).ready(function() {
 	 */
 	$('#new-location').bind('pageshow', function() {
 		
-		$('#new-location-center-point').html("Loading ...");
 		$('#search-result-message').html('');
 		$('#entered-search-term').html('');
 		$('#google-search-branding').html('');
@@ -258,13 +257,21 @@ $(document).ready(function() {
 		$('#search-result-list li').remove();
 		$('#search-result-list ul').listview('refresh');
 		
+		var canAccessInternet = window.android.canAccessInternet();
+		
+		if(!canAccessInternet) {
+			
+			$('#search-result-message').html('No Internet connection available');
+			return;
+		}
+		
+		$('#new-location-center-point').html("Loading ...");
 		loadMapApi('getSearchCenterPoint');
 		
 		var apiKeys = JSON.parse(window.android.getApiKeys());
 		$('#new-location').data(apiKeys);
 		
-		var canAccessInternet = window.android.canAccessInternet();
-		if(canAccessInternet && typeof(google) == "undefined") {
+		if(typeof(google) == "undefined") {
 			
 			// Can access the Internet, thus we can load the Google JSAPI
 			var script = document.createElement("script");
@@ -272,7 +279,7 @@ $(document).ready(function() {
 			script.type = "text/javascript";
 			document.getElementsByTagName("head")[0].appendChild(script);
 		}
-		else if(canAccessInternet && typeof(google.search) == "undefined") {
+		else if(typeof(google.search) == "undefined") {
 			
 			// Can access the Internet, thus we can load the Google JSAPI
 			var script = document.createElement("script");
@@ -460,6 +467,14 @@ $(document).ready(function() {
 		
 		$(document).ready(function() {
 			
+			
+			var canAccessInternet = window.android.canAccessInternet();
+			if(!canAccessInternet) {
+				
+				$('#search-result-message').html('No Internet connection available');
+				return;
+			}			
+
 			$('#search-result-message').html('Loading ...');
 			
 			var latLng = $('body').data("searchCenterPoinLatLng");
@@ -480,9 +495,19 @@ $(document).ready(function() {
 					
 					if (data.results && data.results.length > 0) {
 						
+						// First we check if the user wants to load map images
+						var canLoadStaticMap = window.android.canLoadStaticMap();
+						
 						for (var i = 0; i < data.results.length; i++) {
 
-							$('<li/>', { html : '<h3>' + data.results[i].name + '</h3>' })        
+							var imgHtml = "";
+							
+							if(canLoadStaticMap) {
+								
+								imgHtml = '<img src="' + getMapImage(data.results[i].geometry.location.lat, data.results[i].geometry.location.lng, "13", "78", "78") + '"/>';
+							}
+							
+							$('<li/>', { html : imgHtml + '<h3>' + data.results[i].name + '</h3>' })        
 								.data({
 									locName : htmlDecode(stripHtml(data.results[i].name)),
 									locLat : data.results[i].geometry.location.lat,
@@ -533,6 +558,13 @@ $(document).ready(function() {
 		if(!search || "" === search) {
 			return;
 		}
+		
+		var canAccessInternet = window.android.canAccessInternet();
+		if(!canAccessInternet) {
+			
+			$('#search-result-message').html('No Internet connection available');
+			return;
+		}			
 		
 		$('#entered-search-term').html("<b>Search result for:</b>&nbsp;" + search);
 		$('#search-entry').val('');
