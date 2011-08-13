@@ -17,7 +17,7 @@
 
 	<div data-role="content">
 	
-		<span class="welcome-title"><h1>Artifactly</h1></span>
+		<div class="welcome-title"><h1>Artifactly</h1></div>
 
 		<fieldset class="ui-grid-a welcome-content-container welcome-grid">
 			<div class="ui-block-a welcome-content welcome-item-a">
@@ -111,19 +111,17 @@
 		
 		<div id="new-locaiton-search-group" data-role="fieldcontain">
     		<input type="text" name="search-entry" id="search-entry"  class="new-location-search-text" value=""/>
-    		<input type="button" name="search-location-button" id="search-location-button" data-icon="search" data-iconpos="notext" value=""/>
+    		<input type="button" name="search-location-button" id="search-location-button" data-inline="true" value="Search"/>
+    		<input type="button" name="nearby-places-button" id="nearby-places-button" data-inline="true" value="Nearby" />
 		</div>
-		<input type="button" name="nearby-places-button" id="nearby-places-button" data-inline="true" value="Nearby" />
-		<br />
-		<span>
-		<b>Current Location:</b><br />
-		</span>
-		<div id="new-location-center-point"></div>
-		<div id="entered-search-term"></div>
-		<div id="google-search-branding"></div>
+		<div id="new-location-current-location" data-role="fieldcontain">
+			<b>Current Location:</b><br />
+			<div id="new-location-center-point"></div>
+		</div>
+		<div id="google-search-branding"></div><br />
 		<div id="search-result-message"></div>
 		<div id="search-result-list">
-			<ul data-role="listview" data-inset="true"></ul>
+			<ul data-role="listview"></ul>
 		</div>
 	</div>
 	

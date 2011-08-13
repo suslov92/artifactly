@@ -250,8 +250,8 @@ $(document).ready(function() {
 	 */
 	$('#new-location').bind('pageshow', function() {
 		
+		$('#search-entry').val('');
 		$('#search-result-message').html('');
-		$('#entered-search-term').html('');
 		$('#google-search-branding').html('');
 		
 		$('#search-result-list li').remove();
@@ -467,31 +467,37 @@ $(document).ready(function() {
 		
 		$(document).ready(function() {
 			
-			
 			var canAccessInternet = window.android.canAccessInternet();
 			if(!canAccessInternet) {
 				
 				$('#search-result-message').html('No Internet connection available');
 				return;
-			}			
-
+			}
+			
+			// Reset DIVs and the list
+			$('#search-result-list li').remove();
+			$('#search-result-list ul').listview('refresh');
+			$('#google-search-branding').html('');
 			$('#search-result-message').html('Loading ...');
 			
 			var latLng = $('body').data("searchCenterPoinLatLng");
 			var apiKeys = $('#new-location').data();
 			
+			var searchName = "";
+			
+			var search = $('#search-entry').val();
+			
+			if(search && "" !== search) {
+				searchName = "&name=" + search;
+			}
+			
+			
 			$.ajax({
 				type:'Get',
-				url:'https://maps.googleapis.com/maps/api/place/search/json?location=' + latLng.lat() + ',' + latLng.lng() + '&types=establishment&radius=1000&sensor=false&key=' + apiKeys.placesSearch,
+				url:'https://maps.googleapis.com/maps/api/place/search/json?location=' + latLng.lat() + ',' + latLng.lng() + '&types=establishment' + searchName + '&radius=1000&sensor=false&key=' + apiKeys.placesSearch,
 				success:function(data) {
 					
-					// Reset the list
-					$('#search-result-list li').remove();
-					$('#search-result-list ul').listview('refresh');
-					
 					$('#search-result-message').html('');
-					$('#entered-search-term').html('');
-					$('#google-search-branding').html('');
 					
 					if (data.results && data.results.length > 0) {
 						
@@ -499,23 +505,24 @@ $(document).ready(function() {
 						var canLoadStaticMap = window.android.canLoadStaticMap();
 						
 						for (var i = 0; i < data.results.length; i++) {
-
-							var imgHtml = "";
 							
-							if(canLoadStaticMap) {
-								
-								imgHtml = '<img src="' + getMapImage(data.results[i].geometry.location.lat, data.results[i].geometry.location.lng, "13", "78", "78") + '"/>';
+							var element = $('<li/>', { html : '<h3>' + data.results[i].name + '</h3>' +
+												              '<p>Loading address ...</p>' })        
+										  .data({ locName : htmlDecode(stripHtml(data.results[i].name)),
+											  	  locLat : data.results[i].geometry.location.lat,
+											  	  locLng : data.results[i].geometry.location.lng    
+										  })        
+										  .appendTo($('#search-result-list ul'));
+						
+							if(canAccessInternet) {
+
+								/*
+								 * The following method will append the address to the <li/> element
+								 */
+								appendLocationAddress(data.results[i].geometry.location.lat, data.results[i].geometry.location.lng, element, data.results[i].name);
 							}
-							
-							$('<li/>', { html : imgHtml + '<h3>' + data.results[i].name + '</h3>' })        
-								.data({
-									locName : htmlDecode(stripHtml(data.results[i].name)),
-									locLat : data.results[i].geometry.location.lat,
-									locLng : data.results[i].geometry.location.lng    
-								})        
-								.appendTo($('#search-result-list ul'));
 						}
-
+						
 						// Refresh the list so that all the data is shown
 						$('#search-result-list ul').listview('refresh');
 					}
@@ -564,10 +571,11 @@ $(document).ready(function() {
 			
 			$('#search-result-message').html('No Internet connection available');
 			return;
-		}			
+		}
 		
-		$('#entered-search-term').html("<b>Search result for:</b>&nbsp;" + search);
-		$('#search-entry').val('');
+		// Reset the list
+		$('#search-result-list li').remove();
+		$('#search-result-list ul').listview('refresh');
 		
 		if(google.search) {
 			
@@ -717,14 +725,13 @@ function onLoadSearchApi() {
 	}
 }
 
+/*
+ * Clicking on the search button in the new location page
+ */
 function searchComplete(localSearch) {
 	
 	$(document).ready(function() {
-	
-		// Reset the list
-		$('#search-result-list li').remove();
-		$('#search-result-list ul').listview('refresh');
-		
+			
 		// Do we have any search results
 		if (localSearch.results && localSearch.results.length > 0) {
 			
@@ -735,16 +742,8 @@ function searchComplete(localSearch) {
 			
 			// Iterate over the search result
 			for (var i = 0; i < localSearch.results.length; i++) {
-				
-				var imgHtml = "";
-				
-				if(canLoadStaticMap) {
-					
-					imgHtml = '<img src="' + getMapImage(localSearch.results[i].lat, localSearch.results[i].lng, "13", "78", "78") + '"/>';
-				}
 								
-				$('<li/>', { html : imgHtml +
-									'<h3>' + localSearch.results[i].title + '</h3>' +
+				$('<li/>', { html : '<h3>' + localSearch.results[i].title + '</h3>' +
 									'<p>' + localSearch.results[i].addressLines[0] + '</p>' +
 									'<p>' + localSearch.results[i].city + '</p>' })        
 			      .data({
@@ -1093,8 +1092,8 @@ function appendLocationAddress(lat, lng , element, locationName) {
 			url:'http://maps.googleapis.com/maps/api/geocode/json?address=' + lat + ',' + lng + '&sensor=true',
 			success:function(data) {
 				element.html("");
-				element.append('<h3>' + locationName + '</h3>');
-				element.append('<p>' + data.results[0].formatted_address + '</p>');
+				element.append('<span class="location-address-name">' + locationName + '</span><br />');
+				element.append('<span class="location-formatted-address">' + data.results[0].formatted_address + '</span>');
 				element.data({ locAddress : data.results[0].formatted_address });
 			}
 		});
