@@ -1335,9 +1335,17 @@ function viewLocationPage(location, hasAddress) {
 		// Add new map
 		if(window.android.canLoadStaticMap()) {
 
+			$('#view-location-map-help').show();
 			$('<img/>')
 			.attr('src', getMapImage(location.locLat, location.locLng, "15", "250", "200"))
 			.appendTo($('#view-location-map'));
+		}
+		else {
+			
+			/*
+			 * We only show the help content if map loading is enabled
+			 */
+			$('#view-location-map-help').hide();
 		}
 
 		if(!hasAddress) {
