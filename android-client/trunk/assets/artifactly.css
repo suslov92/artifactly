@@ -47,8 +47,7 @@
 .welcome-title {
 	font: bold x-large nunito-bold,arial,sans-serif;
 	text-align: center;
-	margin-bottom: 0px;
-	padding-bottom: 0px;
+	padding-bottom: 15px;
 }
 
 
@@ -107,28 +106,36 @@ div.view-location-map > img {
 
 /* New Location Page */
 
-#new-locaiton-search-group.ui-field-contain {
-	padding: 0px
+#new-locaiton-search-group {
+	text-align: center;
+	padding: 0px 0px 10px 0px;
 }
 
-#new-locaiton-search-group .ui-btn {
-	margin-left:15px !important;
+#new-location-current-location.ui-field-contain {
+	padding: 5px;
 }
 
-.new-location-search-text {
-	float: left;
-	width: 75% !important;
+#new-location-center-point,
+#search-result-message {
+	font: normal small arial,sans-serif;
+}
+
+#search-result-message {
+	padding-top: 5px;
+	padding-left: 5px;
 }
 
 #google-search-branding {
+	padding-top: 10px;
+	padding-bottom: 0px;
+	padding-left: 5px;
 	float: left;
 }
 
-#entered-search-term,
-#google-search-branding,
-#search-result-message {
-	padding-top: 10px;
+#search-result-list {
+	padding-top: 20px;	
 }
+
 
 /* App Info Page */
 
@@ -186,3 +193,16 @@ label {
 li img {
 	padding: 1px;
 }
+
+/* Formatting appendLocationAddress() result */
+
+.location-address-name {
+	font: bold normal arial,sans-serif;
+}
+
+.location-formatted-address {	
+	font: normal small arial,sans-serif;
+}
+
+
+

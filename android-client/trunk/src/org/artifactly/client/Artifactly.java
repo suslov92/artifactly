@@ -85,7 +85,6 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	private static final String BROADCAST_CURRENT_LOCATION = "broadcastCurrentLocation";
 	
 	// Thread sleep time before we try the callJavaScriptFunction(...) call again
-	private static final int THREAD_SLEEP_BEFORE_RETRY_JS_CALL = 300; 
 	private static final int THREAD_SLEEP_BEFORE_RETRY_ACCESS_LOCALSERVICE = 1000;
 	private WebView webView = null;
 
@@ -407,19 +406,9 @@ public class Artifactly extends Activity implements ApplicationConstants {
 				
 					webView.loadUrl(stringBuilder.toString());
 				}
-				catch(Exception e) {
+				catch(Exception e1) {
 					
-					try {
-						
-						Thread.sleep(THREAD_SLEEP_BEFORE_RETRY_JS_CALL);
-						webView.loadUrl(stringBuilder.toString());
-					}
-					catch (InterruptedException ie) {
-						
-						Log.w(PROD_LOG_TAG, "EXCEPTION: Thread.sleep(N)", ie);
-					}
-					
-					Log.e(PROD_LOG_TAG, "callJavaScriptFunction(...)", e);
+					Log.w(PROD_LOG_TAG, "callJavaScriptFunction(...) name = " + functionName);
 				}
 			}
 		});
