@@ -254,6 +254,12 @@ $(document).ready(function() {
 		$('#search-result-message').html('');
 		$('#google-search-branding').html('');
 		
+		/*
+		 * Disabling the nearby button until the center point address has been loaded.
+		 * If the center point is not ready, the nearby search won't work because of null Lat/Lng
+		 */
+		$('#nearby-places-button').button('disable');
+		
 		$('#search-result-list li').remove();
 		$('#search-result-list ul').listview('refresh');
 		
@@ -743,9 +749,9 @@ function searchComplete(localSearch) {
 			// Iterate over the search result
 			for (var i = 0; i < localSearch.results.length; i++) {
 								
-				$('<li/>', { html : '<h3>' + localSearch.results[i].title + '</h3>' +
-									'<p>' + localSearch.results[i].addressLines[0] + '</p>' +
-									'<p>' + localSearch.results[i].city + '</p>' })        
+				$('<li/>', { html : '<span class="location-address-name">' + localSearch.results[i].title + '<span><br />' +
+									'<span class="location-formatted-address">' + localSearch.results[i].addressLines[0] + '</span><br />' +
+									'<span class="location-formatted-address">' + localSearch.results[i].city + '</span>' })       
 			      .data({
 			    	locName : htmlDecode(stripHtml(localSearch.results[i].title)),
 			    	locLat : localSearch.results[i].lat,
@@ -1093,7 +1099,8 @@ function appendLocationAddress(lat, lng , element, locationName) {
 			success:function(data) {
 				element.html("");
 				element.append('<span class="location-address-name">' + locationName + '</span><br />');
-				element.append('<span class="location-formatted-address">' + data.results[0].formatted_address + '</span>');
+				element.append('<span class="location-formatted-address">' + data.results[0].address_components[0].long_name + ' ' + data.results[0].address_components[1].long_name + '</span><br />');
+				element.append('<span class="location-formatted-address">' + data.results[0].address_components[2].long_name + '</span>');
 				element.data({ locAddress : data.results[0].formatted_address });
 			}
 		});
@@ -1174,6 +1181,7 @@ function getSearchCenterPoint() {
 			if (status == google.maps.GeocoderStatus.OK) {
 				
 				$('#new-location-center-point').html(results[0].formatted_address);
+				$('#nearby-places-button').button('enable');
 				
 			} else {
 				
