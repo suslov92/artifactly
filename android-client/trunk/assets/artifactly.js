@@ -261,7 +261,15 @@ $(document).ready(function() {
 		$('#nearby-places-button').button('disable');
 		
 		$('#search-result-list li').remove();
-		$('#search-result-list ul').listview('refresh');
+		
+		try {
+			
+			$('#search-result-list ul').listview('refresh');
+		}
+		catch(exception) {
+			
+			$('#search-result-list ul').listview();
+		}
 		
 		var canAccessInternet = window.android.canAccessInternet();
 		
@@ -482,7 +490,16 @@ $(document).ready(function() {
 			
 			// Reset DIVs and the list
 			$('#search-result-list li').remove();
-			$('#search-result-list ul').listview('refresh');
+			
+			try {
+			
+				$('#search-result-list ul').listview('refresh');
+			}
+			catch(exception) {
+				
+				$('#search-result-list ul').listview();
+			}
+			
 			$('#google-search-branding').html('');
 			$('#search-result-message').html('Loading ...');
 			
@@ -530,7 +547,14 @@ $(document).ready(function() {
 						}
 						
 						// Refresh the list so that all the data is shown
-						$('#search-result-list ul').listview('refresh');
+						try {
+						
+							$('#search-result-list ul').listview('refresh');
+						}
+						catch(exception) {
+							
+							$('#search-result-list ul').listview();
+						}
 					}
 					else {
 						
@@ -581,7 +605,15 @@ $(document).ready(function() {
 		
 		// Reset the list
 		$('#search-result-list li').remove();
-		$('#search-result-list ul').listview('refresh');
+		
+		try {
+			
+			$('#search-result-list ul').listview('refresh');
+		}
+		catch(exception) {
+			
+			$('#search-result-list ul').listview();
+		}
 		
 		if(google.search) {
 			
@@ -761,7 +793,14 @@ function searchComplete(localSearch) {
 			}
 	
 			// Refresh the list so that all the data is shown
-			$('#search-result-list ul').listview('refresh');
+			try {
+			
+				$('#search-result-list ul').listview('refresh');
+			}
+			catch(exception) {
+			
+				$('#search-result-list ul').listview();
+			}
 		}
 		else {
 			
@@ -934,7 +973,15 @@ function getArtifactsForCurrentLocationCallback(locations) {
 		if(numLi > 0) {
 		
 			$('#artifactly-list li').remove();
-			$('#artifactly-list ul').listview('refresh');
+			
+			try {
+				
+				$('#artifactly-list ul').listview('refresh');
+			}
+			catch(exception) {
+				
+				$('#artifactly-list ul').listview();
+			}
 		}
 		
 		if(!locations || locations.length < 1) {
@@ -964,7 +1011,14 @@ function getArtifactsForCurrentLocationCallback(locations) {
 			
 			if('welcome' != $('.ui-page-active').attr('id')) {
 				
-				$('#artifactly-list ul').listview('refresh');
+				try {
+				
+					$('#artifactly-list ul').listview('refresh');
+				}
+				catch(exception) {
+					
+					$('#artifactly-list ul').listview();
+				}
 			}
 		}
 	});
@@ -1028,7 +1082,15 @@ function getLocationsListCallback(locations) {
 
 		// Reset the list
 		$('#manage-locations-list li').remove();
-		$('#manage-locations-list ul').listview('refresh');
+		
+		try {
+		
+			$('#manage-locations-list ul').listview('refresh');
+		}
+		catch(exception) {
+			
+			$('#manage-locations-list ul').listview();
+		}
 
 		if(!locations || locations.length < 1) {
 
@@ -1056,7 +1118,14 @@ function getLocationsListCallback(locations) {
 			});
 		}
 
-		$('#manage-locations-list ul').listview('refresh');
+		try {
+		
+			$('#manage-locations-list ul').listview('refresh');
+		}
+		catch(exception) {
+			
+			$('#manage-locations-list ul').listview();
+		}
 	});
 }
 
