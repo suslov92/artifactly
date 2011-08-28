@@ -37,6 +37,7 @@
     <string name="map">Map</string>
     <string name="info">About</string>
     <string name="welcome">Home</string>
+    <string name="feedback">Feedback</string>
     <string name="loading_preferences_error">ERROR: loading preferences</string>
     <string name="loading_api_keys_error">ERROR: loading search api keys</string>
     <string name="get_location_error">Was not able to acquire a location</string>
@@ -47,4 +48,6 @@
     <string name="preference_load_maps_off">Load Maps OFF</string>
     <string name="preference_radius_unit">Setting range unit to %1$s</string>
     <string name="update_location_help">Drag the location marker to change the location</string>
+    <string name="email_feedback_chooser">Send your email in:</string>
+    <string name="email_feedback_subject">Artifactly User Feedback</string>
 </resources>
