@@ -224,6 +224,9 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	    case R.id.welcome:
 	    	callJavaScriptFunction(SHOW_WELCOME_PAGE);
 	    	return true;
+	    case R.id.feedback:
+	    	emailFeedback();
+	    	return true;
 	    default:
 	        return super.onOptionsItemSelected(item);
 	    }
@@ -642,7 +645,20 @@ public class Artifactly extends Activity implements ApplicationConstants {
 				Toast.makeText(getApplicationContext(), R.string.update_location_help, Toast.LENGTH_LONG).show();
 			}
 		}
-	} 
+	}
+	
+	// Method that handles the mail feedback
+	private void emailFeedback() {
+		
+		String toList[] = { "feedback@artifactly.org" };
+		
+		Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
+		emailIntent.setType("plain/text");
+		emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, toList);
+		emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, getResources().getString(R.string.email_feedback_subject));
+		
+		startActivity(Intent.createChooser(emailIntent, getResources().getString(R.string.email_feedback_chooser)));
+	}
 
 	// Method that returns a service connection
 	private ServiceConnection getServiceConnection() {
