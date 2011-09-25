@@ -45,6 +45,14 @@ public interface LocalService {
 	public int updateArtifact(String artifactId, String artifactName, String artifactData, String locationId, String locationName);
 	
 	/**
+	 * 
+	 * @param artifactId
+	 * @param artifactData
+	 * @return 1 on success, -1 on error
+	 */
+	public int updateArtifactData(String artifactId, String artifactData);
+	
+	/**
 	 * Update a Location
 	 * 
 	 * @param locationId

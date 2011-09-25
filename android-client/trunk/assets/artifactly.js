@@ -132,7 +132,7 @@ $(document).ready(function() {
 		.attr('selected', 'selected')
 		.appendTo($('#artifact-location-selection'));
 		
-		$('#artifact-location-selection').selectmenu('refresh');
+		$('#artifact-location-selection').selectmenu("refresh");
 		$('body').data({ refreshLocations : false });
 		$.mobile.changePage($('#new-artifact'), "none");
 	});
@@ -314,9 +314,15 @@ $(document).ready(function() {
 		var locName = $('#view-artifact-loc-name').val();
 		
 		/*
-		 * Only update if the artifact name, or the artifact data, or the location name changed
+		 * First, we cherck if the use onluy update the artifact data
+		 * Second, we update if the artifact name, or the artifact data, or the location name changed
 		 */
-		if(data.artName != artName || data.artData != artData || data.locName != locName) {
+		if(data.artName == artName && data.artData != artData && data.locName == locName) {
+			
+			window.android.updateArtifactData(data.artId, artData);
+			$('#view-artifact-art-name').data({artName:artName, artData:artData, locName:locName});
+		}
+		else if(data.artName != artName || data.artData != artData || data.locName != locName) {
 		
 			window.android.updateArtifact(data.artId, artName, artData, data.locId, locName);
 			$('#view-artifact-art-name').data({artName:artName, artData:artData, locName:locName});
@@ -1058,7 +1064,7 @@ function getLocationsOptionsCallback(locations) {
 			});
 		}
 		
-		$('#artifact-location-selection').selectmenu('refresh');
+		$('#artifact-location-selection').selectmenu("refresh");
 	});
 }
 
