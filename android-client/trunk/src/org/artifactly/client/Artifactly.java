@@ -442,7 +442,10 @@ public class Artifactly extends Activity implements ApplicationConstants {
 				editor.putInt(PREFERENCE_RADIUS, radius);
 				editor.commit();
 				
-				String message = String.format(getResources().getString(R.string.set_location_radius), radius);
+				// Getting radius unit
+				String unit = settings.getString(PREFERENCE_RADIUS_UNIT, PREFERENCE_RADIUS_UNIT_DEFAULT);
+				
+				String message = String.format(getResources().getString(R.string.set_location_radius), radius, unit);
 				Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
 			}
 			else {

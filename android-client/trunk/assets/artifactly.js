@@ -203,6 +203,9 @@ $(document).ready(function() {
 		// Setting radius preference
 		$('#options-radius-input').val(preferences.radius);
 		
+		// Keep track of the current radius so that we only call save if the value changed
+		$('#options').data({optionsRadius:preferences.radius});
+		
 		// Resetting options
 		$("input:radio[name='sound-notification']:checked").attr("checked", false).checkboxradio("refresh");
 		$("input:radio[name='load-maps']:checked").attr("checked", false).checkboxradio("refresh");
@@ -411,6 +414,8 @@ $(document).ready(function() {
 
 		var radius = $('#options-radius-input').val();
 		
+		var currentRadius = $('#options').data('optionsRadius');
+		
 		/*
 		 * Remove whitespace and check the entered value if it's a number.
 		 * If it's not a number, we set the radius to -1 and let the 
@@ -421,7 +426,15 @@ $(document).ready(function() {
 			radius = -1;
 		}
 		
-		window.android.setRadius(+radius);
+		/*
+		 * Making sure that the radius value has changed. There is not need 
+		 * to call setRadius if the value hasn't changed.
+		 */
+		if(radius != currentRadius) {
+			
+			$('#options').data({optionsRadius:radius});
+			window.android.setRadius(+radius);
+		}
 	});
 	
 	/*
@@ -1436,7 +1449,7 @@ function viewLocationPage(location, hasAddress) {
 			addLocationAddressToViewLocationPage(location.locLat, location.locLng);
 		}
 
-		$('#delete-location-name').data({ navigateTo : '#manage-locations' });
+		$('#delete-location-name').data({ navigateTo : '#view-location' });
 		$.mobile.changePage($('#view-location'), "none");
 	});
 }
