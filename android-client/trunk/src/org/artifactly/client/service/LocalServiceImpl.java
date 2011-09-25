@@ -370,6 +370,17 @@ public class LocalServiceImpl extends Binder implements LocalService {
 		return dbAdapter.updateArtifact(artifactId, artifactName, artifactData, locationId, locationName);
 	}
 
+	
+	public int updateArtifactData(String artifactId, String artifactData) {
+		
+		if(null == dbAdapter) {
+			
+			return -1;
+		}
+		
+		return dbAdapter.updateArtifactData(artifactId, artifactData);
+	}
+	
 	public int updateLocation(String locationId, String locationName, String locationLat, String locationLng) {
 		
 		if(null == dbAdapter) {

@@ -628,6 +628,11 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			new UpdateArtifactTask().execute(artId, artName, artData, locId, locName);
 		}
 		
+		public void updateArtifactData(String artId, String artData) {
+			
+			new UpdateArtifactDataTask().execute(artId, artData);
+		}
+		
 		public void updateLocation(String locId, String locName, String locLat, String locLng) {
 			
 			new UpdateLocationTask().execute(locId, locName, locLat, locLng);
@@ -975,6 +980,47 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			if(!result.booleanValue()) {
 				
 				Toast.makeText(getApplicationContext(), R.string.get_artifact_failure, Toast.LENGTH_LONG).show();
+			}
+		}
+	}
+	
+	private class UpdateArtifactDataTask extends AsyncTask<String, Void, Integer> {
+
+		@Override
+		protected Integer doInBackground(String... args) {
+			
+			if(null == localService) {
+				
+				return Integer.valueOf(-2);
+			}
+			else if(null == args[0] || "".equals(args[0])) {
+			
+				return Integer.valueOf(-3);
+			}			
+			else {
+				
+				return Integer.valueOf(localService.updateArtifactData(args[0], args[1]));
+			}
+		}
+		
+		@Override
+		protected void onPostExecute(Integer result) {
+		
+			/*
+			 * Show Toast in here because onPostExecute executes in UI thread
+			 */
+			switch(result.intValue()) {
+			
+				case -1:
+					// general error
+					Toast.makeText(getApplicationContext(), R.string.update_artifact_failure, Toast.LENGTH_LONG).show();
+					break;
+				case 1:
+					new GetArtifactsForCurrentLocationTask().execute();
+					Toast.makeText(getApplicationContext(), R.string.update_artifact_success, Toast.LENGTH_SHORT).show();
+					break;
+				default:
+					Log.e(PROD_LOG_TAG, "ERROR: unexpected update artifact result");
 			}
 		}
 	}

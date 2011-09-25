@@ -246,7 +246,6 @@ public class DbAdapter implements ApplicationConstants {
 	 */
 	public int updateArtifact(String artifactId, String artifactName, String artifactData, String locationId, String locationName) {
 		
-		
 		/*
 		 * First, we need to check if the update changes the artifact name to 
 		 * an existing artifact name at that location. We don't allow duplicate
@@ -276,6 +275,18 @@ public class DbAdapter implements ApplicationConstants {
 		int numberLocRowsAffected = mSQLiteDatabase.update(DB_TABLE_LOCATION, locContentValues, LOC_FIELDS[LOC_ID] + "=?", new String[] {locationId});
 		
 		return ((numberArtRowsAffected == 1 && numberLocRowsAffected ==  1) ? 1 : -2);
+	}
+	
+	/*
+	 * Update Artifact Data
+	 */
+	public int updateArtifactData(String artifactId, String artifactData) {
+		
+		ContentValues artContentValues = new ContentValues();
+		artContentValues.put(ART_FIELDS[ART_DATA], artifactData);
+		int numberArtRowsAffected = mSQLiteDatabase.update(DB_TABLE_ARTIFACT, artContentValues, ART_FIELDS[ART_ID] + "=?", new String[] {artifactId});
+		
+		return ((numberArtRowsAffected == 1) ? 1 : -1);
 	}
 	
 	/*
