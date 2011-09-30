@@ -14,6 +14,14 @@
  * limitations under the License.
  */
 
+/*
+ * jQM Default Settings
+ */
+$(document).bind("mobileinit", function() {
+	
+	$.mobile.defaultPageTransition = 'none';
+});
+
 $(document).ready(function() {
 	
 	/*
@@ -1012,7 +1020,7 @@ function getArtifactsForCurrentLocationCallback(locations) {
 			$('#artifactly-message').text("");
 			$.each(locations, function(i, location) {
 
-				$('<li/>', { html : '<img src="images/map-marker.png" />' +
+				$('<li/>', { html : '<img src="images/map-marker.png"/>' +
 									'<h3>' + location.locName + '</h3>' +
 									'<span class="ui-li-count">' + location.artifacts.length + '</span>'})
 				.attr('data-role', 'list-divider')
@@ -1027,17 +1035,14 @@ function getArtifactsForCurrentLocationCallback(locations) {
 					.appendTo($('#artifactly-list ul'))
 				});
 			});
-			
-			if('welcome' != $('.ui-page-active').attr('id')) {
-				
-				try {
-				
-					$('#artifactly-list ul').listview('refresh');
-				}
-				catch(exception) {
-					
-					$('#artifactly-list ul').listview();
-				}
+
+			try {
+
+				$('#artifactly-list ul').listview('refresh');
+			}
+			catch(exception) {
+
+				$('#artifactly-list ul').listview();
 			}
 		}
 	});
