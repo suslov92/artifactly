@@ -251,7 +251,7 @@ $(document).ready(function() {
 	$('#map').bind('pageshow', function() {
 		
 		// Showing the loading animation
-		$.mobile.pageLoading();
+		$.mobile.showPageLoadingMsg();
 
 		loadMapApi('loadMap');
 	});
@@ -402,7 +402,7 @@ $(document).ready(function() {
 		$.mobile.changePage($('#location-chooser-map'), "none");
 		
 		// Showing the loading animation
-		$.mobile.pageLoading();
+		$.mobile.showPageLoadingMsg();
 
 		loadMapApi('loadLocationChooserMap');
 	});
@@ -881,7 +881,7 @@ function loadMap() {
 		$('#map-content').data({ mapReference : map });
 		
 		// Hide the maps loading animation
-		$.mobile.pageLoading(true);
+		$.mobile.hidePageLoadingMsg();
 	});
 }
 
@@ -929,7 +929,7 @@ function loadLocationChooserMap() {
 		});
 		
 		// Hide the maps loading animation
-		$.mobile.pageLoading(true);
+		$.mobile.hidePageLoadingMsg();
 		
 		window.android.showMessage("update_location_help");
 	});
