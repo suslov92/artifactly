@@ -126,5 +126,14 @@ public interface LocalService {
 	 * @return JSON containing all locations
 	 */
 	public String getLocations();
+	
+	/**
+	 * Has location any associated artifacts
+	 * 
+	 * @param locId Location DB row id
+	 * 
+	 * @return true if location has associated artifacts, false otherwise 
+	 */
+	public boolean hasArtifactsAtLocation(String locId);
 
 }

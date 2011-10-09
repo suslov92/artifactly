@@ -203,7 +203,7 @@ li img {
 /* Formatting appendLocationAddress() result */
 
 .location-address-name {
-	font: bold normal arial,sans-serif;
+	font: bold large arial,sans-serif;
 }
 
 .location-formatted-address {	

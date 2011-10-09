@@ -265,7 +265,14 @@
 		
 		<div data-role="controlgroup" data-type="horizontal" class="location-button-group">
 			<input type="button" name="update-location" id="update-location" value="Update" />
-			<input type="button" name="delete-location" id="delete-location" value="Delete" />
+			<!--
+				NOTE: Wrap input with a span element so that we can hide/show it via code.
+				Once https://github.com/jquery/jquery-mobile/issues/1110 is fixed, we should
+				be able to hide/show the input element without using the span element.
+			-->
+			<span id="delete-location-button">
+				<input type="button" name="delete-location" id="delete-location" value="Delete" />
+			</span>
 			<input type="button" name="close-location-icon" id="close-location-icon" data-icon="home" value="&nbsp;" />
 		</div>
 	</div>
