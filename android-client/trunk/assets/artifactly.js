@@ -807,7 +807,7 @@ function searchComplete(localSearch) {
 			// Iterate over the search result
 			for (var i = 0; i < localSearch.results.length; i++) {
 								
-				$('<li/>', { html : '<span class="location-address-name">' + localSearch.results[i].title + '<span><br />' +
+				$('<li/>', { html : '<span class="location-address-name">' + localSearch.results[i].title + '</span><br />' +
 									'<span class="location-formatted-address">' + localSearch.results[i].addressLines[0] + '</span><br />' +
 									'<span class="location-formatted-address">' + localSearch.results[i].city + '</span>' })       
 			      .data({
@@ -1257,7 +1257,7 @@ function addLocationAddressToViewLocationPage(lat, lng) {
 	
 		$.ajax({
 			type:'Get',
-			url:'http://maps.googleapis.com/maps/api/geocode/json?address=' + lat + ',' + lng + '&sensor=true',
+			url:'https://maps.googleapis.com/maps/api/geocode/json?address=' + lat + ',' + lng + '&sensor=true',
 			success:function(data) {
 				
 				if(typeof(data.results[0]) != 'undefined') {
@@ -1296,12 +1296,12 @@ function loadMapApi(callback) {
 		if(canAccessInternet && typeof(google) == "undefined") {
 
 			// Can access the Internet, thus we can load the Google maps API and map
-			$.getScript('http://maps.google.com/maps/api/js?sensor=true&callback=' + callback);
+			$.getScript('https://maps.google.com/maps/api/js?sensor=true&callback=' + callback);
 		}
 		else if(canAccessInternet && typeof(google.maps) == "undefined") {
 
 			// Can access the Internet, thus we can load the Google maps API and map
-			$.getScript('http://maps.google.com/maps/api/js?sensor=true&callback=' + callback);
+			$.getScript('https://maps.google.com/maps/api/js?sensor=true&callback=' + callback);
 		}
 		else {
 
@@ -1464,7 +1464,7 @@ function htmlEncode(value) {
  */
 function getMapImage(lat, lng, zoom, width, height) {
 
-	return "http://maps.google.com/maps/api/staticmap?center=" + lat + "," + lng + "&zoom=" + zoom + "&size=" + width + "x" + height + "&markers=color:red%7Csize:small%7C" + lat + "," + lng + "&sensor=false";
+	return "https://maps.google.com/maps/api/staticmap?center=" + lat + "," + lng + "&zoom=" + zoom + "&size=" + width + "x" + height + "&markers=color:red%7Csize:small%7C" + lat + "," + lng + "&sensor=false";
 }
 
 /*
