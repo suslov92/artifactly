@@ -74,6 +74,7 @@ public class Artifactly extends Activity implements ApplicationConstants {
 	private static final String GET_LOCATIONS_OPTIONS_CALLBACK = "getLocationsOptionsCallback";
 	private static final String GET_LOCATIONS_LIST_CALLBACK = "getLocationsListCallback";
 	private static final String CREATE_ARTIFACT_CALLBACK = "createArtifactCallback";
+	private static final String HAS_ARTIFACTS_AT_LOCATION_CALLBACK = "hasArtifactsAtLocationCallback";
 	private static final String RESET_WEBVIEW = "resetWebView";
 	private static final String SHOW_OPTIONS_PAGE = "showOptionsPage";
 	private static final String SHOW_MAP_PAGE = "showMapPage";
@@ -652,6 +653,11 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			
 				Toast.makeText(getApplicationContext(), R.string.update_location_help, Toast.LENGTH_LONG).show();
 			}
+		}
+		
+		public void hasArtifactsAtLocation(String locId) {
+			
+			new HasArtifactsAtLocationTask().execute(locId);
 		}
 	}
 	
@@ -1257,6 +1263,32 @@ public class Artifactly extends Activity implements ApplicationConstants {
 			default:
 				Log.e(PROD_LOG_TAG, "ERROR: unexpected deleteArtifact() status");
 			}
+		}
+	}
+	
+	private class HasArtifactsAtLocationTask extends AsyncTask<String, Void, Void> {
+
+		@Override
+		protected Void doInBackground(String... args) {
+			
+			
+			if(null == localService) {
+				
+				// We don't do anything
+				return null;
+			}
+			
+			boolean hasArtifacts = localService.hasArtifactsAtLocation(args[0]);
+			
+			/*
+			 * We only call the JS callback if there are artifacts so that we can hide the delete button
+			 */
+			if(hasArtifacts) {
+				
+				callJavaScriptFunction(HAS_ARTIFACTS_AT_LOCATION_CALLBACK);
+			}
+			
+			return null;
 		}
 	}
 }

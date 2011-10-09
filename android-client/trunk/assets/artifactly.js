@@ -86,7 +86,7 @@ $(document).ready(function() {
 
 		var location = $(this).data();
 		
-		viewLocationPage(location, false);
+		viewLocationPage(location, false, false);
 	});
 	
 	/*
@@ -100,7 +100,7 @@ $(document).ready(function() {
 		 * When we construct the manage locations list, we already lookup 
 		 * the address and attache it to the location. Thus we pass in 'true'
 		 */
-		viewLocationPage(location, true);
+		viewLocationPage(location, true, true);
 	});
 	
 	/*
@@ -541,7 +541,6 @@ $(document).ready(function() {
 				searchName = "&name=" + search;
 			}
 			
-			
 			$.ajax({
 				type:'Get',
 				url:'https://maps.googleapis.com/maps/api/place/search/json?location=' + latLng.lat() + ',' + latLng.lng() + '&types=establishment' + searchName + '&radius=1000&sensor=false&key=' + apiKeys.placesSearch,
@@ -569,7 +568,7 @@ $(document).ready(function() {
 								/*
 								 * The following method will append the address to the <li/> element
 								 */
-								appendLocationAddress(data.results[i].geometry.location.lat, data.results[i].geometry.location.lng, element, data.results[i].name);
+								appendLocationAddress(data.results[i].geometry.location.lat, data.results[i].geometry.location.lng, element, data.results[i].name, data.results[i].id);
 							}
 						}
 						
@@ -762,7 +761,7 @@ $(document).ready(function() {
 		var location = $('#location-chooser-map').data();
 		$('#view-location').data({navigate:'no'});
 		window.android.updateLocationCoodinates(location.locId, location.locName, (+location.locLat).toFixed(6), (+location.locLng).toFixed(6));
-		viewLocationPage(location, false);
+		viewLocationPage(location, false, false);
 	});
 	
 }); // END jQuery main block
@@ -1002,11 +1001,11 @@ function getArtifactsForCurrentLocationCallback(locations) {
 			$('#artifactly-list li').remove();
 			
 			try {
-				
+
 				$('#artifactly-list ul').listview('refresh');
 			}
 			catch(exception) {
-				
+
 				$('#artifactly-list ul').listview();
 			}
 		}
@@ -1041,8 +1040,7 @@ function getArtifactsForCurrentLocationCallback(locations) {
 				$('#artifactly-list ul').listview('refresh');
 			}
 			catch(exception) {
-
-				$('#artifactly-list ul').listview();
+				// Left empty on purpose
 			}
 		}
 	});
@@ -1137,7 +1135,7 @@ function getLocationsListCallback(locations) {
 					/*
 					 * The following method will append the address to the <li/> element
 					 */
-					appendLocationAddress(location.locLat, location.locLng, element, location.locName);
+					appendLocationAddress(location.locLat, location.locLng, element, location.locName, location.locId);
 				}
 			});
 		}
@@ -1151,6 +1149,15 @@ function getLocationsListCallback(locations) {
 			$('#manage-locations-list ul').listview();
 		}
 	});
+}
+
+/*
+ * This will hide the delete button in the view-location page
+ * if the location has associated artifacts
+ */
+function hasArtifactsAtLocationCallback() {
+	
+	$('#delete-location-button').hide();
 }
 
 /*
@@ -1182,26 +1189,67 @@ function broadcastCurrentLocation(location) {
 /*
  * Helper method that appends the formatted address to the provided DOM element
  */
-function appendLocationAddress(lat, lng , element, locationName) {
+function appendLocationAddress(lat, lng , element, locationName, cacheKey) {
 	
 	$(document).ready(function() {
 		
-		$.ajax({
-			type:'Get',
-			url:'http://maps.googleapis.com/maps/api/geocode/json?address=' + lat + ',' + lng + '&sensor=true',
-			success:function(data) {
-				element.html("");
-				element.append('<span class="location-address-name">' + locationName + '</span><br />');
-				element.append('<span class="location-formatted-address">' + data.results[0].address_components[0].long_name + ' ' + data.results[0].address_components[1].long_name + '</span><br />');
-				element.append('<span class="location-formatted-address">' + data.results[0].address_components[2].long_name + '</span>');
-				element.data({ locAddress : data.results[0].formatted_address });
-			}
-		});
+		/*
+		 * NOTE:
+		 * We use the "manage-locations" div to store the location address lookup cache
+		 */
+
+		// First we check if we have the location cached
+		var key = '' + cacheKey;
+		var cachedLocation = $('#manage-locations').data(key);
+
+		if(typeof(cachedLocation) != "undefined") {
+			
+			element.html("");
+			element.append('<span class="location-address-name">' + locationName + '</span><br />');
+			element.append('<span class="location-formatted-address">' + cachedLocation.streetNumber + ' ' + cachedLocation.street + '</span><br />');
+			element.append('<span class="location-formatted-address">' + cachedLocation.city + '</span>');
+			element.data({ locAddress : cachedLocation.address });
+		}
+		else {
+
+			$.ajax({
+				type:'Get',
+				url:'https://maps.googleapis.com/maps/api/geocode/json?address=' + lat + ',' + lng + '&sensor=true',
+				success:function(data) {
+					
+					element.html("");
+					element.append('<span class="location-address-name">' + locationName + '</span><br />');
+					
+					/*
+					 * In some case there is no address_component, we just show the locationName
+					 */
+					if(typeof(data.results[0]) != 'undefined') {
+						
+						element.append('<span class="location-formatted-address">' + data.results[0].address_components[0].long_name + ' ' + data.results[0].address_components[1].long_name + '</span><br />');
+						element.append('<span class="location-formatted-address">' + data.results[0].address_components[2].long_name + '</span>');
+						element.data({ locAddress : data.results[0].formatted_address });
+						
+						// Caching address data
+						$('#manage-locations').data(key,
+								{streetNumber: data.results[0].address_components[0].long_name,
+								 street: data.results[0].address_components[1].long_name,
+								 city: data.results[0].address_components[2].long_name,
+								 address: data.results[0].formatted_address});
+					}
+					else {
+						
+						element.append('<span class="location-formatted-address">Address Not Available</span><br />');
+						element.data({ locAddress : "Address Not Available" });
+					}
+				}
+			});
+		}
 	});
 }
 
 /*
- * Helper method that set the formatted address to the "view-location-address" div tag in the "view-location" page
+ * Helper method that set the formatted address to the "view-location-address" 
+ * div tag in the "view-location" page
  */
 function addLocationAddressToViewLocationPage(lat, lng) {
 	
@@ -1212,7 +1260,14 @@ function addLocationAddressToViewLocationPage(lat, lng) {
 			url:'http://maps.googleapis.com/maps/api/geocode/json?address=' + lat + ',' + lng + '&sensor=true',
 			success:function(data) {
 				
-				$('#view-location-address').html(data.results[0].formatted_address);
+				if(typeof(data.results[0]) != 'undefined') {
+			
+					$('#view-location-address').html(data.results[0].formatted_address);
+				}
+				else {
+					
+					$('#view-location-address').html('Address Not Available');
+				}
 			}
 		});
 	});
@@ -1418,7 +1473,7 @@ function getMapImage(lat, lng, zoom, width, height) {
  * @param location : location object
  * @param hasAddress : boolean indicating if the location parameter has the address
  */
-function viewLocationPage(location, hasAddress) {
+function viewLocationPage(location, hasAddress, hasDeleteButton) {
 	
 	$(document).ready(function() {
 		
@@ -1452,6 +1507,20 @@ function viewLocationPage(location, hasAddress) {
 		if(!hasAddress) {
 
 			addLocationAddressToViewLocationPage(location.locLat, location.locLng);
+		}
+		
+		/*
+		 * We only show the delete button in the view-location page if the location
+		 * has not associated artifacts and when it's accessed via the manage-locations page
+		 */
+		if(hasDeleteButton) {
+			
+			$('#delete-location-button').show();
+			window.android.hasArtifactsAtLocation(location.locId);
+		}
+		else {
+			
+			$('#delete-location-button').hide();
 		}
 
 		$('#delete-location-name').data({ navigateTo : '#view-location' });

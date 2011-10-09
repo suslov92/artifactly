@@ -390,6 +390,24 @@ public class DbAdapter implements ApplicationConstants {
 		return 1;
 	}
 	
+	/*
+	 * Check if a location has any associated artifacts
+	 */
+	public boolean hasArtifactsAtLocation(String locId) {
+		
+		boolean hasArtifacts = false;
+		
+		try {
+		
+			hasArtifacts = hasLocationInLocToArtTable(locId);
+		}
+		catch(SQLiteException e) {
+
+			Log.e(PROD_LOG_TAG, "SQLiteException: hasArtifactsAtLocation()", e);
+		}
+		
+		return hasArtifacts;
+	}
 	
 	/*
 	 * Helper method that checks if the provided artifactRowId is part of an existing location and artifact relationship
