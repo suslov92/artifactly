@@ -8,7 +8,7 @@
     <string name="create_artifact_failure">Failed to create Artifact</string>
     <string name="create_artifact_provide_different_location_name">Location name exists, please choose another location name</string>
     <string name="create_artifact_already_exists">Artifact already exists</string>
-    <string name="create_artifact_name_error">Artifact name is not valid</string>
+    <string name="create_artifact_name_error">Item name is not valid</string>
     <string name="create_artifact_location_name_error">Location name is not valid</string>
     <string name="stop_location_tracking_success">Stopped location tracking</string>
     <string name="stop_location_tracking_failure">Failed to stop location tracking</string>
